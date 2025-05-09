@@ -1,0 +1,16 @@
+# IDE's
+
+.idea
+.vscode
+
+# Environments
+
+.env
+
+# Volumes NONE FOR NOW
+
+./nginx/data
+
+# Dev
+
+./api/node_modules

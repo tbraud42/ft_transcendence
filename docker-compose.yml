@@ -1,0 +1,50 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      API_PORT: ${API_PORT}
+    volumes:
+      - ./nginx/html:/var/www/html
+      - ./nginx/data/logs:/var/log/nginx
+      - ./nginx/data/certs:/etc/nginx/certs
+    depends_on:
+      - api
+    networks:
+      - frontend
+      - backend
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    hostname: api
+    environment:
+      API_PORT: ${API_PORT}
+      DB_HOST: ${DB_HOST}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./api/data:/var/www/api
+    networks:
+      - backend
+
+networks:
+  frontend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: "frontend"
+      com.docker.network.bridge.enable_icc: "true"
+    ipam:
+      config:
+        - subnet: "172.30.0.0/16" # We preset to keep a consistent network for firewall rules
+  backend:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: "backend"
+      com.docker.network.bridge.enable_icc: "true"
