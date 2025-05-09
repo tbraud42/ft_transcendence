@@ -10,7 +10,7 @@ services:
       DOMAIN_NAME: ${DOMAIN_NAME}
       API_PORT: ${API_PORT}
     volumes:
-      - ./nginx/html:/var/www/html
+      - ./nginx/html:/usr/share/nginx/html:ro
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
     depends_on:
@@ -29,8 +29,6 @@ services:
       DB_HOST: ${DB_HOST}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - ./api/data:/var/www/api
     networks:
       - backend
 

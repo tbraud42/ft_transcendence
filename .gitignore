@@ -7,7 +7,7 @@
 
 .env
 
-# Volumes NONE FOR NOW
+# Volumes
 
 ./nginx/data
 
