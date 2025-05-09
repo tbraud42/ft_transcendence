@@ -10,7 +10,7 @@ services:
       DOMAIN_NAME: ${DOMAIN_NAME}
       API_PORT: ${API_PORT}
     volumes:
-      - ./nginx/html:/usr/share/nginx/html:ro
+      - ./nginx/html:/var/www/html:ro
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
     depends_on:

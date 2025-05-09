@@ -77,6 +77,13 @@ button{
     border-radius: 5px;
     cursor: pointer;
 }
+
+button:hover{
+    background-color: #ffffff;
+    color: #080710;
+    box-shadow: 0 0 20px rgba(255,255,255,0.5);
+}
+
 .social {
     margin-top: 30px;
     display: flex;
@@ -109,4 +116,10 @@ button{
     font-size: 14px;
     color: white;
     font-weight: 600;
+}
+
+#login-error {
+    font-size: 14px;
+    text-align: center;
+    color: #ff5555;
 }

@@ -1,0 +1,10 @@
+{
+  "title": "Login",
+  "form_title": "ft_transcendence",
+  "label_username": "Username",
+  "label_password": "Password",
+  "placeholder_username": "Email or Username",
+  "placeholder_password": "Password",
+  "btn_login": "Log In",
+  "error_empty_fields": "Please fill in all fields."
+}
