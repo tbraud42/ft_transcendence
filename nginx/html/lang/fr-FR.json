@@ -1,10 +1,13 @@
 {
-  "title": "Connexion",
-  "form_title": "ft_transcendence",
-  "label_username": "Nom d'utilisateur",
-  "label_password": "Mot de passe",
-  "placeholder_username": "Email ou nom d'utilisateur",
-  "placeholder_password": "Mot de passe",
-  "btn_login": "Se connecter",
-  "error_empty_fields": "Veuillez remplir tous les champs."
+  "login": {
+    "title": "Connexion",
+    "form_title": "ft_transcendence",
+    "label_username": "Nom d'utilisateur",
+    "label_password": "Mot de passe",
+    "placeholder_username": "Email ou nom d'utilisateur",
+    "placeholder_password": "Mot de passe",
+    "btn_login": "Se connecter",
+    "error_empty_fields": "Veuillez remplir tous les champs.",
+    "google_label": "Se connecter avec Google"
+  }
 }

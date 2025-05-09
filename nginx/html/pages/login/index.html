@@ -1,18 +1,19 @@
-<h1>Connexion</h1>
+<h1 data-i18n="title"></h1>
 <form id="login-form">
-    <h3>ft_transcendence</h3>
+    <h3 data-i18n="login.form_title"></h3>
 
-    <label for="username">Username</label>
-    <input type="text" placeholder="Email or Username" id="username">
+    <label for="username" data-i18n="login.label_username"></label>
+    <input type="text" id="username" data-i18n-placeholder="login.placeholder_username">
 
-    <label for="password">Password</label>
-    <input type="password" placeholder="Password" id="password">
+    <label for="password" data-i18n="login.label_password"></label>
+    <input type="password" id="password" data-i18n-placeholder="login.placeholder_password">
 
-    <button id="loginBtn">Log In</button>
+    <button id="loginBtn" type="submit" data-i18n="login.btn_login"></button>
 
     <div class="social">
-        <div>
+        <div class="google-btn">
             <img src="img/google.png" alt="Google" width="25" height="25">
+            <span data-i18n="login.google_label"></span>
         </div>
     </div>
 </form>

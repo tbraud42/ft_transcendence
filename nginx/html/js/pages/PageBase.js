@@ -29,6 +29,7 @@ export default class PageBase {
         this.jsFiles.forEach(file => {
             if (!document.querySelector(`script[data-page-js="${this.route}"]`)) {
                 const script = document.createElement('script');
+                script.type = 'module';
                 script.src = `${this.path}${file}`;
                 script.setAttribute('data-page-js', this.route);
                 document.body.appendChild(script);
