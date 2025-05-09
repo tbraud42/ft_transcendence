@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     langSelector.value = getCurrentLang();
     langSelector.addEventListener('change', async e => {
         await loadLanguage(e.target.value);
-        applyTranslations(); // traduire après changement de langue
+        applyTranslations();
     });
 
     const app = document.getElementById('app');
@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     contentDiv.id = 'content';
     app.appendChild(contentDiv);
 
-    router(); // le HTML de la page est injecté ici
+    router();
 });
 
 window.addEventListener('popstate', router);

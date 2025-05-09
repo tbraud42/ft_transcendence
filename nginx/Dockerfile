@@ -3,9 +3,6 @@ FROM nginx:latest
 # Copy the nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy the HTML files to the default nginx directory
-COPY ./html /var/www/html
-
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh

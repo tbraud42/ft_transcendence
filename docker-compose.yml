@@ -9,12 +9,29 @@ services:
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME}
       API_PORT: ${API_PORT}
+      WEB_PORT: ${WEB_PORT}
     volumes:
-      - ./nginx/html:/var/www/html:ro
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
     depends_on:
       - api
+      - web
+    networks:
+      - frontend
+      - backend
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    hostname: web
+    ports:
+      - "${WEB_PORT}"
+    environment:
+      WEB_PORT: ${WEB_PORT}
+      API_URL: api.${DOMAIN_NAME}
+    volumes:
+      - ./web/src:/var/www/src:ro
     networks:
       - frontend
       - backend

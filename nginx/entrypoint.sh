@@ -41,6 +41,7 @@ fi
 echo "Replacing DOMAIN_NAME and API_PORT in Nginx configuration..."
 sed -i "s/DOMAIN_NAME/$DOMAIN_NAME/g" /etc/nginx/nginx.conf
 sed -i "s/API_PORT/$API_PORT/g" /etc/nginx/nginx.conf
+sed -i "s/WEB_PORT/$WEB_PORT/g" /etc/nginx/nginx.conf
 
 echo "Starting Nginx..."
 exec nginx -g "daemon off;"
