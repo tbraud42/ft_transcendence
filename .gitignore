@@ -9,8 +9,8 @@
 
 # Volumes
 
-./nginx/data
+nginx/data
 
 # Dev
 
-./api/node_modules
+api/node_modules
