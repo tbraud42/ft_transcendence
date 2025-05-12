@@ -1,5 +1,9 @@
 FROM node:20-alpine
 
+ENV SHELL=/bin/sh
+
+RUN apk add --no-cache rsync
+
 WORKDIR /app
 
 COPY package.json tsconfig.json ./

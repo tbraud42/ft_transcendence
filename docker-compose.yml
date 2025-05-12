@@ -28,6 +28,7 @@ services:
       API_URL: api.${DOMAIN_NAME}
     volumes:
       - ./web/dist:/app/dist
+      - ./web/src:/app/src
 
   api:
     build:
