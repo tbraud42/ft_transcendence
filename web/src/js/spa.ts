@@ -4,15 +4,21 @@ import HomePage from './pages/HomePage.js';
 import { loadLanguage, getCurrentLang } from './lang/i18n.js';
 import { applyTranslations } from './lang/i18n-dom.js';
 
-const routes = {
+type Route = {
+    [key: string]: () => string;
+};
+
+const routes: Route = {
     '/': LoginPage,
     '/home': HomePage,
 };
 
-function router() {
+function router(): void {
     const path = window.location.pathname;
     const contentDiv = document.getElementById('content');
-    if (!contentDiv) return;
+    if (!contentDiv) {
+        return;
+    }
 
     const view = routes[path];
     if (view) {
@@ -21,16 +27,15 @@ function router() {
         contentDiv.innerHTML = '<h1>404 Not Found</h1>';
     }
 
-    // Nettoyage ancien style
     const styles = document.querySelectorAll('link[rel="stylesheet"][data-page-css]');
-    styles.forEach(style => {
+    styles.forEach((style: Element) => {
         if (style.getAttribute('data-page-css') !== path) {
             style.remove();
         }
     });
 
     const scripts = document.querySelectorAll('script[data-page-js]');
-    scripts.forEach(script => {
+    scripts.forEach((script: Element) => {
         if (script.getAttribute('data-page-js') === path) {
             script.remove();
         }
@@ -39,7 +44,7 @@ function router() {
     applyTranslations();
 }
 
-function createLanguageSelector() {
+function createLanguageSelector(): HTMLSelectElement {
     const langMenu = document.createElement('div');
     langMenu.id = 'lang-menu';
 
@@ -68,12 +73,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const langSelector = createLanguageSelector();
     langSelector.value = getCurrentLang();
-    langSelector.addEventListener('change', async e => {
-        await loadLanguage(e.target.value);
+    langSelector.addEventListener('change', async (e: Event) => {
+        const target = e.target as HTMLSelectElement;
+        await loadLanguage(target.value);
         applyTranslations();
     });
 
-    const app = document.getElementById('app');
+    const app = document.getElementById('app') as HTMLElement;
     const contentDiv = document.createElement('div');
     contentDiv.id = 'content';
     app.appendChild(contentDiv);

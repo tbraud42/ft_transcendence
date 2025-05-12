@@ -1,0 +1,11 @@
+{
+  "name": "transcendence-web",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node_modules/.bin/tsc --project tsconfig.json"
+
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

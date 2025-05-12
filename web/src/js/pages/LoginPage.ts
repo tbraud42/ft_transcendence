@@ -5,11 +5,11 @@ class LoginPage extends PageBase {
         super(
             '/pages/login/',
             '/',
-            "index.html",
-            ["style.css"],
-            ["logic.js"]
+            'index.html',
+            ['style.css'],
+            ['logic.js']
         );
     }
 }
 
-export default () => new LoginPage().load();
+export default (): string => new LoginPage().load();

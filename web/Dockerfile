@@ -1,7 +1,13 @@
-FROM nginx:latest
+FROM node:20-alpine
 
-# Copy the nginx configuration file
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy web files
-COPY ./src /var/www/src
+COPY package.json tsconfig.json ./
+RUN npm install
+
+COPY src ./src
+
+COPY ./entrypoint.sh ./
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]

@@ -1,5 +1,11 @@
 export default class PageBase {
-    constructor(path, route, htmlFile, cssFiles, jsFiles) {
+    path: string;
+    route: string;
+    htmlFile: string;
+    cssFiles: string[];
+    jsFiles: string[];
+
+    constructor(path: string, route: string, htmlFile: string, cssFiles: string[], jsFiles: string[]) {
         this.path = path;
         this.route = route;
         this.htmlFile = htmlFile;
@@ -7,13 +13,13 @@ export default class PageBase {
         this.jsFiles = jsFiles;
     }
 
-    load() {
+    load(): string {
         this._injectCSS();
         this._injectJS();
         return this._loadHTML();
     }
 
-    _injectCSS() {
+    private _injectCSS(): void {
         this.cssFiles.forEach(file => {
             if (!document.querySelector(`link[data-page-css="${this.route}"]`)) {
                 const link = document.createElement('link');
@@ -25,7 +31,7 @@ export default class PageBase {
         });
     }
 
-    _injectJS() {
+    private _injectJS(): void {
         this.jsFiles.forEach(file => {
             if (!document.querySelector(`script[data-page-js="${this.route}"]`)) {
                 const script = document.createElement('script');
@@ -37,7 +43,7 @@ export default class PageBase {
         });
     }
 
-    _loadHTML() {
+    private _loadHTML(): string {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', `${this.path}${this.htmlFile}`, false);
         xhr.send(null);

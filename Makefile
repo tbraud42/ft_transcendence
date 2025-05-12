@@ -26,5 +26,6 @@ down:
 clean:
 	docker-compose -f $(COMPOSE_FILE) down --volumes --remove-orphans
 	$(RM) .$(DIRSEP)nginx$(DIRSEP)data
+	$(RM) .$(DIRSEP)web$(DIRSEP)dist
 
 .PHONY: up build logs dev down clean

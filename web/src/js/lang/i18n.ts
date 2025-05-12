@@ -1,16 +1,18 @@
-let dictionary = {};
-let currentLang = localStorage.getItem('lang') || 'fr-FR';
+type Dictionary = Record<string, any>;
 
-export async function loadLanguage(lang) {
+let dictionary: Dictionary = {};
+let currentLang: string = localStorage.getItem('lang') || 'fr-FR';
+
+export async function loadLanguage(lang: string): Promise<void> {
     const res = await fetch(`/lang/${lang}.json`);
     dictionary = await res.json();
     currentLang = lang;
     localStorage.setItem('lang', lang);
 }
 
-export function t(key) {
+export function t(key: string): string {
     const parts = key.split('.');
-    let value = dictionary;
+    let value: any = dictionary;
 
     for (const part of parts) {
         if (value && part in value) {
@@ -20,9 +22,9 @@ export function t(key) {
         }
     }
 
-    return value;
+    return typeof value === 'string' ? value : `[${key}]`;
 }
 
-export function getCurrentLang() {
+export function getCurrentLang(): string {
     return currentLang;
 }

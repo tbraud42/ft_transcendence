@@ -5,11 +5,11 @@ class HomePage extends PageBase {
         super(
             '/pages/home/',
             '/',
-            "index.html",
-            ["style.css"],
-            ["logic.js"]
+            'index.html',
+            ['style.css'],
+            ['logic.js']
         );
     }
 }
 
-export default () => new HomePage().load();
+export default (): string => new HomePage().load();

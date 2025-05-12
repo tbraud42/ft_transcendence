@@ -7,6 +7,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Remove default nginx index page
+RUN rm -rf /usr/share/nginx/html/*
+
 # Expose port 80
 EXPOSE 80
 EXPOSE 443

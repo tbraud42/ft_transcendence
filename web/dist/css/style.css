@@ -1,0 +1,29 @@
+#lang-menu {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 10px rgba(8, 7, 16, 0.5);
+}
+
+#lang-selector {
+    background-color: transparent;
+    color: #ffffff;
+    border: none;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    appearance: none;
+    text-align: right;
+}
+
+#lang-selector option {
+    background-color: #080710;
+    color: #ffffff;
+}
