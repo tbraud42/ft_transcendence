@@ -1,9 +1,9 @@
-import PageBase from './PageBase.js';
+import PageBase from '../PageBase.js';
 
 class HomePage extends PageBase {
     constructor() {
         super(
-            '/pages/home/',
+            '/js/pages/home/',
             '/',
             'index.html',
             ['style.css'],

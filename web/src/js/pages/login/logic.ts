@@ -1,5 +1,5 @@
-import { loadLanguage } from '../../js/lang/i18n.js';
-import { applyTranslations } from '../../js/lang/i18n-dom.js';
+import { loadLanguage } from '../../lang/i18n.js';
+import { applyTranslations } from '../../lang/i18n-dom.js';
 
 (async function () {
     await loadLanguage(localStorage.getItem('lang') || 'fr-FR');
@@ -13,8 +13,8 @@ import { applyTranslations } from '../../js/lang/i18n-dom.js';
     form.addEventListener('submit', (e: Event) => {
         e.preventDefault();
 
-        const usernameInput = form.querySelector<HTMLInputElement>('input[name="username"]');
-        const passwordInput = form.querySelector<HTMLInputElement>('input[name="password"]');
+        const usernameInput = document.getElementById('username') as HTMLInputElement | null;
+        const passwordInput = document.getElementById('password') as HTMLInputElement | null;
 
         const username = usernameInput?.value.trim() || '';
         const password = passwordInput?.value.trim() || '';
@@ -29,6 +29,8 @@ import { applyTranslations } from '../../js/lang/i18n-dom.js';
 
         errorDiv.textContent = '';
 
+        console.log(`Username: ${username}, Password: ${password}`);
+
         if (!username || !password) {
             errorDiv.setAttribute('data-i18n', 'login.error_empty_fields');
             applyTranslations();
@@ -38,7 +40,7 @@ import { applyTranslations } from '../../js/lang/i18n-dom.js';
             return;
         }
 
-        history.pushState(null, '', '/home');
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        ///go to /home page
+        window.location.href = '/home';
     });
 })();
