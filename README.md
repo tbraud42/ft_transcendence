@@ -21,4 +21,3 @@ make
 
 Everything will be built and started automatically.
 After that, you can access the application at `http://localhost`.
-
