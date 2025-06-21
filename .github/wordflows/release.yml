@@ -1,0 +1,36 @@
+name: Build & push images
+
+on:
+  push:
+    branches:
+      - stable
+
+env:
+  REGISTRY: 37.59.114.182
+
+jobs:
+  release:
+    name: Public in prod
+    if: "startsWith(github.event.head_commit.message, 'Release ')"
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+
+      - name: Extract version from commit message
+        id: extract_version
+        run: |
+          msg="${{ github.event.head_commit.message }}"
+          version=$(echo "$msg" | sed -n 's/^Release \([0-9.]\+\)$/\1/p')
+          echo "VERSION=$version" >> $GITHUB_OUTPUT
+      
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
