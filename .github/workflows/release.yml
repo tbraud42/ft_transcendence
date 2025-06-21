@@ -6,7 +6,7 @@ on:
       - stable
 
 env:
-  REGISTRY: 37.59.114.182:5000
+  REGISTRY: http://37.59.114.182:5000/v2/
 
 jobs:
   release:
