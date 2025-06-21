@@ -1,6 +1,8 @@
 services:
   nginx:
-    image: 37.59.114.182:5000/nginx:latest
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     ports:
       - "80:80"
       - "443:443"

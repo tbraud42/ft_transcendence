@@ -40,3 +40,12 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build Nginx & push
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: ./nginx
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/nginx:${{ steps.extract_version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/nginx:latest
