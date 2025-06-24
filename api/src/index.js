@@ -7,7 +7,7 @@ const fastify = Fastify({
 const ADDRESS = '0.0.0.0';
 
 // API Port should be set in the environment variable or default to 3000
-const API_PORT = process.env.API_PORT || 3000;
+const API_PORT = process.env.API_PORT || 3001;
 
 fastify.get('/ping', async (request, reply) => {
     console.log("Ping received");
