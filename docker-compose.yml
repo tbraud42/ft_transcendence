@@ -51,6 +51,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      JWT_SECRET: ${JWT_SECRET}
       DATABASE_PORT: ${DATABASE_PORT}
     volumes:
       - ./sqlite_api:/app
