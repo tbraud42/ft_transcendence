@@ -1,7 +1,27 @@
-FROM nginx:latest
+# Modification : start from a debian source to install nginx 
+# with ModSecurity without compatibility issues
+FROM debian:bookworm-slim
 
-# Copy the nginx configuration file
+# Set minimum required variables
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	ca-certificates \
+	curl \
+	gnupg2 \
+	logrotate \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Install Nginx & ModSecurity dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	nginx \
+	libnginx-mod-http-modsecurity \
+	modsecurity-crs \
+	&& rm -rf /var/lib/apt/lists/*
+
+	# Copy the nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy basic ModSecurity configuration then copy the custom ModSecurity rules
+COPY modsecurity/ /etc/modsecurity/
 
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
