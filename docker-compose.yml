@@ -54,8 +54,9 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       DATABASE_PORT: ${DATABASE_PORT}
     volumes:
-      - ./sqlite_api:/app
-      - /app/node_modules
+      - ./sqlite_api/src:/app/src
+      - ./sqlite_api/data:/app/data
+      - ./sqlite_api/package.json:/app/package.json
     command: npm run dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]

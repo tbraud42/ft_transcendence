@@ -10,7 +10,7 @@ COPY . .
 
 FROM node:20-slim
 
-RUN useradd -m appuser
+# RUN useradd -m appuser
 
 WORKDIR /app
 
@@ -21,7 +21,9 @@ COPY --from=builder /app/src ./src
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 
-USER appuser
+# RUN chown -R appuser:appuser /app
+
+# USER appuser
 
 EXPOSE 3000
 
