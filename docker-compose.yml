@@ -14,7 +14,7 @@ services:
       - ./web/dist:/usr/share/nginx/html:ro
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
-      - ./nginx/modsecurity:/etc/nginx/modsecurity
+      - ./nginx/modsecurity:/etc/modsecurity
     depends_on:
       - api
     networks:

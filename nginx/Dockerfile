@@ -16,8 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	libnginx-mod-http-modsecurity \
 	modsecurity-crs \
 	&& rm -rf /var/lib/apt/lists/*
+# Modify IncludeOptional to Include in ModSecurity rules
+RUN sed -i 's/IncludeOptional/Include/g' /usr/share/modsecurity-crs/owasp-crs.load
 
-	# Copy the nginx configuration file
+RUN rm -rf /usr/share/modsecurity-crs/owasp-crs.load
+
+
+
+# Copy the nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy basic ModSecurity configuration then copy the custom ModSecurity rules
@@ -27,8 +33,8 @@ COPY modsecurity/ /etc/modsecurity/
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Remove default nginx index page
-RUN rm -rf /usr/share/nginx/html/*
+#debug ?
+COPY index.html /usr/share/nginx/html/index.html
 
 # Expose port 80
 EXPOSE 80
