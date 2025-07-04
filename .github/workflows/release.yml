@@ -1,0 +1,51 @@
+name: Build & push images
+
+on:
+  push:
+    branches:
+      - stable
+
+env:
+  REGISTRY: 37.59.114.182:5000
+
+jobs:
+  release:
+    name: Public in prod
+    if: "startsWith(github.event.head_commit.message, 'Release ')"
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Extract version from commit message
+        id: extract_version
+        run: |
+          msg="${{ github.event.head_commit.message }}"
+          version=$(echo "$msg" | sed -n 's/^Release \([0-9.]\+\)$/\1/p')
+          echo "VERSION=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker with insecure registry
+        uses: crazy-max/ghaction-setup-docker@v3
+        with:
+          daemon-config: |
+            {
+              "insecure-registries": ["${{ env.REGISTRY }}"]
+            }
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build Nginx & push
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: ./nginx
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/nginx:${{ steps.extract_version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/nginx:latest

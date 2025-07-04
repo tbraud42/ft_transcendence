@@ -1,18 +1,18 @@
 services:
   nginx:
-    image: 37.59.114.182:5000/nginx:latest
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
     ports:
       - "80:80"
       - "443:443"
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME}
       API_PORT: ${API_PORT}
-      MODSEC_MODE: ${MODSEC_MODE}
     volumes:
       - ./web/dist:/usr/share/nginx/html:ro
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
-      - ./nginx/modsecurity:/etc/modsecurity
     depends_on:
       - api
     networks:
@@ -42,14 +42,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
     networks:
       - backend
-
-# vault:
-#   build:
-#     context: ./vault
-#     dockerfile: Dockerfile
-#     hostname: vault
-#   ports:
-#     - "8200:8200"
 
 networks:
   frontend:
