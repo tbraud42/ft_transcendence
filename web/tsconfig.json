@@ -1,15 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["DOM", "ES2017"],
+    "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
     "strict": true,
     "esModuleInterop": true,
-    "outDir": "dist",
-    "rootDir": "."
+    "skipLibCheck": true
   },
-  "include": [
-    "**/*.ts"
-  ]
+  "include": ["src"]
 }

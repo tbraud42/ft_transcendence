@@ -1,0 +1,15 @@
+{
+  "app_title": "ft_transcendence",
+  "login_title": "Login to ft_transcendence",
+  "login_pseudo": "Pseudo",
+  "login_password": "Password",
+  "login_signup": "Sign up",
+  "login_google": "Login with Google",
+  "home_welcome": "Welcome, {{user}}!",
+  "home_logout": "Logout",
+  "login_switch_to_signup": "Don't have an account? Sign up",
+  "signup_switch_to_login": "Already have an account? Log in",
+  "signup_password_confirm": "Confirm password",
+  "login_error_empty": "Please enter both username and password",
+  "signup_error_mismatch": "Passwords do not match"
+}
