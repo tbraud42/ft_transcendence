@@ -1,9 +1,9 @@
-import PageBase from './PageBase.js';
+import PageBase from '../PageBase.js';
 
 class LoginPage extends PageBase {
     constructor() {
         super(
-            '/pages/login/',
+            '/js/pages/login/',
             '/',
             'index.html',
             ['style.css'],
