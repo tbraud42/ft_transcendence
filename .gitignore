@@ -15,5 +15,9 @@ web/dist
 # Dev
 
 api/node_modules
-test.sh
-.gitignore
+sqlite_api/node_modules
+sqlite_api/data/*.sqlite
+dev/
+
+# MacOS
+.DS_Store
