@@ -28,6 +28,4 @@ clean:
 	$(RM) .$(DIRSEP)nginx$(DIRSEP)data
 	$(RM) .$(DIRSEP)web$(DIRSEP)dist
 
-rebuild: clean build up
-
-.PHONY: up build logs dev down clean rebuild
+.PHONY: up build logs dev down clean

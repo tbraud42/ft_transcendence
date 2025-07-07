@@ -1,2 +1,0 @@
-# FROM vault:latest
-
