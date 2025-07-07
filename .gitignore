@@ -20,5 +20,4 @@ sqlite_api/data/*.sqlite
 dev/
 
 # MacOS
-
 .DS_Store

@@ -9,9 +9,11 @@ services:
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME}
       API_PORT: ${API_PORT}
+      MODSEC_MODE: ${MODSEC_MODE}
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
+      - ./nginx/modsecurity:/etc/modsecurity
     depends_on:
       - api
       - web
@@ -64,6 +66,14 @@ services:
     restart: unless-stopped
     networks:
       - backend
+
+# vault:
+#   build:
+#     context: ./vault
+#     dockerfile: Dockerfile
+#     hostname: vault
+#   ports:
+#     - "8200:8200"
 
 networks:
   frontend:
