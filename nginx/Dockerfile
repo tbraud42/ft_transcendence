@@ -1,5 +1,4 @@
-# Modification : start from a debian source to install nginx 
-# with ModSecurity without compatibility issues
+
 FROM debian:bookworm-slim
 
 # Set minimum required variables
@@ -21,8 +20,6 @@ RUN sed -i 's/IncludeOptional/Include/g' /usr/share/modsecurity-crs/owasp-crs.lo
 
 RUN rm -rf /usr/share/modsecurity-crs/owasp-crs.load
 
-
-
 # Copy the nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
@@ -32,9 +29,6 @@ COPY modsecurity/ /etc/modsecurity/
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
-
-#debug ?
-COPY index.html /usr/share/nginx/html/index.html
 
 # Expose port 80
 EXPOSE 80
