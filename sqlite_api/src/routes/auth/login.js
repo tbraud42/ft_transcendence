@@ -1,7 +1,5 @@
 // routes/auth/login.js
 export default async function (fastify, options) {
-  console.log("👉 fastify.jwt dans /auth ?", typeof fastify.jwt);
-
   fastify.post('/', async (request, reply) => {
     const { username, password } = request.body;
 
@@ -12,4 +10,4 @@ export default async function (fastify, options) {
 
     return reply.status(401).send({ error: 'Invalid credentials' });
   });
-}// pas encorez connecter a la db
+} // pas encorez connecter a la db

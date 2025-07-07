@@ -7,6 +7,7 @@ import Fastify from 'fastify';
 
 // import jwt secrets
 import jwtPlugin from './plugins/jwt.js';
+// const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import cle JWT depuis vault
 
 // import routes
 import loginRoute from './routes/auth/login.js';
@@ -37,11 +38,11 @@ const start = async () => {
   try {
     await fastify.listen({ port: PORT, host: ADDRESS });
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log("fastify.jwt dans /auth ?", typeof fastify.jwt);
+    console.log("fastify.jwt dans /auth ?", typeof fastify);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
 };
 
-start(); // ← sans ça, ton register ne fonctionne pas comme tu crois !
+start();
