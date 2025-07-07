@@ -3,20 +3,27 @@ import { router } from '../router.ts'
 
 export function createHeader(): HTMLElement {
     const header = document.createElement('header')
-    header.className = 'bg-gray-800 text-white p-4 flex justify-between items-center'
+    header.className = 'bg-gray-800 text-white px-6 py-4 flex justify-between items-center rounded-b-2xl shadow-md'
 
     const title = document.createElement('h1')
     title.className = 'text-xl font-bold'
     title.textContent = i18next.t('app_title')
 
+    // 📦 Container pour les contrôles
+    const controls = document.createElement('div')
+    controls.className = 'flex items-center gap-3'
+
     const langSelect = document.createElement('select')
-    langSelect.className = 'bg-gray-700 text-white p-1 rounded'
+    langSelect.className =
+        'bg-gray-700 text-white dark:bg-gray-700 dark:text-white px-3 py-2 rounded-xl border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm transition'
 
     for (const lang of ['en', 'fr']) {
         const opt = document.createElement('option')
         opt.value = lang
-        opt.text = lang.toUpperCase()
-        if (lang === i18next.language) opt.selected = true
+        opt.text = lang === 'en' ? '🇬🇧' : '🇫🇷'
+        if (lang === i18next.language) {
+            opt.selected = true
+        }
         langSelect.appendChild(opt)
     }
 
@@ -24,10 +31,34 @@ export function createHeader(): HTMLElement {
         i18next.changeLanguage(langSelect.value).then(() => {
             localStorage.setItem('lang', langSelect.value)
             router()
+            updateThemeLabel()
         })
     }
 
+    const themeToggle = document.createElement('button')
+    themeToggle.className =
+        'px-3 py-2 rounded-xl bg-gray-700 text-white text-sm hover:bg-gray-600 dark:hover:bg-gray-500 transition shadow-sm'
+
+    function updateThemeLabel() {
+        const isDark = document.documentElement.classList.contains('dark')
+        themeToggle.textContent = isDark
+            ? `☀️`
+            : `🌙`
+    }
+
+    updateThemeLabel()
+
+    themeToggle.onclick = () => {
+        document.documentElement.classList.toggle('dark')
+        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+        updateThemeLabel()
+    }
+
+    controls.appendChild(langSelect)
+    controls.appendChild(themeToggle)
+
     header.appendChild(title)
-    header.appendChild(langSelect)
+    header.appendChild(controls)
+
     return header
 }

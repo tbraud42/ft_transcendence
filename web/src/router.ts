@@ -12,7 +12,7 @@ export function router(): void {
     app.appendChild(createHeader())
 
     const main = document.createElement('main')
-    main.className = 'min-h-[70vh] p-4'
+    main.className = 'flex-grow p-4 flex justify-center items-center'
 
     const route = window.location.hash
 

@@ -1,5 +1,6 @@
 export default {
-    content: ['./src/**/*.html', './src/**/*.ts'],
+    darkMode: 'class',
+    content: ['./src/**/*.{html,ts}'],
     theme: {
         extend: {},
     },

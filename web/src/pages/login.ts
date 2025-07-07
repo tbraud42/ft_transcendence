@@ -1,49 +1,43 @@
 import i18next from '../i18n.ts'
 import { login } from '../auth.ts'
 import googleIcon from '../img/google.webp'
+import { createInput } from '../components/input.ts'
+import { createButton } from '../components/button.ts'
 
 export function renderLogin(isSignupDefault: boolean = false): HTMLElement {
     const isSignup = { value: isSignupDefault }
 
     const container = document.createElement('div')
-    container.className = 'max-w-md mx-auto text-center space-y-6'
+    container.className =
+        'w-full max-w-md mx-auto px-8 py-10 bg-white/70 dark:bg-gray-800/80 ' +
+        'backdrop-blur-md shadow-xl rounded-3xl space-y-6 text-center transition'
 
     const title = document.createElement('h2')
-    title.className = 'text-2xl font-bold'
-    title.textContent = i18next.t('login_title')
+    title.className = 'text-2xl font-bold text-center'
+    title.textContent = isSignup.value
+        ? i18next.t('login_title')
+        : i18next.t('login_signup')
 
     const form = document.createElement('form')
     form.className = 'space-y-4'
 
-    const pseudoInput = document.createElement('input')
-    pseudoInput.type = 'text'
-    pseudoInput.placeholder = i18next.t('login_pseudo')
-    pseudoInput.required = true
-    pseudoInput.className = 'w-full p-2 rounded text-black'
-
-    const passwordInput = document.createElement('input')
-    passwordInput.type = 'password'
-    passwordInput.placeholder = i18next.t('login_password')
-    passwordInput.required = true
-    passwordInput.className = 'w-full p-2 rounded text-black'
-
-    const passwordConfirm = document.createElement('input')
-    passwordConfirm.type = 'password'
-    passwordConfirm.placeholder = i18next.t('signup_password_confirm')
-    passwordConfirm.className = 'w-full p-2 rounded text-black'
-    if (!isSignup.value) passwordConfirm.classList.add('hidden')
+    const pseudoInput = createInput('text', i18next.t('login_pseudo'))
+    const passwordInput = createInput('password', i18next.t('login_password'))
+    const passwordConfirm = createInput('password', i18next.t('signup_password_confirm'))
+    if (!isSignup.value) {
+        passwordConfirm.classList.add('hidden')
+        passwordConfirm.disabled = true
+    }
 
     const errorMsg = document.createElement('p')
     errorMsg.className = 'text-red-500 text-sm h-5'
 
-    const submitBtn = document.createElement('button')
-    submitBtn.type = 'submit'
-    submitBtn.className = 'bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white rounded w-full'
-    submitBtn.textContent = i18next.t('login_signup')
+    const submitBtn = createButton(isSignup.value ? i18next.t('login_signup') : i18next.t('login_login'), 'submit', 'black')
 
     const switchLink = document.createElement('button')
     switchLink.type = 'button'
-    switchLink.className = 'text-blue-400 underline'
+    switchLink.className = 'text-sm text-gray-500 dark:text-gray-300 hover:underline'
+
     switchLink.textContent = isSignup.value
         ? i18next.t('signup_switch_to_login')
         : i18next.t('login_switch_to_signup')
@@ -63,7 +57,9 @@ export function renderLogin(isSignupDefault: boolean = false): HTMLElement {
 
     // Bouton Google avec icône
     const googleBtn = document.createElement('button')
-    googleBtn.className = 'bg-red-500 hover:bg-red-600 px-4 py-2 text-white rounded w-full flex items-center justify-center gap-2'
+    googleBtn.className =
+        'flex items-center justify-center gap-2 w-full py-2 rounded-xl border border-gray-300 dark:border-gray-600 ' +
+        'bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition'
     googleBtn.onclick = () => login('GoogleUser')
 
     const icon = document.createElement('img')
@@ -80,6 +76,26 @@ export function renderLogin(isSignupDefault: boolean = false): HTMLElement {
     container.appendChild(title)
     container.appendChild(form)
     container.appendChild(switchLink)
+
+    const orDivider = document.createElement('div')
+    orDivider.className = 'flex items-center text-gray-400 text-sm my-4'
+
+    const lineLeft = document.createElement('div')
+    lineLeft.className = 'flex-grow border-t border-gray-300 dark:border-gray-600'
+
+    const orText = document.createElement('span')
+    orText.className = 'mx-4 whitespace-nowrap text-gray-500 dark:text-gray-400'
+    orText.textContent = i18next.t('login_or')
+
+    const lineRight = document.createElement('div')
+    lineRight.className = 'flex-grow border-t border-gray-300 dark:border-gray-600'
+
+    orDivider.appendChild(lineLeft)
+    orDivider.appendChild(orText)
+    orDivider.appendChild(lineRight)
+
+    container.appendChild(orDivider)
+
     container.appendChild(googleBtn)
 
     // Handlers
