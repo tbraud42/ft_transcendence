@@ -8,5 +8,13 @@ export default defineConfig({
     },
     json: {
         namedExports: true
+    },
+    server: {
+        host: true,
+        port: 5173,
+        strictPort: true,
+        watch: {
+            usePolling: true,
+        },
     }
 })

@@ -4,6 +4,7 @@ set -e
 
 CERT_DIR="/etc/nginx/certs"
 DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
+WEB_PORT="${WEB_PORT:-80}"
 ADMIN_EMAIL="admin@${DOMAIN_NAME}"
 LE_LIVE_DIR="/etc/letsencrypt/live/$DOMAIN_NAME"
 CERT_FILE="$CERT_DIR/fullchain.pem_$DOMAIN_NAME"
@@ -53,9 +54,10 @@ else
     fi
 fi
 
-echo "[INFO] Replacing DOMAIN_NAME and API_PORT in Nginx configuration..."
+echo "[INFO] Replacing DOMAIN_NAME, API_PORT, and WEB_PORT in Nginx configuration..."
 sed -i "s/DOMAIN_NAME/$DOMAIN_NAME/g" /etc/nginx/nginx.conf
 sed -i "s/API_PORT/$API_PORT/g" /etc/nginx/nginx.conf
+sed -i "s/WEB_PORT/$WEB_PORT/g" /etc/nginx/nginx.conf
 
 echo "[INFO] Starting Nginx..."
 exec nginx -g "daemon off;"

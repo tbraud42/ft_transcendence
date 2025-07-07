@@ -11,7 +11,7 @@ const API_PORT = process.env.API_PORT || 3001;
 
 fastify.get('/ping', async (request, reply) => {
     console.log("Ping received");
-    return { message: 'pong' };
+    return reply.code(200).send({ status: 'ok' })
 });
 
 try {

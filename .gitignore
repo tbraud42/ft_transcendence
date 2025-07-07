@@ -18,6 +18,7 @@ api/node_modules
 sqlite_api/node_modules
 sqlite_api/data/*.sqlite
 dev/
+build_and_push.sh
 
 # MacOS
 
