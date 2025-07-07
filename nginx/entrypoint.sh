@@ -25,20 +25,23 @@ if [[ -f "$CERT_FILE" && -f "$KEY_FILE" ]]; then
 else
     echo "[INFO] Attempting to generate SSL certificate for $DOMAIN_NAME & api.$DOMAIN_NAME..."
 
+    # Désactiver "exit on error" temporairement
+    set +e
     certbot certonly --standalone --non-interactive --agree-tos \
         --email "$ADMIN_EMAIL" \
         -d "$DOMAIN_NAME" \
         -d "api.$DOMAIN_NAME" \
-        --verbose --debug --quiet || {
-            echo "[WARN] Let's Encrypt certificate generation failed."
-            echo "[INFO] Generating fallback self-signed certificates..."
+        --verbose --debug --quiet 2>/dev/null
+    CERTBOT_EXIT_CODE=$?
+    set -e
 
-            selfsigned_cert "$DOMAIN_NAME"
-            selfsigned_cert "api.$DOMAIN_NAME"
-            exit 0
-        }
+    if [[ $CERTBOT_EXIT_CODE -ne 0 ]]; then
+        echo "[WARN] Let's Encrypt certificate generation failed (exit code $CERTBOT_EXIT_CODE)."
+        echo "[INFO] Generating fallback self-signed certificates..."
 
-    if [[ -f "$LE_LIVE_DIR/fullchain.pem" && -f "$LE_LIVE_DIR/privkey.pem" ]]; then
+        selfsigned_cert "$DOMAIN_NAME"
+        selfsigned_cert "api.$DOMAIN_NAME"
+    elif [[ -f "$LE_LIVE_DIR/fullchain.pem" && -f "$LE_LIVE_DIR/privkey.pem" ]]; then
         cp "$LE_LIVE_DIR/fullchain.pem" "$CERT_FILE"
         cp "$LE_LIVE_DIR/privkey.pem" "$KEY_FILE"
         echo "[SUCCESS] Let's Encrypt certificates copied to $CERT_DIR"
