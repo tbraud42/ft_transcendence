@@ -1,4 +1,8 @@
 {
+  "langs": {
+    "fr-FR": "Français",
+    "en-US": "Anglais"
+  },
   "login": {
     "form_title": "ft_transcendence",
     "label_username": "Nom d'utilisateur",

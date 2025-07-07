@@ -15,3 +15,8 @@ web/dist
 # Dev
 
 api/node_modules
+dev/
+
+# MacOS
+
+.DS_Store

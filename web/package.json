@@ -2,13 +2,9 @@
   "name": "transcendence-web",
   "version": "1.0.0",
   "scripts": {
-    "build": "node_modules/.bin/tsc --project tsconfig.json",
-    "watch": "npx tsc --watch",
-    "copy-assets": "chokidar 'src/**/*.{html,css,json}' -c 'npm run sync-assets'",
-    "sync-assets": "rsync -a --exclude='*.ts' src/ dist/"
+    "build": "node_modules/.bin/tsc --project tsconfig.json"
   },
   "devDependencies": {
-    "chokidar-cli": "^3.0.0",
     "typescript": "^5.8.3"
   }
 }
