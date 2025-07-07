@@ -1,0 +1,15 @@
+{
+  "app_title": "ft_transcendence",
+  "login_title": "Connexion à ft_transcendence",
+  "login_pseudo": "Pseudo",
+  "login_password": "Mot de passe",
+  "login_signup": "S'inscrire",
+  "login_google": "Connexion avec Google",
+  "home_welcome": "Bienvenue, {{user}} !",
+  "home_logout": "Se déconnecter",
+  "login_switch_to_signup": "Pas encore de compte ? Inscrivez-vous",
+  "signup_switch_to_login": "Déjà inscrit ? Connectez-vous",
+  "signup_password_confirm": "Confirmez le mot de passe",
+  "login_error_empty": "Veuillez entrer un pseudo et un mot de passe",
+  "signup_error_mismatch": "Les mots de passe ne correspondent pas"
+}
