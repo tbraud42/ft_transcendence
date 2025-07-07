@@ -1,13 +1,15 @@
-export default async function (fastify, opts) {
-  fastify.post('/login', async (request, reply) => {
+// routes/auth/login.js
+export default async function (fastify, options) {
+  console.log("👉 fastify.jwt dans /auth ?", typeof fastify.jwt);
+
+  fastify.post('/', async (request, reply) => {
     const { username, password } = request.body;
 
-    // Remplace ceci par une vraie vérification utilisateur/BDD
-    if (username === 'admin' && password === 'admin') {
-      const token = fastify.jwt.sign({ user: username });
-      return { token };
-    } else {
-      reply.code(401).send({ error: 'Invalid credentials' });
+    if (username === 'admin' && password === 'pass123') {
+      const token = fastify.jwt.sign({ username });
+      return reply.send({ token });
     }
+
+    return reply.status(401).send({ error: 'Invalid credentials' });
   });
-}
+}// pas encorez connecter a la db

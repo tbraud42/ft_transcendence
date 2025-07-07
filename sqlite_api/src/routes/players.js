@@ -1,9 +1,8 @@
+// routes/players.js
 export default async function (fastify, opts) {
-  fastify.get('/players', async (request, reply) => {
-    // retourne tous les joueurs
+  fastify.get('/', { preHandler: fastify.authenticate }, async (request, reply) => {
   });
 
-  fastify.post('/players', async (request, reply) => {
-    // ajoute un joueur
+  fastify.post('/', { preHandler: fastify.authenticate }, async (request, reply) => {
   });
 }

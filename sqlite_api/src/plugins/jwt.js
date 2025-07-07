@@ -1,15 +1,8 @@
-import jwt from '@fastify/jwt';
+// plugins/jwt.js
+import fastifyJWT from '@fastify/jwt';
 
-export default async function jwtPlugin(fastify, opts) {
-  fastify.register(jwt, {
-    secret: process.env.JWT_SECRET,
-  });
-
-  fastify.decorate('authenticate', async function (request, reply) {
-    try {
-      await request.jwtVerify();
-    } catch (err) {
-      reply.code(401).send({ error: 'Unauthorized' });
-    }
+export default async function jwtPlugin(fastify, options) {
+  await fastify.register(fastifyJWT, {
+    secret: process.env.JWT_SECRET || 'dev-secret-key',
   });
 }
