@@ -1,39 +1,36 @@
-import { isLoggedIn } from './auth.ts'
-import { renderLogin } from './pages/login.ts'
-import { renderHome } from './pages/home.ts'
-import { createHeader } from './components/header.ts'
-import { createFooter } from './components/footer.ts'
-import {renderProfile} from "./pages/profile";
+import { isLoggedIn } from './auth'
+import { renderLogin } from './pages/login'
+import { renderHome } from './pages/home'
+import { renderPong } from './pages/pongMenu'
+import { renderProfile } from './pages/profile'
+import { renderPongPlay } from './pages/pongPlay'
+import { createHeader } from './components/header'
+import { createFooter } from './components/footer'
 
 export function router(): void {
     const app = document.getElementById('app')
-    if (!app) return
+    if (!app) {
+        return
+    }
 
     app.innerHTML = ''
     app.appendChild(createHeader())
 
     const main = document.createElement('main')
-    main.className = 'flex-grow p-0 flex justify-center items-center min-h-[70vh]'
+    main.className = 'flex-grow p-4'
 
-    const route = window.location.hash
+    const route = window.location.hash.split('?')[0]
 
     if (!isLoggedIn()) {
-        const isSignup = route === '#/signup'
-        main.appendChild(renderLogin(isSignup))
+        main.appendChild(renderLogin(route === '#/signup'))
+    } else if (route === '#/pong/play') {
+        main.appendChild(renderPongPlay())
+    } else if (route === '#/pong') {
+        main.appendChild(renderPong())
     } else if (route.startsWith('#/profile')) {
         main.appendChild(renderProfile())
-        app.appendChild(main)
-        app.appendChild(createFooter())
-        return
     } else {
-        switch (route) {
-            case '#/home':
-                main.appendChild(renderHome())
-                break
-            default:
-                window.location.hash = '#/home'
-                return
-        }
+        main.appendChild(renderHome())
     }
 
     app.appendChild(main)

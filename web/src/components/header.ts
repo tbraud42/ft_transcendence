@@ -7,11 +7,13 @@ export function createHeader(): HTMLElement {
     const header = document.createElement('header')
     header.className = 'bg-gray-800 text-white px-6 py-4 flex justify-between items-center rounded-b-2xl shadow-md'
 
-    const title = document.createElement('h1')
-    title.className = 'text-xl font-bold'
+    const title = document.createElement('button')
+    title.className = 'text-xl font-bold hover:underline'
     title.textContent = i18next.t('app_title')
+    title.onclick = () => {
+        window.location.hash = '#/home'
+    }
 
-    // 📦 Container pour les contrôles
     const controls = document.createElement('div')
     controls.className = 'flex items-center gap-3'
 
