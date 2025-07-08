@@ -1,117 +1,22 @@
-# services:
-#   nginx:
-#     build:
-#       context: ./nginx
-#       dockerfile: Dockerfile
-#     ports:
-#       - "80:80"
-#       - "443:443"
-#     environment:
-#       DOMAIN_NAME: ${DOMAIN_NAME}
-#       API_PORT: ${API_PORT}
-#       MODSEC_MODE: ${MODSEC_MODE}
-#     volumes:
-#       - ./nginx/data/logs:/var/log/nginx
-#       - ./nginx/data/certs:/etc/nginx/certs
-#       - ./nginx/modsecurity:/etc/modsecurity
-#     depends_on:
-#       - api
-#       - web
-#     networks:
-#       - frontend
-#       - backend
-
-#   web:
-#     build:
-#       context: ./web
-#       dockerfile: Dockerfile
-#     hostname: web
-#     environment:
-#       API_URL: api.${DOMAIN_NAME}
-#     expose:
-#       - "80"
-#     networks:
-#       - backend
-
-#   api:
-#     build:
-#       context: ./api
-#       dockerfile: Dockerfile
-#     hostname: api
-#     environment:
-#       API_PORT: ${API_PORT}
-#     networks:
-#       - backend
-
-#   sqlite_api:
-#     build:
-#       context: ./sqlite_api
-#       dockerfile: Dockerfile
-#     container_name: sqlite_api
-#     ports:
-#       - "3000:3000"
-#     environment:
-#       JWT_SECRET: ${JWT_SECRET}
-#       DATABASE_PORT: ${DATABASE_PORT}
-#     volumes:
-#       - ./sqlite_api/src:/app/src
-#       - ./sqlite_api/data:/app/data
-#       - ./sqlite_api/package.json:/app/package.json
-#     command: npm run dev
-#     healthcheck:
-#       test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
-#       interval: 10s
-#       timeout: 3s
-#       retries: 3
-#     restart: unless-stopped
-#     networks:
-#       - backend
-
-# # vault:
-# #   build:
-# #     context: ./vault
-# #     dockerfile: Dockerfile
-# #     hostname: vault
-# #   ports:
-# #     - "8200:8200"
-
-# networks:
-#   frontend:
-#     driver: bridge
-#     driver_opts:
-#       com.docker.network.bridge.name: "frontend"
-#       com.docker.network.bridge.enable_icc: "true"
-#     ipam:
-#       config:
-#         - subnet: "172.30.0.0/16" # We preset to keep a consistent network for firewall rules
-#   backend:
-#     driver: bridge
-#     driver_opts:
-#       com.docker.network.bridge.name: "backend"
-#       com.docker.network.bridge.enable_icc: "true"
-
-
 services:
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
-    image: ft_transcendence-nginx:prod
     ports:
       - "80:80"
       - "443:443"
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME}
       API_PORT: ${API_PORT}
-      WEB_PORT: 80
+      MODSEC_MODE: ${MODSEC_MODE}
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
+      - ./nginx/modsecurity:/etc/modsecurity
     depends_on:
-      api:
-        condition: service_healthy
-      web:
-        condition: service_healthy
+      - api
+      - web
     networks:
       - frontend
       - backend
@@ -120,7 +25,6 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    image: ft_transcendence-web:prod
     hostname: web
     environment:
       API_URL: api.${DOMAIN_NAME}
@@ -128,11 +32,6 @@ services:
       - "80"
     networks:
       - backend
-    healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
 
   api:
     build:
@@ -143,11 +42,6 @@ services:
       API_PORT: ${API_PORT}
     networks:
       - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
 
   sqlite_api:
     build:
@@ -166,12 +60,20 @@ services:
     command: npm run dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
-      interval: 5s
+      interval: 10s
       timeout: 3s
       retries: 3
     restart: unless-stopped
     networks:
       - backend
+
+# vault:
+#   build:
+#     context: ./vault
+#     dockerfile: Dockerfile
+#     hostname: vault
+#   ports:
+#     - "8200:8200"
 
 networks:
   frontend:
