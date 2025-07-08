@@ -10,10 +10,6 @@ export function renderHome(): HTMLElement {
     title.className = 'text-2xl font-bold text-center'
     title.textContent = i18next.t('home_welcome', { user: getUsername() || '...' })
 
-    const logoutBtn = createButton(i18next.t('home_logout'), 'button', 'red')
-    logoutBtn.onclick = logout
-
     div.appendChild(title)
-    div.appendChild(logoutBtn)
     return div
 }

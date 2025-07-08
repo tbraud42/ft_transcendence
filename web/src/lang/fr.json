@@ -13,5 +13,15 @@
   "signup_switch_to_login": "Déjà inscrit ? Connectez-vous",
   "signup_password_confirm": "Confirmez le mot de passe",
   "login_error_empty": "Veuillez entrer un pseudo et un mot de passe",
-  "signup_error_mismatch": "Les mots de passe ne correspondent pas"
+  "signup_error_mismatch": "Les mots de passe ne correspondent pas",
+  "profile_sidebar_home": "Accueil",
+  "profile_sidebar_profile": "Profil",
+  "profile_sidebar_settings": "Paramètres",
+  "settings_title": "Modifier mes informations",
+  "settings_new_username": "Nouveau pseudo",
+  "settings_current_password": "Mot de passe actuel",
+  "settings_new_password": "Nouveau mot de passe",
+  "settings_submit": "Enregistrer",
+  "settings_error_empty_fields": "Veuillez remplir tous les champs",
+  "settings_success_update": "Mise à jour réussie"
 }

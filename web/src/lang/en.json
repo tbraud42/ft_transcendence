@@ -13,5 +13,15 @@
   "signup_switch_to_login": "Already have an account? Log in",
   "signup_password_confirm": "Confirm password",
   "login_error_empty": "Please enter both username and password",
-  "signup_error_mismatch": "Passwords do not match"
+  "signup_error_mismatch": "Passwords do not match",
+  "profile_sidebar_home": "Home",
+  "profile_sidebar_profile": "Profile",
+  "profile_sidebar_settings": "Settings",
+  "settings_title": "Edit My Information",
+  "settings_new_username": "New Username",
+  "settings_current_password": "Current Password",
+  "settings_new_password": "New Password",
+  "settings_submit": "Save",
+  "settings_error_empty_fields": "Please fill in all fields",
+  "settings_success_update": "Update successful"
 }
