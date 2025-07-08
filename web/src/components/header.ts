@@ -1,5 +1,6 @@
 import i18next from '../i18n.ts'
 import { router } from '../router.ts'
+import profileIcon from '../img/profile-icon.svg'
 import {createButton} from "./button";
 
 export function createHeader(): HTMLElement {
@@ -59,14 +60,18 @@ export function createHeader(): HTMLElement {
     profileBtn.className = 'w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full transition'
 
     const icon = document.createElement('img')
-    icon.src = '/img/profile-icon.svg'
-    icon.alt = 'Profile'
+    icon.src = profileIcon
+    icon.alt = 'Profile Icon'
     icon.className = 'w-5 h-5'
 
     profileBtn.appendChild(icon)
     profileBtn.title = i18next.t('header_profile')
     profileBtn.onclick = () => {
-        window.location.hash = '#/profile'
+        if (window.location.hash === '#/profile') {
+            window.location.hash = '#/home'
+        } else {
+            window.location.hash = '#/profile'
+        }
     }
 
     controls.appendChild(langSelect)
