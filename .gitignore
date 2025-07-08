@@ -21,3 +21,5 @@ dev/
 
 # MacOS
 .DS_Store
+
+*/test.sh
