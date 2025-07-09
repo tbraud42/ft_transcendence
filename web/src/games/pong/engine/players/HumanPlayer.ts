@@ -1,4 +1,5 @@
 import { PlayerBase } from './PlayerBase'
+import {BallBase} from "../balls/BallBase";
 
 export class HumanPlayer extends PlayerBase {
     constructor(isLeft: boolean, canvas: HTMLCanvasElement, speed: number = 5) {
@@ -10,10 +11,10 @@ export class HumanPlayer extends PlayerBase {
     private setupControls(): void {
         document.addEventListener('keydown', (e) => {
             if (this.isLeft) {
-                if (e.key === 'w') {
+                if (e.key === 's' || e.key === 'S') {
                     this.moveUp = true
                 }
-                if (e.key === 's') {
+                if (e.key === 'w' || e.key === 'W') {
                     this.moveDown = true
                 }
             } else {
@@ -28,10 +29,10 @@ export class HumanPlayer extends PlayerBase {
 
         document.addEventListener('keyup', (e) => {
             if (this.isLeft) {
-                if (e.key === 'w') {
+                if (e.key === 's' || e.key === 'S') {
                     this.moveUp = false
                 }
-                if (e.key === 's') {
+                if (e.key === 'w' || e.key === 'W') {
                     this.moveDown = false
                 }
             } else {
@@ -46,7 +47,7 @@ export class HumanPlayer extends PlayerBase {
     }
 
     // Move the paddle each frame
-    update(): void {
+    update(ball?: BallBase): void {
         if (this.moveUp) {
             this.y -= this.speed
         }

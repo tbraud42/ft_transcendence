@@ -1,3 +1,5 @@
+import {BallBase} from "../balls/BallBase";
+
 export interface PlayerState {
     y: number
     height: number
@@ -30,7 +32,7 @@ export abstract class PlayerBase {
     }
 
     // Called every frame, implemented by subclasses
-    abstract update(ballY?: number): void
+    abstract update(ball?: BallBase): void
 
     getState(): PlayerState {
         return {

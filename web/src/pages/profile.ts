@@ -8,7 +8,6 @@ export function renderProfile(): HTMLElement {
     const container = document.createElement('div')
     container.className = 'flex min-h-[70vh] w-full'
 
-    // Sidebar
     const sidebar = createSidebar([
         { label: i18next.t('profile_sidebar_home'), href: '#/home' },
         { label: i18next.t('profile_sidebar_profile'), href: '#/profile' },
@@ -16,7 +15,6 @@ export function renderProfile(): HTMLElement {
         { label: i18next.t('home_logout'), href: () => logout(), color: 'red' },
     ])
 
-    // Main content
     const content = document.createElement('div')
     content.className =
         'flex-1 p-6 ml-4 mr-4 bg-white/70 dark:bg-gray-800/80 rounded-xl backdrop-blur transition-all duration-300 ease-in-out'
@@ -82,7 +80,7 @@ export function renderSettingsView(): HTMLElement {
             return
         }
 
-        // Simulate success
+        // TODO: Simulate success for now, replace with actual API call
         setTimeout(() => {
             message.textContent = i18next.t('settings_success_update')
             pseudoInput.value = ''

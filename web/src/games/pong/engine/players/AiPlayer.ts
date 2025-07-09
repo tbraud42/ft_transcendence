@@ -1,4 +1,5 @@
 import { PlayerBase } from './PlayerBase'
+import {BallBase} from "../balls/BallBase";
 
 export class AiPlayer extends PlayerBase {
     private readonly difficulty: string
@@ -20,15 +21,15 @@ export class AiPlayer extends PlayerBase {
         this.difficulty = difficulty
     }
 
-    update(ballY?: number): void {
-        if (typeof ballY !== 'number') {
+    update(ball?: BallBase): void {
+        if (typeof ball === 'undefined') {
             return
         }
 
         const paddleCenter = this.y + this.height / 2
 
-        if (Math.abs(ballY - paddleCenter) > 5) {
-            if (ballY > paddleCenter) {
+        if (Math.abs(ball.y - paddleCenter) > 5) {
+            if (ball.y > paddleCenter) {
                 this.y += this.speed
             } else {
                 this.y -= this.speed

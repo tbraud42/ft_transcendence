@@ -27,6 +27,7 @@ export function renderPongPlay(): HTMLElement {
     const exitBtn = createExitButton(() => {
         document.body.classList.remove('pong-mode')
         window.location.hash = '#/pong'
+        stopTimer()
         if (currentGame) {
             currentGame.stop()
             currentGame = null
@@ -38,14 +39,39 @@ export function renderPongPlay(): HTMLElement {
 
     const countdown = createCountdownOverlay()
 
+    const timerDisplay = document.createElement('div')
+    timerDisplay.className = 'absolute top-4 right-4 text-white text-xl font-mono z-10 pointer-events-none'
+    timerDisplay.textContent = '00:00'
+    container.appendChild(timerDisplay)
+
     // === Game logic ===
     const game = new PongGame(canvas, selectedGameMode, selectedDifficulty, scoreLeft, scoreRight)
     currentGame = game
     game.start()
 
+    let startTime = Date.now()
+    let timerInterval: ReturnType<typeof setInterval>
+
+    function startTimer() {
+        console.log('Timer started')
+        startTime = Date.now()
+        timerInterval = setInterval(() => {
+            const now = Date.now()
+            const elapsed = Math.floor((now - startTime) / 1000)
+            const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0')
+            const seconds = String(elapsed % 60).padStart(2, '0')
+            timerDisplay.textContent = `${minutes}:${seconds}`
+        }, 1000)
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval)
+    }
+
     launchCountdown(countdown, () => {
         countdown.remove()
         game.startBall()
+        startTimer()
     })
 
     container.append(exitBtn, canvasWrapper, countdown, scoreOverlay)

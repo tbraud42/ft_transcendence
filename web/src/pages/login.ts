@@ -1,5 +1,4 @@
 import i18next from '../utils/lang/i18n'
-import { login } from '../utils/auth/auth'
 import googleIcon from '../img/google.webp'
 import { createInput } from '../components/input'
 import { createButton } from '../components/button'

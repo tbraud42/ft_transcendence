@@ -17,7 +17,7 @@ export class PongGame {
 
     constructor(
         canvas: HTMLCanvasElement,
-        mode: 'ai' | 'pvp' = 'ai',
+        mode: 'ai' | 'pvp' | 'public' | 'private' = 'ai',
         difficulty: 'easy' | 'medium' | 'hard' = 'medium',
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement
@@ -30,9 +30,11 @@ export class PongGame {
         if (mode === 'ai') {
             this.player1 = new HumanPlayer(true, canvas)
             this.player2 = new AiPlayer(false, canvas, difficulty)
-        } else {
+        } else if (mode === 'pvp') {
             this.player1 = new HumanPlayer(true, canvas)
             this.player2 = new HumanPlayer(false, canvas)
+        } else {
+            throw new Error('Online mode is not implemented yet')
         }
 
         // Create win text overlay
@@ -58,14 +60,16 @@ export class PongGame {
     }
 
     stop() {
-        if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId)
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId)
+        }
         this.ballActive = false
         this.gameEnded = true
     }
 
     update() {
-        this.player1.update(this.ball.y)
-        this.player2.update(this.ball.y)
+        this.player1.update(this.ball)
+        this.player2.update(this.ball)
 
         if (this.ballActive) {
             this.ball.update(this.canvas, this.player1, this.player2)
