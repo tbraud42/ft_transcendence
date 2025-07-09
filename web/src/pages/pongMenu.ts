@@ -43,7 +43,7 @@ function createOnlineSection(): HTMLDivElement {
 
 
 
-    const createLocalButton = (label: string, mode: 'public' | 'private'): HTMLButtonElement => {
+    const createOnlineButton = (label: string, mode: 'public' | 'private'): HTMLButtonElement => {
         const button = createButton(label, 'button', mode === 'public' ? 'blue' : 'black')
 
         button.onclick = () => {
@@ -77,8 +77,8 @@ function createOnlineSection(): HTMLDivElement {
         return button
     }
 
-    const createPublicBtn = createLocalButton(i18next.t('pong_online_create_public'), 'public')
-    const createPrivateBtn = createLocalButton(i18next.t('pong_online_create_private'), 'private')
+    const createPublicBtn = createOnlineButton(i18next.t('pong_online_create_public'), 'public')
+    const createPrivateBtn = createOnlineButton(i18next.t('pong_online_create_private'), 'private')
 
     const joinBtn = createButton(i18next.t('pong_online_private_join'), 'button', 'black')
     joinBtn.onclick = () => {

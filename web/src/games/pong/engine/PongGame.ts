@@ -33,8 +33,10 @@ export class PongGame {
         } else if (mode === 'pvp') {
             this.player1 = new HumanPlayer(true, canvas)
             this.player2 = new HumanPlayer(false, canvas)
-        } else {
-            throw new Error('Online mode is not implemented yet')
+        } else if (mode === 'public' || mode === 'private') {
+            // TODO: Implement Online Player logic
+            this.player1 = new HumanPlayer(true, canvas)
+            this.player2 = new HumanPlayer(false, canvas)
         }
 
         // Create win text overlay
@@ -68,10 +70,9 @@ export class PongGame {
     }
 
     update() {
-        this.player1.update(this.ball)
-        this.player2.update(this.ball)
-
         if (this.ballActive) {
+            this.player1.update(this.ball)
+            this.player2.update(this.ball)
             this.ball.update(this.canvas, this.player1, this.player2)
 
             const score1 = this.player1.getScore()
@@ -80,6 +81,9 @@ export class PongGame {
             if (score1 >= 5 || score2 >= 5) {
                 this.handleGameOver(score1 > score2 ? 'Left Player' : 'Right Player')
             }
+        } else {
+            this.player1.update()
+            this.player2.update()
         }
     }
 
