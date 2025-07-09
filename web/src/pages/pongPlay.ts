@@ -5,95 +5,115 @@ import { createButton } from '../components/button'
 import { selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
 
 export function renderPongPlay(): HTMLElement {
-    const container = document.createElement('div')
-    container.className = 'relative flex items-center justify-center min-h-screen w-full bg-black text-white overflow-hidden'
     document.body.classList.add('pong-mode')
 
-    // --- Canvas wrapper ---
-    const canvasWrapper = document.createElement('div')
-    canvasWrapper.className = 'relative flex items-center justify-center p-4'
+    // === Main container ===
+    const container = document.createElement('div')
+    container.className = 'relative flex items-center justify-center min-h-screen w-full bg-black text-white overflow-hidden'
 
+    // === Canvas ===
     const canvas = createPongCanvas()
     canvas.classList.add('rounded-2xl', 'shadow-xl', 'border', 'border-white/20')
+
+    const canvasWrapper = document.createElement('div')
+    canvasWrapper.className = 'relative flex items-center justify-center p-4'
     canvasWrapper.appendChild(canvas)
 
-    // --- Exit Button with confirm state ---
-    const exitBtn = createButton('Exit', 'button', 'red')
-    exitBtn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20')
+    // === Exit button ===
+    const exitBtn = createExitButton(() => {
+        document.body.classList.remove('pong-mode')
+        window.location.hash = '#/pong'
+    })
 
-    let confirmMode = false
-    let confirmTimeout: ReturnType<typeof setTimeout> | null = null
+    // === Score display ===
+    const scoreOverlay = createScoreOverlay()
+    const [scoreLeft, scoreRight] = scoreOverlay.children as HTMLCollectionOf<HTMLDivElement>
 
-    function resetExitButton() {
-        confirmMode = false
-        exitBtn.textContent = i18next.t('button_exit')
-        if (confirmTimeout) {
-            clearTimeout(confirmTimeout)
-            confirmTimeout = null
-        }
-    }
+    // === Countdown overlay ===
+    const countdown = createCountdownOverlay()
 
-    exitBtn.onclick = () => {
-        if (!confirmMode) {
-            confirmMode = true
-            exitBtn.textContent = i18next.t('button_exit_confirm')
-            confirmTimeout = setTimeout(resetExitButton, 3000)
-        } else {
-            document.body.classList.remove('pong-mode')
-            window.location.hash = '#/pong'
-        }
-    }
-
-    // Reset if mouse leaves the button
-    exitBtn.onmouseleave = resetExitButton
-
-    // --- Countdown overlay ---
-    const countdown = document.createElement('div')
-    countdown.className =
-        'absolute inset-0 flex items-center justify-center text-white text-6xl font-extrabold pointer-events-none transition-all z-10'
-
-    // --- Assemble ---
-    container.append(exitBtn, canvasWrapper, countdown)
-
-    // --- Score overlay ---
-    const scoreOverlay = document.createElement('div')
-    scoreOverlay.className = 'absolute top-4 w-full flex justify-center gap-24 text-white text-4xl font-bold pointer-events-none z-10'
-
-    const scoreLeft = document.createElement('div')
-    const scoreRight = document.createElement('div')
-
-    scoreOverlay.appendChild(scoreLeft)
-    scoreOverlay.appendChild(scoreRight)
-
-    container.appendChild(scoreOverlay)
-
-    // --- Start game (paddles only) ---
+    // === Game logic ===
     const game = new PongGame(canvas, selectedGameMode, selectedDifficulty, scoreLeft, scoreRight)
     game.start()
 
-    // --- Countdown logic ---
-    const countdownSequence = ['3', '2', '1', 'GO!']
+    launchCountdown(countdown, () => {
+        countdown.remove()
+        game.startBall()
+    })
+
+    // === Assemble all ===
+    container.append(exitBtn, canvasWrapper, countdown, scoreOverlay)
+    return container
+}
+
+// === Helpers ===
+
+function createExitButton(onConfirm: () => void): HTMLButtonElement {
+    const btn = createButton(i18next.t('button_exit'), 'button', 'red')
+    btn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20')
+
+    let confirmMode = false
+    let timeout: ReturnType<typeof setTimeout> | null = null
+
+    const reset = () => {
+        confirmMode = false
+        btn.textContent = i18next.t('button_exit')
+        if (timeout) {
+            clearTimeout(timeout)
+            timeout = null
+        }
+    }
+
+    btn.onclick = () => {
+        if (!confirmMode) {
+            confirmMode = true
+            btn.textContent = i18next.t('button_exit_confirm')
+            timeout = setTimeout(reset, 3000)
+        } else {
+            onConfirm()
+        }
+    }
+
+    btn.onmouseleave = reset
+    return btn
+}
+
+function createCountdownOverlay(): HTMLDivElement {
+    const div = document.createElement('div')
+    div.className =
+        'absolute inset-0 flex items-center justify-center text-white text-6xl font-extrabold pointer-events-none transition-all z-10'
+    return div
+}
+
+function launchCountdown(container: HTMLElement, onComplete: () => void) {
+    const sequence = ['3', '2', '1', 'GO!']
     let index = 0
 
     const interval = setInterval(() => {
-        countdown.textContent = countdownSequence[index]
-        countdown.style.opacity = '1'
-        countdown.style.transform = 'scale(1.1)'
+        container.textContent = sequence[index]
+        container.style.opacity = '1'
+        container.style.transform = 'scale(1.1)'
 
         setTimeout(() => {
-            countdown.style.opacity = '0'
-            countdown.style.transform = 'scale(1)'
+            container.style.opacity = '0'
+            container.style.transform = 'scale(1)'
         }, 400)
 
         index++
-        if (index === countdownSequence.length) {
+        if (index === sequence.length) {
             clearInterval(interval)
-            setTimeout(() => {
-                countdown.remove()
-                game.startBall()
-            }, 500)
+            setTimeout(onComplete, 500)
         }
     }, 1000)
+}
 
-    return container
+function createScoreOverlay(): HTMLDivElement {
+    const wrapper = document.createElement('div')
+    wrapper.className = 'absolute top-4 w-full flex justify-center gap-24 text-white text-4xl font-bold pointer-events-none z-10'
+
+    const left = document.createElement('div')
+    const right = document.createElement('div')
+
+    wrapper.append(left, right)
+    return wrapper
 }

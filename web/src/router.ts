@@ -1,4 +1,4 @@
-import { isLoggedIn } from './auth'
+import { isLoggedIn } from './utils/auth/auth'
 import { renderLogin } from './pages/login'
 import { renderHome } from './pages/home'
 import { renderPong } from './pages/pongMenu'

@@ -1,87 +1,112 @@
 import i18next from '../i18n.ts'
 import { router } from '../router.ts'
 import profileIcon from '../img/profile-icon.svg'
-import {createButton} from "./button";
+import { createButton } from './button'
 
 export function createHeader(): HTMLElement {
     const header = document.createElement('header')
-    header.className = 'bg-gray-800 text-white px-6 py-4 flex justify-between items-center rounded-b-2xl shadow-md'
+    header.className =
+        'bg-gray-800 text-white px-6 py-4 flex justify-between items-center rounded-b-2xl shadow-md'
 
-    const title = document.createElement('button')
-    title.className = 'text-xl font-bold hover:underline'
-    title.textContent = i18next.t('app_title')
-    title.onclick = () => {
+    const title = createTitle()
+    const controls = createControls()
+
+    header.append(title, controls)
+    return header
+}
+
+function createTitle(): HTMLButtonElement {
+    const btn = document.createElement('button')
+    btn.className = 'text-xl font-bold hover:underline transition'
+    btn.textContent = i18next.t('app_title')
+    btn.onclick = () => {
         window.location.hash = '#/home'
     }
+    return btn
+}
 
-    const controls = document.createElement('div')
-    controls.className = 'flex items-center gap-3'
+function createControls(): HTMLDivElement {
+    const wrapper = document.createElement('div')
+    wrapper.className = 'flex items-center gap-3'
 
-    const langSelect = document.createElement('select')
-    langSelect.className =
-        'bg-gray-700 text-white dark:bg-gray-700 dark:text-white px-3 py-2 rounded-xl border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm transition'
+    wrapper.append(
+        createLangSelect(),
+        createThemeToggle(),
+        createProfileButton()
+    )
+    return wrapper
+}
 
-    for (const lang of ['en', 'fr']) {
-        const opt = document.createElement('option')
-        opt.value = lang
-        opt.text = lang === 'en' ? '🇬🇧' : '🇫🇷'
-        if (lang === i18next.language) {
-            opt.selected = true
-        }
-        langSelect.appendChild(opt)
+function createLangSelect(): HTMLSelectElement {
+    const select = document.createElement('select')
+    select.className =
+        'bg-gray-700 text-white px-3 py-2 rounded-xl border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm transition'
+
+    const langs: Record<string, string> = {
+        en: '🇬🇧',
+        fr: '🇫🇷',
     }
 
-    langSelect.onchange = () => {
-        i18next.changeLanguage(langSelect.value).then(() => {
-            localStorage.setItem('lang', langSelect.value)
+    Object.entries(langs).forEach(([code, emoji]) => {
+        const opt = document.createElement('option')
+        opt.value = code
+        opt.textContent = emoji
+        if (i18next.language === code) opt.selected = true
+        select.appendChild(opt)
+    })
+
+    select.onchange = () => {
+        const lang = select.value
+        i18next.changeLanguage(lang).then(() => {
+            localStorage.setItem('lang', lang)
             router()
             updateThemeLabel()
         })
     }
 
-    const themeToggle = document.createElement('button')
-    themeToggle.className =
+    return select
+}
+
+function createThemeToggle(): HTMLButtonElement {
+    const btn = document.createElement('button')
+    btn.className =
         'px-3 py-2 rounded-xl bg-gray-700 text-white text-sm hover:bg-gray-600 dark:hover:bg-gray-500 transition shadow-sm'
 
     function updateThemeLabel() {
-        const isDark = document.documentElement.classList.contains('dark')
-        themeToggle.textContent = isDark
-            ? `☀️`
-            : `🌙`
+        btn.textContent = isDark() ? '☀️' : '🌙'
+    }
+
+    function isDark(): boolean {
+        return document.documentElement.classList.contains('dark')
     }
 
     updateThemeLabel()
 
-    themeToggle.onclick = () => {
+    btn.onclick = () => {
         document.documentElement.classList.toggle('dark')
-        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+        localStorage.setItem('theme', isDark() ? 'dark' : 'light')
         updateThemeLabel()
     }
 
-    const profileBtn = createButton('', 'button', 'black')
-    profileBtn.className = 'w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full transition'
+    return btn
+}
+
+function createProfileButton(): HTMLButtonElement {
+    const btn = createButton('', 'button', 'black')
+    btn.className = 'w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full transition'
 
     const icon = document.createElement('img')
     icon.src = profileIcon
     icon.alt = 'Profile Icon'
     icon.className = 'w-5 h-5'
 
-    profileBtn.appendChild(icon)
-    profileBtn.title = i18next.t('header_profile')
-    profileBtn.onclick = () => {
-        if (window.location.hash === '#/profile') {
-            window.location.hash = '#/home'
-        } else {
-            window.location.hash = '#/profile'
-        }
+    btn.appendChild(icon)
+    btn.title = i18next.t('header_profile')
+
+    btn.onclick = () => {
+        const hash = window.location.hash
+        window.location.hash = hash === '#/profile' ? '#/home' : '#/profile'
     }
 
-    controls.appendChild(langSelect)
-    controls.appendChild(themeToggle)
-    controls.appendChild(profileBtn)
-
-    header.appendChild(title)
-    header.appendChild(controls)
-
-    return header
+    return btn
 }
