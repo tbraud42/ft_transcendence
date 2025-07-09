@@ -44,10 +44,14 @@
   "pong_online_joining": "Joining room...",
   "pong_online_create_publicing": "Creating public room...",
   "pong_online_create_privateing": "Creating private room...",
-  "pong_ai_title": "Play vs AI",
+  "pong_local_title": "Local Game",
+  "pong_local_2p": "1v1 Local Play",
+  "pong_local_or_ai": "Or against AI",
   "pong_ai_difficulty_easy": "Easy",
   "pong_ai_difficulty_medium": "Medium",
   "pong_ai_difficulty_hard": "Hard",
-  "pong_ai_play": "Play",
-  "pong_ai_start": "Starting AI game with difficulty:"
+  "pong_ai_play": "Play against AI",
+  "pong_ai_start": "Starting AI game with difficulty:",
+  "button_exit": "Exit",
+  "button_exit_confirm": "Confirm"
 }

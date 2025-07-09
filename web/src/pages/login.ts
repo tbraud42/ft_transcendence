@@ -9,7 +9,8 @@ export function renderLogin(isSignupDefault: boolean = false): HTMLElement {
 
     const container = document.createElement('div')
     container.className =
-        'w-full max-w-md mx-auto px-8 py-10 bg-white/70 dark:bg-gray-800/80 ' +
+        'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ' +
+        'w-full max-w-md px-8 py-10 bg-white/70 dark:bg-gray-800/80 ' +
         'backdrop-blur-md shadow-xl rounded-3xl space-y-6 text-center transition'
 
     const title = document.createElement('h2')

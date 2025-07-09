@@ -44,10 +44,14 @@
   "pong_online_joining": "Rejoindre la salle...",
   "pong_online_create_publicing": "Création de la salle publique...",
   "pong_online_create_privateing": "Création de la salle privée...",
-  "pong_ai_title": "Jouer contre l'IA",
+  "pong_local_title": "Partie locale",
+  "pong_local_2p": "Jouer à deux en local",
+  "pong_local_or_ai": "Ou contre l'IA",
   "pong_ai_difficulty_easy": "Facile",
   "pong_ai_difficulty_medium": "Moyen",
   "pong_ai_difficulty_hard": "Difficile",
-  "pong_ai_play": "Jouer",
-  "pong_ai_start": "Démarrage du jeu contre l'IA avec la difficulté :"
+  "pong_ai_play": "Jouer contre l'IA",
+  "pong_ai_start": "Démarrage du jeu contre l'IA avec la difficulté :",
+  "button_exit": "Quitter",
+  "button_exit_confirm": "Confirmer"
 }

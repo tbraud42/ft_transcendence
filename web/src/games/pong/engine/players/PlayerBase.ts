@@ -5,6 +5,7 @@ export interface PlayerState {
     speed: number
     moveUp: boolean
     moveDown: boolean
+    score: number
 }
 
 export abstract class PlayerBase {
@@ -14,6 +15,7 @@ export abstract class PlayerBase {
     public speed: number = 5
     public moveUp: boolean = false
     public moveDown: boolean = false
+    public score: number = 0
 
     protected readonly canvas: HTMLCanvasElement
     protected readonly ctx: CanvasRenderingContext2D
@@ -38,6 +40,7 @@ export abstract class PlayerBase {
             speed: this.speed,
             moveUp: this.moveUp,
             moveDown: this.moveDown,
+            score: this.score
         }
     }
 
@@ -45,5 +48,13 @@ export abstract class PlayerBase {
         this.ctx.fillStyle = this.isLeft ? 'blue' : 'red'
         const x = this.isLeft ? 0 : this.canvas.width - this.width
         this.ctx.fillRect(x, this.y, this.width, this.height)
+    }
+
+    addScore(): void {
+        this.score += 1
+    }
+
+    getScore() {
+        return this.score
     }
 }

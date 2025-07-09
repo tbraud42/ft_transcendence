@@ -2,8 +2,9 @@ import { BallBase } from './BallBase'
 import { PlayerBase } from '../players/PlayerBase'
 
 export class BasicBall extends BallBase {
-    constructor(startX: number, startY: number) {
-        super(startX, startY)
+    constructor(startX: number, startY: number, difficulty: string = 'medium') {
+        const speed = difficulty === 'easy' ? 4.5 : difficulty === 'hard' ? 6.5 : 5.5
+        super(startX, startY, speed)
     }
 
     update(canvas: HTMLCanvasElement, player1: PlayerBase, player2: PlayerBase) {
@@ -56,19 +57,27 @@ export class BasicBall extends BallBase {
             this.vx *= 1.02
         }
 
-        // Reset if out of bounds
-        if (this.x + this.radius < 0 || this.x - this.radius > canvas.width) {
+        // Reset if out of bounds, count score
+        if (this.x + this.radius < 0) {
+            player2.addScore()
+            this.resetPosition(canvas.width, canvas.height)
+        } else if (this.x - this.radius > canvas.width) {
+            player1.addScore()
             this.resetPosition(canvas.width, canvas.height)
         }
 
         // Friction and minimum speed
         const friction = 0.999
-        const minSpeed = 3
+        const minSpeed = this.speed - 1
 
         this.vx *= friction
         this.vy *= friction
 
-        if (Math.abs(this.vx) < minSpeed) this.vx = minSpeed * Math.sign(this.vx)
-        if (Math.abs(this.vy) < minSpeed) this.vy = minSpeed * Math.sign(this.vy)
+        if (Math.abs(this.vx) < minSpeed) {
+            this.vx = minSpeed * Math.sign(this.vx)
+        }
+        if (Math.abs(this.vy) < minSpeed) {
+            this.vy = minSpeed * Math.sign(this.vy)
+        }
     }
 }

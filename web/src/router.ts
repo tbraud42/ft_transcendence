@@ -22,6 +22,9 @@ export function router(): void {
     const route = window.location.hash.split('?')[0]
 
     if (!isLoggedIn()) {
+        if (route !== '#/login' && route !== '#/signup') {
+            window.location.hash = '#/login'
+        }
         main.appendChild(renderLogin(route === '#/signup'))
     } else if (route === '#/pong/play') {
         main.appendChild(renderPongPlay())
