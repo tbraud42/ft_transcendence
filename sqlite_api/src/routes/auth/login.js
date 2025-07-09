@@ -3,11 +3,17 @@ export default async function (fastify, options) {
   fastify.post('/', async (request, reply) => {
     const { username, password } = request.body;
 
-    if (username === 'admin' && password === 'pass123') {
-      const token = fastify.generateToken({ username });
-      return reply.send({ token });
+    const user = fastify.showUser(fastify.db, username);
+
+    if (!user) {
+      return reply.code(401).send({ error: 'Utilisateur introuvable' });
     }
 
-    return reply.status(401).send({ error: 'Invalid credentials' });
+    if (fastify.verifyPassword(password, user.password_hash)) {
+      return reply.code(401).send({ error: 'Mot de passe incorrect' });
+    }
+
+    const token = fastify.generateToken({ username });
+    return reply.send({ token });
   });
-} // pas encorez connecter a la db
+}
