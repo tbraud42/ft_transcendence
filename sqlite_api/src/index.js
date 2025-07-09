@@ -6,7 +6,8 @@ dotenv.config();
 import Fastify from 'fastify';
 
 // import jwt secrets
-import jwtPlugin from './plugins/jwt.js';
+import jwt from 'jsonwebtoken';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key';
 // const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import cle JWT depuis vault
 
 // import routes
@@ -17,13 +18,23 @@ import pingRoutes from './routes/ping.js';
 
 const start = async () => {
   const fastify = Fastify({ logger: true });
-  await fastify.register(jwtPlugin);
+
+  fastify.decorate('generateToken', (payload) => {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+  });
 
   fastify.decorate('authenticate', async function (request, reply) {
     try {
-      await request.jwtVerify();
+      const authHeader = request.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return reply.code(401).send({ error: 'Unauthorized' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, JWT_SECRET);
+      request.user = decoded;
     } catch (err) {
-      reply.code(401).send({ error: 'Unauthorized' });
+      reply.code(401).send({ error: 'Invalid token', message: err.message });
     }
   });
 
@@ -38,7 +49,6 @@ const start = async () => {
   try {
     await fastify.listen({ port: PORT, host: ADDRESS });
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log("fastify.jwt dans /auth ?", typeof fastify);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

@@ -4,7 +4,7 @@ export default async function (fastify, options) {
     const { username, password } = request.body;
 
     if (username === 'admin' && password === 'pass123') {
-      const token = fastify.jwt.sign({ username });
+      const token = fastify.generateToken({ username });
       return reply.send({ token });
     }
 
