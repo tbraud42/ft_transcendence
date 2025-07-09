@@ -1,11 +1,11 @@
-import { isLoggedIn } from './utils/auth/auth'
-import { renderLogin } from './pages/login'
-import { renderHome } from './pages/home'
-import { renderPong } from './pages/pongMenu'
-import { renderProfile } from './pages/profile'
-import { renderPongPlay } from './pages/pongPlay'
-import { createHeader } from './components/header'
-import { createFooter } from './components/footer'
+import { isLoggedIn } from './auth/auth'
+import { renderLogin } from '../pages/login'
+import { renderHome } from '../pages/home'
+import { renderPong } from '../pages/pongMenu'
+import { renderProfile } from '../pages/profile'
+import { renderPongPlay } from '../pages/pongPlay'
+import { createHeader } from '../components/header'
+import { createFooter } from '../components/footer'
 
 export function router(): void {
     const app = document.getElementById('app')

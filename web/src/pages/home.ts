@@ -1,4 +1,4 @@
-import i18next from '../i18n'
+import i18next from '../utils/lang/i18n'
 import { createGameCard } from '../components/gameCard'
 import pongPreview from '../img/pong-preview.webp'
 import comingSoon from '../img/coming-soon.webp'

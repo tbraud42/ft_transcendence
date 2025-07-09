@@ -1,5 +1,5 @@
 import './style.css'
-import { router } from './router.ts'
+import { router } from './utils/router.ts'
 import faviconUrl from './img/favicon.webp'
 
 const link = document.createElement('link')

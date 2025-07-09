@@ -1,5 +1,5 @@
-import i18next from '../i18n.ts'
-import { router } from '../router.ts'
+import i18next from '../utils/lang/i18n.ts'
+import { router } from '../utils/router.ts'
 import profileIcon from '../img/profile-icon.svg'
 import { createButton } from './button'
 

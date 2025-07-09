@@ -1,17 +1,22 @@
 import { createPongCanvas } from '../games/pong/pongCanvas'
 import { PongGame } from '../games/pong/engine/PongGame'
-import i18next from '../i18n'
+import i18next from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
+
+let currentGame: PongGame | null = null
 
 export function renderPongPlay(): HTMLElement {
     document.body.classList.add('pong-mode')
 
-    // === Main container ===
-    const container = document.createElement('div')
-    container.className = 'relative flex items-center justify-center min-h-screen w-full bg-black text-white overflow-hidden'
+    if (currentGame) {
+        currentGame.stop()
+        currentGame = null
+    }
 
-    // === Canvas ===
+    const container = document.createElement('div')
+    container.className = 'relative flex items-center justify-center min-h-screen w-full text-white overflow-hidden'
+
     const canvas = createPongCanvas()
     canvas.classList.add('rounded-2xl', 'shadow-xl', 'border', 'border-white/20')
 
@@ -19,21 +24,23 @@ export function renderPongPlay(): HTMLElement {
     canvasWrapper.className = 'relative flex items-center justify-center p-4'
     canvasWrapper.appendChild(canvas)
 
-    // === Exit button ===
     const exitBtn = createExitButton(() => {
         document.body.classList.remove('pong-mode')
         window.location.hash = '#/pong'
+        if (currentGame) {
+            currentGame.stop()
+            currentGame = null
+        }
     })
 
-    // === Score display ===
     const scoreOverlay = createScoreOverlay()
     const [scoreLeft, scoreRight] = scoreOverlay.children as HTMLCollectionOf<HTMLDivElement>
 
-    // === Countdown overlay ===
     const countdown = createCountdownOverlay()
 
     // === Game logic ===
     const game = new PongGame(canvas, selectedGameMode, selectedDifficulty, scoreLeft, scoreRight)
+    currentGame = game
     game.start()
 
     launchCountdown(countdown, () => {
@@ -41,7 +48,6 @@ export function renderPongPlay(): HTMLElement {
         game.startBall()
     })
 
-    // === Assemble all ===
     container.append(exitBtn, canvasWrapper, countdown, scoreOverlay)
     return container
 }
@@ -50,6 +56,7 @@ export function renderPongPlay(): HTMLElement {
 
 function createExitButton(onConfirm: () => void): HTMLButtonElement {
     const btn = createButton(i18next.t('button_exit'), 'button', 'red')
+    btn.className = btn.className.replace('w-full', '')
     btn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20')
 
     let confirmMode = false

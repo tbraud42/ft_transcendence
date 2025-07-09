@@ -1,4 +1,4 @@
-import i18next from '../i18n'
+import i18next from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { createInput } from '../components/input'
 import { setSelectedDifficulty, setSelectedGameMode } from '../games/pong/pongState'
