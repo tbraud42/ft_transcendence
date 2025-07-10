@@ -1,8 +1,6 @@
 // src/database/.js
 import bcrypt from 'bcrypt';
 
-const saltRounds = 10; // complexiter de hash
-
 export async function createUser(db, { username, password }) {
   if (!password || typeof password !== 'string') {
     throw new Error("Password is required and must be a string");
@@ -66,6 +64,6 @@ export function clearDatabase(db) {
     const tableName = table.name;
     db.prepare(`DELETE FROM ${tableName}`).run();
     db.prepare(`DELETE FROM sqlite_sequence WHERE name = ?`).run(tableName); // Reset AUTOINCREMENT
-    console.log(`🧹 Table vidée : ${tableName}`);
+    console.log(`database clear : ${tableName}`);
   }
 }

@@ -6,11 +6,11 @@ export default async function (fastify, options) {
     const user = fastify.showUser(fastify.db, username);
 
     if (!user) {
-      return reply.code(401).send({ error: 'Utilisateur introuvable' });
+      return reply.code(401).send({ error: 'User not found' });
     }
 
-    if (fastify.verifyPassword(password, user.password_hash)) {
-      return reply.code(401).send({ error: 'Mot de passe incorrect' });
+    if (!(await fastify.verifyPassword(password, user.password_hash))) {
+      return reply.code(401).send({ error: 'invalid password' });
     }
 
     const token = fastify.generateToken({ username });

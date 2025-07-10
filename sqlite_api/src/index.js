@@ -26,6 +26,7 @@ import {
 
 // import routes
 import loginRoute from './routes/auth/login.js';
+import isAuthRoute from './routes/auth/isAuth.js';
 import matchRoutes from './routes/matches.js';
 import playerRoutes from './routes/players.js';
 import pingRoutes from './routes/ping.js';
@@ -61,11 +62,11 @@ const start = async () => {
   });
 
   fastify.decorate('verifyPassword', async function (password, hashedPassword) {
-    const isValid = await bcrypt.compare(password, hashedPassword);
-    return isValid;
+    return await bcrypt.compare(password, hashedPassword);
   });
 
   await fastify.register(loginRoute, { prefix: '/auth' });
+  await fastify.register(isAuthRoute, { prefix: '/isAuth' });
   await fastify.register(matchRoutes, { prefix: '/matches' });
   await fastify.register(playerRoutes, { prefix: '/players' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
@@ -75,11 +76,12 @@ const start = async () => {
 
   try {
     await fastify.listen({ port: PORT, host: ADDRESS });
-    fastify.clearDatabase(fastify.db);
-    fastify.createUser(fastify.db, { username: 'admin', password: 'pass123'});
-    fastify.createUser(fastify.db, { username: 'tao', password: 'test'});
-    fastify.createUser(fastify.db, { username: 'toto', password: 'fesse'});
-    fastify.showAllData(fastify.db);
+    await fastify.clearDatabase(fastify.db);
+    await fastify.createUser(fastify.db, { username: 'admin', password: 'pass123'});
+    await fastify.createUser(fastify.db, { username: 'tao', password: 'test'});
+    await fastify.createUser(fastify.db, { username: 'toto', password: 'fesse'});
+    console.log(`----------show time !----------\n`);
+    await fastify.showAllData(fastify.db);
     console.log(`Server running on http://localhost:${PORT}`);
   } catch (err) {
     fastify.log.error(err);
