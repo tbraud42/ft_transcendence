@@ -14,7 +14,7 @@
   },
   "private": true,
   "dependencies": {
-    "@fastify/jwt": "^9.1.0",
+    "axios": "^1.10.0",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^9.0.0",
     "dotenv": "^16.3.1",
