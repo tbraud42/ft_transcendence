@@ -4,6 +4,7 @@ import {createInput} from '../components/input'
 import {setSelectedDifficulty, setSelectedGameMode} from '../games/pong/pongState'
 import {createOverlayCard} from "../components/overlayCard";
 import {createOptionSelector} from "../components/optionSelector";
+import { fetchPublicRooms, createRoom } from '../api/game'
 
 export function renderPong(): HTMLElement {
     document.body.classList.add('pong-mode')
@@ -34,12 +35,46 @@ export function renderPong(): HTMLElement {
 // === Helpers ===
 
 function createOnlineSection(): HTMLDivElement {
-    const lobbies = createStatusText(i18next.t('pong_online_loading'))
 
-    // TODO: Simulate loading lobbies for now, replace with actual API call later
-    setTimeout(() => {
-        lobbies.textContent = i18next.t('pong_online_no_lobbies')
-    }, 2000)
+
+
+    const lobbies = document.createElement('div')
+    lobbies.textContent = i18next.t('pong_online_loading')
+
+    fetchPublicRooms().then((rooms) => {
+        if (rooms.length === 0) {
+            lobbies.textContent = i18next.t('pong_online_no_lobbies')
+            return
+        }
+
+        console.log('Fetched public rooms:', rooms)
+        lobbies.innerHTML = ''
+        rooms.forEach(room => {
+            const roomDiv = document.createElement('div')
+            roomDiv.className = 'bg-gray-800 p-4 rounded-lg mb-4 flex justify-between items-center'
+            //roomDiv.className = `bg-gray-800 p-4 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4`
+
+            const info = document.createElement('div')
+            const title = document.createElement('h3')
+            title.className = 'text-lg font-semibold'
+            title.textContent = room.name
+
+            const players = document.createElement('p')
+            players.className = 'text-sm text-gray-400'
+            players.textContent = i18next.t('pong_online_players', { count: room.players.length })
+
+            info.append(title, players)
+
+            const joinBtn = createButton(i18next.t('pong_join'), 'button', 'blue')
+            joinBtn.onclick = () => {
+                window.location.hash = `#/pong/lobby/${room.id}`
+            }
+
+            roomDiv.append(info, joinBtn)
+            lobbies.appendChild(roomDiv)
+        })
+    })
+
 
 
 
@@ -47,6 +82,7 @@ function createOnlineSection(): HTMLDivElement {
         const button = createButton(label, 'button', mode === 'public' ? 'blue' : 'black')
 
         button.onclick = () => {
+            const nameInput = createInput('text', i18next.t('pong_online_name'))
             const difficultySelect = createOptionSelector({
                 label: i18next.t('pong_difficulty_label'),
                 values: [
@@ -61,7 +97,7 @@ function createOnlineSection(): HTMLDivElement {
 
             const overlay = createOverlayCard({
                 title: i18next.t('pong_configuration'),
-                children: [difficultySelect.element, confirmBtn]
+                children: [nameInput, difficultySelect.element, confirmBtn]
             })
 
             confirmBtn.onclick = () => {
@@ -69,6 +105,18 @@ function createOnlineSection(): HTMLDivElement {
                 setSelectedGameMode(mode)
                 //TODO: Implement actual create public lobby logic with selectedDifficulty
                 overlay.close()
+                createRoom(
+                    nameInput.value,
+                    mode === 'private',
+                    difficultySelect.getValue() as 'easy' | 'medium' | 'hard',
+                    'player-id-placeholder'
+                ).then(room => {
+                    overlay.close()
+                    window.location.hash = `#/pong/lobby/${room.id}`
+                }).catch(err => {
+                    console.error('Error creating room:', err)
+                    alert(i18next.t('pong_online_error_create'))
+                })
             }
 
             document.body.appendChild(overlay.element)
