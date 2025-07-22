@@ -1,4 +1,8 @@
 // routes/auth/login.js
+// | Method   | Route              | Description                            | Access           |
+// | -------- | ------------------ | -------------------------------------- | ---------------- |
+// | `POST`   | `/login`           | login, reply by JWT token              | Public           |
+
 export default async function (fastify, options) {
   fastify.post('/', async (request, reply) => {
     const { username, password } = request.body;
@@ -14,6 +18,7 @@ export default async function (fastify, options) {
     }
 
     const token = fastify.generateToken({ username });
+    fastify.stat.login++;
     return reply.send({ token });
   });
 }

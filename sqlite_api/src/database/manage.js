@@ -1,4 +1,4 @@
-// src/database/.js
+// database/.js
 import bcrypt from 'bcrypt';
 
 export async function createUser(db, { username, password }) {

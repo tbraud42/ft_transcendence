@@ -4,6 +4,7 @@ dotenv.config();
 
 // import fastify
 import Fastify from 'fastify';
+import rateLimit from '@fastify/rate-limit';
 
 // import database
 import db from './database/db.js'
@@ -16,15 +17,29 @@ import {
   clearDatabase,
 } from './database/manage.js';
 
+import {
+  getAllTournaments,
+  getTournamentById,
+  createTournament,
+  updateTournament,
+  deleteTournament,
+  isTournamentCreator, // ici fonction utiliser en prehandler, changemement de fichier ?
+  getParticipantsByTournamentId,
+  addParticipant,
+  updateParticipant,
+  deleteParticipant
+} from './database/tournaments.js';
+
 // import routes
 import loginRoute from './routes/auth/login.js';
 import signupRoutes from './routes/auth/signup.js';
 import isLoginRoute from './routes/auth/isLogin.js';
 import pingRoutes from './routes/ping.js';
+import statRoutes from './routes/stat.js';
 // import googleRoutes from './routes/auth/google.js';
-// import userRoutes from './routes/client/user.js';
-// import googleRoutes from './routes/matchs/tournaments';
-// import googleRoutes from './routes/matchs/tournaments_client';
+import userRoutes from './routes/client/user.js';
+// import tournamentsRoutes from './routes/matchs/tournaments';
+// import tournaments_clientRoutes from './routes/matchs/tournaments_client';
 
 // importe all fastify.decorate function
 import {
@@ -33,12 +48,14 @@ import {
   authenticate,
   verifyPassword,
   allowSelfOrAdmin
-} from './routes/plugins/security.js'
+} from './plugins/security.js'
+
+import bcrypt from 'bcrypt';
 
 const start = async () => {
   const fastify = Fastify({ logger: true });
 
-  // trouver un moyen de changer tout sa
+  // trouver un moyen de changer tout sa ??
   fastify.decorate('db', db);
   fastify.decorate('createUser', createUser);
   fastify.decorate('showUser', showUser);
@@ -46,17 +63,44 @@ const start = async () => {
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('showAllData', showAllData);
   fastify.decorate('clearDatabase', clearDatabase);
+  fastify.decorate('getAllTournaments', getAllTournaments);
+  fastify.decorate('getTournamentById', getTournamentById);
+  fastify.decorate('createTournament', createTournament);
+  fastify.decorate('updateTournament', updateTournament);
+  fastify.decorate('deleteTournament', deleteTournament);
+  fastify.decorate('isTournamentCreator', isTournamentCreator);
+  fastify.decorate('getParticipantsByTournamentId', getParticipantsByTournamentId);
+  fastify.decorate('addParticipant', addParticipant);
+  fastify.decorate('updateParticipant', updateParticipant);
+  fastify.decorate('deleteParticipant', deleteParticipant);
   fastify.decorate('generateToken', generateToken);
   fastify.decorate('requireRole', requireRole);
   fastify.decorate('authenticate', authenticate);
   fastify.decorate('verifyPassword', verifyPassword);
   fastify.decorate('allowSelfOrAdmin', allowSelfOrAdmin);
+  fastify.decorate('stat', {
+    request: 0,
+    login: 0,
+    signup: 0
+  });
+
+  fastify.addHook('onRequest', async (req, reply) => {
+    fastify.stat.request++;
+  });
+
+  fastify.register(rateLimit, { // c'est drole
+    max: 20,
+    timeWindow: '1 minute'
+  });
+
 
   // await fastify.register(googleRoutes, { prefix: '/google' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(isLoginRoute, { prefix: '/auth/isLogin' });
+  await fastify.register(userRoutes, { prefix: '/users' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
+  await fastify.register(statRoutes, { prefix: '/stat' });
 
   const ADDRESS = '0.0.0.0';
   const PORT = process.env.DATABASE_PORT || 3000;
@@ -64,9 +108,15 @@ const start = async () => {
   try {
     fastify.listen({ port: PORT, host: ADDRESS });
     await fastify.clearDatabase(fastify.db); // clear all data, remove for futur
-    // await fastify.createUser(fastify.db, { username: 'admin', password: 'pass123'});
-    // await fastify.createUser(fastify.db, { username: 'tao', password: 'test'});
-    // await fastify.createUser(fastify.db, { username: 'toto', password: 'fesse'});
+    const username = 'admin';
+    const email = 'admin@example.com';
+    const password = 'supersecurepassword';
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const insertUser = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
+    const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
+
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);
     console.log(`Server running on http://localhost:${PORT}`);
@@ -78,26 +128,14 @@ const start = async () => {
 
 start();
 
-/**
- * Enregistrement des routes de l'API, chacune avec un préfixe dédié :
- * - /auth/login     : connexion d'un utilisateur (authentification classique).
- * - /auth/signup    : création d'un nouvel utilisateur.
- * - /auth/isLogin   : vérification du statut d'authentification via JWT.
- * - /matches        : gestion des matchs (création, mise à jour, consultation). À revoir si nécessaire.
- * - /players        : gestion des joueurs (profils, stats, recherche...).
- * - /ping           : route de test pour vérifier que le serveur répond correctement.
- *
- * // - /auth/google  : (désactivé pour le moment) authentification via Google OAuth2.
- */
-
-
+// ----------test auth---------------
 import axios from 'axios';
 
 const API_URL = 'http://localhost:3000';
 
 const user = {
   username: 'testuser',
-  password: 'testpass'
+  password: 'Testpass1@'
 };
 
 let token = '';
