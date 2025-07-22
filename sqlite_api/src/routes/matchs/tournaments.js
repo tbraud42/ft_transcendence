@@ -29,15 +29,15 @@ export default async function (fastify, options) {
     reply.send(tournaments); // voir la valeur de retour
   });
 
-  fastify.patch('/:id', {preHandler: [fastify.authenticate, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)]}, async (req, reply) => {
+  fastify.patch('/:id', {preHandler: [fastify.authenticate/*, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)*/]}, async (req, reply) => {
     const tournaments = fastify.updateTournament(fastify.db, req.params.id, /*data*/); // retour d'erreur possible?
 
     reply.send({ success: true });
   });
 
-  fastify.delete('/:id', {preHandler: [fastify.authenticate, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)]}, async (req, reply) => {
+  fastify.delete('/:id', {preHandler: [fastify.authenticate/*, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)*/]}, async (req, reply) => {
     const tournaments = fastify.deleteTournament(fastify.db, req.params.id);
-    if (!tournaments) return reply.code(404).send({ error: 'tournaments not found' }); // bon retoru d'erreur?
+    if (!tournaments) return reply.code(404).send({ error: 'tournaments not found' }); // bon retour d'erreur?
 
     reply.send({ success: true });
   });

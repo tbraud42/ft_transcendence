@@ -34,10 +34,12 @@ import {
 import loginRoute from './routes/auth/login.js';
 import signupRoutes from './routes/auth/signup.js';
 import isLoginRoute from './routes/auth/isLogin.js';
+import userRoutes from './routes/client/user.js';
+import tournamentRoute from './routes/matchs/tournaments.js';
+import tournamentClientRoute from './routes/matchs/tournaments_client.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
 // import googleRoutes from './routes/auth/google.js';
-import userRoutes from './routes/client/user.js';
 // import tournamentsRoutes from './routes/matchs/tournaments';
 // import tournaments_clientRoutes from './routes/matchs/tournaments_client';
 
@@ -99,6 +101,8 @@ const start = async () => {
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(isLoginRoute, { prefix: '/auth/isLogin' });
   await fastify.register(userRoutes, { prefix: '/users' });
+  await fastify.register(tournamentRoute, { prefix: '/tournaments' });
+  await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 

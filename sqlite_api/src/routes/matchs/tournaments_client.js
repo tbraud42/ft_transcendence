@@ -20,11 +20,11 @@ export default async function (fastify, options) {
 	reply.send(tournaments);
   });
 
-  fastify.patch('/:id/participants/:userId', {preHandler: [fastify.authenticate, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)]}, async (req, reply) => {
+  fastify.patch('/:id/participants/:userId', {preHandler: [fastify.authenticate/*, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)*/]}, async (req, reply) => {
     reply.send({ success: true }); // req.params.id req.params.userId
   });
 
-  fastify.delete('/:id/participants/:userId', {preHandler: [fastify.authenticate, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)]}, async (req, reply) => {
+  fastify.delete('/:id/participants/:userId', {preHandler: [fastify.authenticate/*, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)*/]}, async (req, reply) => {
     await fastify.deleteUser(fastify.db, req.params.id);
     reply.send({ success: true });
   });
