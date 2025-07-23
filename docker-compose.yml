@@ -46,15 +46,12 @@ services:
       context: ./sqlite_api
       dockerfile: Dockerfile
     container_name: sqlite_api
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
     volumes:
-      - ./sqlite_api/src:/app/src
       - ./sqlite_api/data:/app/data
-      - ./sqlite_api/package.json:/app/package.json
-    command: npm run dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
       interval: 5s

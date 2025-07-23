@@ -50,7 +50,6 @@ else
         echo "[INFO] Generating fallback self-signed certificates..."
         selfsigned_cert "$DOMAIN_NAME"
         selfsigned_cert "api.$DOMAIN_NAME"
-        selfsigned_cert "game.api.$DOMAIN_NAME"
         selfsigned_cert "pong.ws.$DOMAIN_NAME"
     fi
 fi

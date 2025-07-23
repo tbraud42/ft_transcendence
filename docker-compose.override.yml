@@ -21,10 +21,12 @@ services:
       timeout: 3s
       retries: 3
 
+  sqlite_api:
+    volumes:
+      - ./sqlite_api/src:/app/src
+    command: npm run dev
+
   ws_server:
-    build:
-      context: ./ws_server
-      dockerfile: Dockerfile.dev
-    image: ft_transcendence-ws_server:dev
     volumes:
       - ./ws_server/src:/app/src
+    command: npm run dev
