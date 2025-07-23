@@ -1,20 +1,20 @@
-// src/database/.js
-export async function createUser(db, { username, password_hash }) {
-  try {
-    const stmt = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
-    const info = stmt.run(username, password_hash);
+// database/.js
+import bcrypt from 'bcrypt';
 
-    return { success: true, id: info.lastInsertRowid, user: { id: info.lastInsertRowid, username, password_hash } };
-  } catch (err) {
-
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return { success: false, error: 'user_exists' };
-    }
-    throw err;
+export async function createUser(db, { username, password }) {
+  if (!password || typeof password !== 'string') {
+    throw new Error("Password is required and must be a string");
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
+
+  const stmt = db.prepare(`INSERT INTO users (username, password_hash) VALUES (?, ?)`);
+  const info = stmt.run(username, hashedPassword);
+
+  return { success: true, userId: info.lastInsertRowid };
 }
 
-export async function showUser(db, username) {
+export function showUser(db, username) {
   const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
   const user = stmt.get(username);
 
@@ -35,3 +35,35 @@ export async function deleteUser(db, id) {
   return { success: true, id };
 }
 
+
+// tmp pour le debug
+export async function showAllData(db) {
+  // Recup toute les tables
+  const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
+
+  for (const { name } of tables) {
+    console.log(`\nTable: ${name}`);
+
+    // Recup ligne
+    const rows = db.prepare(`SELECT * FROM ${name}`).all();
+
+    if (rows.length === 0) {
+      console.log('empty db');
+    } else {
+      for (const row of rows) {
+        console.log(row);
+      }
+    }
+  }
+}
+
+export function clearDatabase(db) {
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
+
+  for (const table of tables) {
+    const tableName = table.name;
+    db.prepare(`DELETE FROM ${tableName}`).run();
+    db.prepare(`DELETE FROM sqlite_sequence WHERE name = ?`).run(tableName); // Reset AUTOINCREMENT
+    console.log(`database clear : ${tableName}`);
+  }
+}
