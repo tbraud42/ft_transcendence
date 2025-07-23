@@ -14,6 +14,7 @@ web/dist
 
 # Dev
 
+dev/
 api/node_modules
 sqlite_api/node_modules
 sqlite_api/data/*.sqlite

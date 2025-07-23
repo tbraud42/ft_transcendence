@@ -1,9 +1,11 @@
 import { PlayerBase } from './PlayerBase'
 import {BallBase} from "../balls/BallBase";
 
-export class HumanPlayer extends PlayerBase {
-    constructor(isLeft: boolean, canvas: HTMLCanvasElement, speed: number = 5) {
+export class LocalPlayer extends PlayerBase {
+    protected readonly playerName: string
+    constructor(isLeft: boolean, canvas: HTMLCanvasElement, playerName: string, speed: number = 5) {
         super(isLeft, canvas, speed)
+        this.playerName = playerName || (isLeft ? 'Player 1' : 'Player 2')
         this.setupControls()
     }
 

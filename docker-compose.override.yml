@@ -21,10 +21,10 @@ services:
       timeout: 3s
       retries: 3
 
-  game_api:
+  ws_server:
     build:
-      context: ./game_api
+      context: ./ws_server
       dockerfile: Dockerfile.dev
-    image: ft_transcendence-game_api:dev
+    image: ft_transcendence-ws_server:dev
     volumes:
-      - ./game_api/src:/app/src
+      - ./ws_server/src:/app/src

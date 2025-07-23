@@ -33,11 +33,10 @@ const start = async () => {
   await fastify.register(pingRoutes, { prefix: '/ping' });
 
   const ADDRESS = '0.0.0.0';
-  const PORT = process.env.DATABASE_PORT || 3000;
 
   try {
-    await fastify.listen({ port: PORT, host: ADDRESS });
-    console.log(`Server running on http://localhost:${PORT}`);
+    await fastify.listen({ port: 3000, host: ADDRESS });
+    console.log(`Server running on http://localhost:3000`);
     console.log("fastify.jwt dans /auth ?", typeof fastify);
   } catch (err) {
     fastify.log.error(err);

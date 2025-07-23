@@ -13,17 +13,17 @@ export function createOptionSelector(options: {
     let currentValue = options.selected ?? options.values[0]?.value
 
     const wrapper = document.createElement('div')
-    wrapper.className = 'flex flex-col gap-2'
+    wrapper.className = 'flex flex-col gap-2 text-center'
 
     if (options.label) {
         const labelEl = document.createElement('label')
-        labelEl.className = 'text-sm font-medium text-gray-800 dark:text-white'
+        labelEl.className = 'text-sm font-medium text-gray-800 dark:text-white text-center'
         labelEl.textContent = options.label
         wrapper.appendChild(labelEl)
     }
 
     const container = document.createElement('div')
-    container.className = 'flex flex-wrap gap-3'
+    container.className = 'flex flex-wrap gap-3 justify-center'
     wrapper.appendChild(container)
 
     const buttons: Record<string, HTMLButtonElement> = {}

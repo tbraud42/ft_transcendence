@@ -14,7 +14,7 @@ services:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
     depends_on:
-      api:
+      sqlite_api:
         condition: service_healthy
       web:
         condition: service_healthy
@@ -29,7 +29,6 @@ services:
     image: ft_transcendence-web:prod
     hostname: web
     environment:
-      VITE_API_URL: api.${DOMAIN_NAME}
       VITE_GAME_API_URL: game.api.${DOMAIN_NAME}
       VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
     expose:
@@ -42,21 +41,6 @@ services:
       timeout: 3s
       retries: 3
 
-  api:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    hostname: api
-    expose:
-      - 3000
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
-
   sqlite_api:
     build:
       context: ./sqlite_api
@@ -66,7 +50,6 @@ services:
       - "3000:3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      DATABASE_PORT: ${DATABASE_PORT}
     volumes:
       - ./sqlite_api/src:/app/src
       - ./sqlite_api/data:/app/data
@@ -81,24 +64,6 @@ services:
     networks:
       - backend
 
-  game_api:
-    build:
-      context: ./game_api
-      dockerfile: Dockerfile
-    container_name: game_api
-    expose:
-      - "3000"
-    environment:
-      JWT_SECRET: ${JWT_SECRET}
-      DATABASE_PORT: ${DATABASE_PORT}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-    networks:
-      - backend
-
   ws_server:
     build:
       context: ./ws_server
@@ -107,7 +72,7 @@ services:
     expose:
       - "3000"
     environment:
-      - NODE_ENV=development
+      - JWT_SECRET=${JWT_SECRET}
     restart: unless-stopped
     networks:
       - backend

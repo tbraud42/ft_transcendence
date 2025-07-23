@@ -1,5 +1,5 @@
 import { BasicBall } from './balls/BasicBall'
-import { HumanPlayer } from './players/HumanPlayer'
+import { LocalPlayer } from './players/LocalPlayer'
 import { PlayerBase } from './players/PlayerBase'
 import { BallBase } from './balls/BallBase'
 import {AiPlayer} from "./players/AiPlayer";
@@ -28,15 +28,15 @@ export class PongGame {
         this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty)
 
         if (mode === 'ai') {
-            this.player1 = new HumanPlayer(true, canvas)
+            this.player1 = new LocalPlayer(true, canvas)
             this.player2 = new AiPlayer(false, canvas, difficulty)
         } else if (mode === 'pvp') {
-            this.player1 = new HumanPlayer(true, canvas)
-            this.player2 = new HumanPlayer(false, canvas)
+            this.player1 = new LocalPlayer(true, canvas)
+            this.player2 = new LocalPlayer(false, canvas)
         } else if (mode === 'public' || mode === 'private') {
             // TODO: Implement Online Player logic
-            this.player1 = new HumanPlayer(true, canvas)
-            this.player2 = new HumanPlayer(false, canvas)
+            this.player1 = new LocalPlayer(true, canvas)
+            this.player2 = new LocalPlayer(false, canvas)
         }
 
         // Create win text overlay

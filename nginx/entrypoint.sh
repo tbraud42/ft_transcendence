@@ -30,7 +30,6 @@ else
         --email "$ADMIN_EMAIL" \
         -d "$DOMAIN_NAME" \
         -d "api.$DOMAIN_NAME" \
-        -d "game.api.$DOMAIN_NAME" \
         -d "pong.ws.$DOMAIN_NAME" \
         --verbose --debug --quiet 2>/dev/null
     CERTBOT_EXIT_CODE=$?
