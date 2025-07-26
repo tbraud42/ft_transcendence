@@ -42,11 +42,20 @@ export async function deleteTournament(db, id) {
   return db.run('DELETE FROM tournaments WHERE id = ?', [id]);
 }
 
-export async function isTournamentCreator(db, tournamentId, userId) {
-  const tournament = await db.get('SELECT creator_id FROM tournaments WHERE id = ?', [tournamentId]);
-  if (!tournament) return false;
-  return tournament.creator_id === userId;
+export function requireCreatorOrAdmin(db) {
+  return async function (req, reply) {
+    const tournamentId = req.params.id;
+    const userId = req.user.id;
+
+    const tournament = await db.get('SELECT creator_id FROM tournaments WHERE id = ?', [tournamentId]);
+    if (!tournament) return reply.code(404).send({ error: 'Tournament not found' });
+
+    if (tournament.creator_id !== userId && req.user.role !== 'admin') {
+      return reply.code(403).send({ error: 'Forbidden' });
+    }
+  };
 }
+
 
 export async function getParticipantsByTournamentId(db, tournamentId) {
   return db.all('SELECT * FROM participants WHERE tournament_id = ?', [tournamentId]);

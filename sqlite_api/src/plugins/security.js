@@ -7,7 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 import bcrypt from 'bcrypt';
 
 export function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' }); // tmp changer expires
 }
 
 export function requireRole(role) {
@@ -18,19 +18,27 @@ export function requireRole(role) {
   };
 }
 
-export async function authenticate(request, reply) {
-  try {
-    const authHeader = request.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return reply.code(401).send({ error: 'Unauthorized' });
-    }
+export function authenticate(fastify) { // msg d'erreur personnaliser ??
+  return async function Authenticate(request, reply) {
+    try {
+      const authHeader = request.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return reply.code(401).send({ error: 'Unauthorized' });// : No token provided
+      }
 
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
-    request.user = decoded;
-  } catch (err) {
-    reply.code(401).send({ error: 'Invalid token', message: err.message });
-  }
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, JWT_SECRET);
+
+      const user = await fastify.showUserById(fastify.db, parseInt(decoded.id));
+      if (!user) {
+        return reply.code(401).send({ error: 'Unauthorized' }); // : user no longer exists
+      }
+
+      request.user = user;
+    } catch (err) {
+      return reply.code(401).send({ error: 'Unauthorized', message: err.message }); // Invalid token
+    }
+  };
 }
 
 export async function verifyPassword(password, hashedPassword) {
@@ -51,4 +59,36 @@ export function allowSelfOrAdmin(paramKey = 'id') {
       return reply.code(403).send({ error: 'Access denied: not your data' });
     }
   };
+}
+
+export async function validatePassword(password) {
+  const minLength = 8;
+
+  const hasMinLength = password.length >= minLength;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasDigit = /[0-9]/.test(password);
+  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+
+  return {
+    valid: hasMinLength && hasUppercase && hasLowercase && hasDigit && hasSymbol,
+    errors: {
+      minLength: hasMinLength,
+      uppercase: hasUppercase,
+      lowercase: hasLowercase,
+      digit: hasDigit,
+      symbol: hasSymbol
+    }
+  };
+}
+
+export async function passwordFeedback(errors) {
+  const messages = [];
+  if (!errors.minLength) messages.push("at least 8 characters");
+  if (!errors.uppercase) messages.push("at least one uppercase letter");
+  if (!errors.lowercase) messages.push("at least one lowercase letter");
+  if (!errors.digit) messages.push("at least one digit");
+  if (!errors.symbol) messages.push("at least one symbol");
+
+  return `Password must contain ${messages.join(", ")}.`;
 }
