@@ -112,10 +112,9 @@ const start = async () => {
   await fastify.register(statRoutes, { prefix: '/stat' });
 
   const ADDRESS = '0.0.0.0';
-  const PORT = process.env.DATABASE_PORT || 3000;
 
   try {
-    fastify.listen({ port: PORT, host: ADDRESS });
+    fastify.listen({ port: 3000, host: ADDRESS });
     // await fastify.clearDatabase(fastify.db); // clear all data, remove for futur
     // const username = 'admin';
     // const email = 'admin@example.com';
@@ -128,7 +127,7 @@ const start = async () => {
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:3000`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

@@ -3,18 +3,21 @@ services:
     build:
       context: ./nginx
       dockerfile: Dockerfile
+    image: ft_transcendence-nginx:prod
     ports:
       - "80:80"
       - "443:443"
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME}
-      API_PORT: ${API_PORT}
+      WEB_PORT: 80
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
     depends_on:
-      - api
-      - web
+      sqlite_api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - frontend
       - backend
@@ -23,23 +26,20 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+    image: ft_transcendence-web:prod
     hostname: web
     environment:
-      API_URL: api.${DOMAIN_NAME}
+      VITE_GAME_API_URL: game.api.${DOMAIN_NAME}
+      VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
     expose:
       - "80"
     networks:
       - backend
-
-  api:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    hostname: api
-    environment:
-      API_PORT: ${API_PORT}
-    networks:
-      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
   sqlite_api:
     build:
@@ -50,7 +50,6 @@ services:
       - "3000:3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      DATABASE_PORT: ${DATABASE_PORT}
     volumes:
       - ./sqlite_api/src:/app/src
       - ./sqlite_api/data:/app/data
@@ -58,9 +57,22 @@ services:
     command: npm run dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
       retries: 3
+    restart: unless-stopped
+    networks:
+      - backend
+
+  ws_server:
+    build:
+      context: ./ws_server
+      dockerfile: Dockerfile
+    container_name: ws_server
+    expose:
+      - "3000"
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
     restart: unless-stopped
     networks:
       - backend
