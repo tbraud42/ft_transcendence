@@ -1,7 +1,9 @@
 // database/tournaments.js
 
 export async function getAllTournaments(db) {
-  return db.all('SELECT * FROM tournaments');
+  const stmt = db.prepare('SELECT * FROM tournaments')
+  const rows = stmt.all()
+  return rows
 }
 
 export async function getTournamentById(db, id) {

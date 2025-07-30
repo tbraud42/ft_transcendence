@@ -4,8 +4,8 @@ import { createInput } from '../../components/input'
 import { createOverlayCard } from '../../components/overlayCard'
 import { createOptionSelector } from '../../components/optionSelector'
 import { setSelectedDifficulty, setSelectedGameMode } from '../../games/pong/pongState'
-import { fetchPublicRooms, createRoom } from '../../api/game'
-import {createList} from "../../components/list";
+import { createTournament, fetchTournaments } from '../../api/game'
+import { createList } from "../../components/list";
 
 export function renderOnlineTab(): HTMLElement {
     const container = document.createElement('div')
@@ -22,7 +22,7 @@ export function renderOnlineTab(): HTMLElement {
     container.appendChild(roomList)
 
     // === Load public rooms ===
-    fetchPublicRooms().then((rooms) => {
+    fetchTournaments().then((rooms) => {
         if (rooms.length === 0) {
             lobbiesStatus.textContent = i18next.t('pong_online_no_lobbies')
             return
@@ -86,7 +86,7 @@ export function renderOnlineTab(): HTMLElement {
                 setSelectedDifficulty(difficulty.getValue() as 'easy' | 'medium' | 'hard')
                 setSelectedGameMode(mode)
                 overlay.close()
-                createRoom(nameInput.value, mode === 'private', difficulty.getValue() as 'easy' | 'medium' | 'hard', 'player-id')
+                createTournament(nameInput.value, mode === 'private', difficulty.getValue() as 'easy' | 'medium' | 'hard')
                     .then(room => {
                         window.location.hash = `#/pong/lobby/${room.id}`
                     })

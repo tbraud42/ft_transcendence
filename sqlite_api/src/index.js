@@ -112,12 +112,16 @@ const start = async () => {
   try {
     await fastify.register(cors, {
       origin: (origin, cb) => {
-        if (process.env.NODE_ENV === 'development') {
-          cb(null, true)
+        const isDev = process.env.NODE_ENV === 'development'
+
+        if (isDev) {
+          cb(null, true) // autorise tout en dev
         } else {
           const allowedOrigins = [
             `https://${process.env.VITE_DOMAIN}`,
+            `https://www.${process.env.VITE_DOMAIN}`
           ]
+
           if (!origin || allowedOrigins.includes(origin)) {
             cb(null, true)
           } else {
@@ -125,7 +129,11 @@ const start = async () => {
           }
         }
       },
-      credentials: true
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+      preflightContinue: false,
+      optionsSuccessStatus: 204
     })
 
     fastify.listen({ port: 3000, host: ADDRESS });
