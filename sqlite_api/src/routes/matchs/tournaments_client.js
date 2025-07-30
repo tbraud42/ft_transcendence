@@ -8,23 +8,23 @@
 
 // en construction
 export default async function (fastify, options) {
-  fastify.get('/:id/participants', {preHandler: [fastify.authenticate]}, async (req, reply) => {
+  fastify.get('/:id/participants', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
     const user = null; // fonction pour montrer les participant d'un tournant, tous
     if (!user) return reply.code(404).send({ error: 'User not found' });
     reply.send(user);
   });
 
-  fastify.post('/:id/participants', {preHandler: [fastify.authenticate]}, async (req, reply) => {
-	const tournaments = fastify.addParticipant(fastify.db, req.params.id); // add participant
+  fastify.post('/:id/participants', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const tournaments = fastify.addParticipant(fastify.db, req.params.id); // add participant
 
-	reply.send(tournaments);
+    reply.send(tournaments);
   });
 
-  fastify.patch('/:id/participants/:userId', {preHandler: [fastify.authenticate/*, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)*/]}, async (req, reply) => {
+  fastify.patch('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify), fastify.requireCreatorOrAdmin(fastify.db)]}, async (req, reply) => {
     reply.send({ success: true }); // req.params.id req.params.userId
   });
 
-  fastify.delete('/:id/participants/:userId', {preHandler: [fastify.authenticate/*, fastify.isTournamentCreator(fastify.db, req.params.id, req.params.userId)*/]}, async (req, reply) => {
+  fastify.delete('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify), fastify.requireCreatorOrAdmin(fastify.db)]}, async (req, reply) => {
     await fastify.deleteUser(fastify.db, req.params.id);
     reply.send({ success: true });
   });

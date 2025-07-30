@@ -1,20 +1,25 @@
 -- Utilisateurs (auth + profil joueur)
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
-  role TEXT DEFAULT 'user', -- peut être 'user' ou 'admin'
+  username VARCHAR(30) NOT NULL UNIQUE,
+  password_hash VARCHAR(100) NOT NULL,
+  role VARCHAR(10) DEFAULT 'user', -- 'user' ou 'admin'
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Tournois
 CREATE TABLE tournaments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  description TEXT,
-  created_by INTEGER NOT NULL, -- FK vers users
+  name VARCHAR(50) NOT NULL,
+  description VARCHAR(255),
+  created_by INTEGER NOT NULL,        -- id vers users
+  creator_id INTEGER NOT NULL,        -- doublon de created_by ?
+  difficulty VARCHAR(15),             -- par ex: 'easy', 'medium', 'hard'
+  maxPlayers INTEGER DEFAULT 16,
+  isPrivate BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES users(id)
+  FOREIGN KEY (created_by) REFERENCES users(id),
+  FOREIGN KEY (creator_id) REFERENCES users(id)
 );
 
 -- Participants aux tournois
@@ -27,5 +32,5 @@ CREATE TABLE tournament_participants (
   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
   FOREIGN KEY (user_id) REFERENCES users(id),
-  UNIQUE(tournament_id, user_id) -- un joueur ne peut participer qu'une fois par tournoi
+  UNIQUE(tournament_id, user_id)
 );
