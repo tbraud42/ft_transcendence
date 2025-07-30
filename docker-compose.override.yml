@@ -24,6 +24,8 @@ services:
   sqlite_api:
     volumes:
       - ./sqlite_api/src:/app/src
+    environment:
+      - NODE_ENV=development
     command: npm run dev
 
   ws_server:

@@ -1,7 +1,8 @@
 import i18next from '../lang/i18n'
 import { login } from './auth'
+import { apiSignup, apiLogin } from "../../api/auth";
 
-export function handleLogin(
+export async function handleLogin(
     pseudoInput: HTMLInputElement,
     passwordInput: HTMLInputElement,
     errorMsg: HTMLElement
@@ -15,15 +16,24 @@ export function handleLogin(
         return
     }
 
-    login(user)
+    try {
+        const token = await apiLogin(user, pass)
+        if (!token) {
+            errorMsg.textContent = i18next.t('login_error_failed')
+            return
+        }
+        login(token)
+    } catch {
+        errorMsg.textContent = i18next.t('login_error_failed')
+    }
 }
 
-export function handleSignup(
+export async function handleSignup(
     pseudoInput: HTMLInputElement,
     passwordInput: HTMLInputElement,
     passwordConfirm: HTMLInputElement,
     errorMsg: HTMLElement
-): void {
+): Promise<void> {
     event.preventDefault()
     const user = pseudoInput.value.trim()
     const pass = passwordInput.value
@@ -39,7 +49,16 @@ export function handleSignup(
         return
     }
 
-    login(user)
+    try {
+        const token = await apiSignup(user, pass)
+        if (!token) {
+            errorMsg.textContent = i18next.t('signup_error_failed')
+            return
+        }
+        login(token)
+    } catch {
+        errorMsg.textContent = i18next.t('signup_error_failed')
+    }
 }
 
 export function handleGoogleLogin(): void {

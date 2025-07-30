@@ -29,7 +29,8 @@ services:
     image: ft_transcendence-web:prod
     hostname: web
     environment:
-      VITE_GAME_API_URL: game.api.${DOMAIN_NAME}
+      VITE_DOMAIN: ${DOMAIN_NAME}
+      VITE_API_URL: api.${DOMAIN_NAME}
       VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
     expose:
       - "80"

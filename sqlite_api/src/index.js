@@ -5,6 +5,7 @@ dotenv.config();
 // import fastify
 import Fastify from 'fastify';
 import rateLimit from '@fastify/rate-limit';
+import cors from '@fastify/cors'
 
 // import database
 import db from './database/db.js'
@@ -109,6 +110,24 @@ const start = async () => {
   const ADDRESS = '0.0.0.0';
 
   try {
+    await fastify.register(cors, {
+      origin: (origin, cb) => {
+        if (process.env.NODE_ENV === 'development') {
+          cb(null, true)
+        } else {
+          const allowedOrigins = [
+            `https://${process.env.VITE_DOMAIN}`,
+          ]
+          if (!origin || allowedOrigins.includes(origin)) {
+            cb(null, true)
+          } else {
+            cb(new Error('Not allowed'), false)
+          }
+        }
+      },
+      credentials: true
+    })
+
     fastify.listen({ port: 3000, host: ADDRESS });
     await fastify.clearDatabase(fastify.db); // clear all data, remove for futur
     const username = 'admin';
