@@ -26,7 +26,8 @@ export default async function (fastify, options) {
   fastify.post('/', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
     const { name, description, difficulty, maxPlayers, isPrivate } = req.body;
 
-    if (getTournamentByName(fastify.db, name))  {
+    const result = await fastify.getTournamentByName(fastify.db, name)
+    if (result)  {
       return reply.status(400).send({ error: 'Name already token' });
     }
 
@@ -52,6 +53,11 @@ export default async function (fastify, options) {
 
   fastify.patch('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
     const { name, description, difficulty, maxPlayers, isPrivate } = req.body;
+    const creator_id = req.user.id; // admin qui peu changer des choses ?
+
+    if (!name || !creator_id || !difficulty || !maxPlayers) { // rajouter les test de grandeur de chaine de caracter ?
+      return reply.status(400).send({ error: 'Missing required fields' });
+    }
 
     const data = {
       name,

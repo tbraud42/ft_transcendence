@@ -15,7 +15,7 @@ import {
   updateUser,
   deleteUser,
   showAllData,
-  clearDatabase,
+  clearDatabase
 } from './database/manage.js';
 
 import {
@@ -136,45 +136,3 @@ const start = async () => {
 };
 
 start();
-
-// ----------test auth---------------
-import axios from 'axios';
-
-const API_URL = 'http://localhost:3000';
-
-const user = {
-  username: 'testuser',
-  password: 'Testpass1@'
-};
-
-let token = '';
-let createdPlayerId = null;
-
-async function signup() {
-  try {
-    const res = await axios.post(`${API_URL}/auth/signup`, user);
-    token = res.data.token;
-    console.log('✅ Login success. Token reçu :', token);
-  } catch (err) {
-    console.error('❌ Échec du login :', err.response?.data || err.message);
-  }
-}
-
-async function isAuthenticated() {
-  try {
-    const res = await axios.get(`${API_URL}/auth/isLogin`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    console.log('✅ Authentifié :', res.data);
-  } catch (err) {
-    console.error('❌ Auth invalide :', err.response?.data || err.message);
-  }
-}
-
-async function runAllTests() {
-  console.log('\n🔐 LOGIN ET AUTH TEST\n');
-  await signup();
-  await isAuthenticated();
-}
-
-// runAllTests();
