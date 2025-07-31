@@ -1,19 +1,24 @@
 // database/tournaments.js
 
 export async function getAllTournaments(db) {
-  return db.all('SELECT * FROM tournaments');
+  const result = db.prepare('SELECT * FROM tournaments').all();
+  return result;
 }
 
 export async function getTournamentById(db, id) {
-  return db.get('SELECT * FROM tournaments WHERE id = ?', [id]);
+  const result = db.prepare('SELECT * FROM tournaments WHERE id = ?').get(id);
+  return result;
+}
+
+export async function getTournamentByName(db, name) {
+  const result = db.prepare('SELECT * FROM tournaments WHERE name = ?').get(name);
+  return result;
 }
 
 export async function createTournament(db, data) {
   const { name, description, creator_id } = data;
-  return db.run(
-    'INSERT INTO tournaments (name, description, creator_id) VALUES (?, ?, ?)',
-    [name, description, creator_id]
-  );
+  const result = db.prepare('INSERT INTO tournaments (name, description, creator_id) VALUES (?, ?, ?)').run(name, description, creator_id);
+  return result;
 }
 
 export async function updateTournament(db, id, data) {
@@ -39,28 +44,27 @@ export async function updateTournament(db, id, data) {
 }
 
 export async function deleteTournament(db, id) {
-  return db.run('DELETE FROM tournaments WHERE id = ?', [id]);
-}
-
-export async function isTournamentCreator(db, tournamentId, userId) {
-  const tournament = await db.get('SELECT creator_id FROM tournaments WHERE id = ?', [tournamentId]);
-  if (!tournament) return false;
-  return tournament.creator_id === userId;
+  const result = db.prepare('DELETE FROM tournaments WHERE id = ?').run(id);
+  return result;
 }
 
 export async function getParticipantsByTournamentId(db, tournamentId) {
-  return db.all('SELECT * FROM participants WHERE tournament_id = ?', [tournamentId]);
+  const result = db.prepare('SELECT * FROM participants WHERE tournament_id = ?').all(tournamentId);
+  return result;
 }
 
 export async function addParticipant(db, tournamentId, userId) {
-  return db.run('INSERT INTO participants (tournament_id, user_id) VALUES (?, ?)', [tournamentId, userId]);
+  const result = db.prepare('INSERT INTO participants (tournament_id, user_id) VALUES (?, ?)').run(tournamentId, userId);
+  return result;
 }
 
 export async function updateParticipant(db, tournamentId, userId, data) {
   // mise à jour du score tmp avant amelioration
-  return db.run('UPDATE participants SET score = ? WHERE tournament_id = ? AND user_id = ?', [data.score, tournamentId, userId]);
+  const result = db.prepare('UPDATE participants SET score = ? WHERE tournament_id = ? AND user_id = ?').run(data.score, tournamentId, userId);
+  return result;
 }
 
 export async function deleteParticipant(db, tournamentId, userId) {
-  return db.run('DELETE FROM participants WHERE tournament_id = ? AND user_id = ?', [tournamentId, userId]);
+  const result = db.prepare('DELETE FROM participants WHERE tournament_id = ? AND user_id = ?').run(tournamentId, userId);
+  return result;
 }

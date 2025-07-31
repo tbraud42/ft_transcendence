@@ -7,7 +7,7 @@ export default async function (fastify, options) {
   fastify.post('/', async (request, reply) => {
     const { username, password } = request.body;
 
-    const user = fastify.showUser(fastify.db, username);
+    const user = await fastify.showUserByUsername(fastify.db, username);
 
     if (!user) {
       return reply.code(401).send({ error: 'User not found' });
@@ -17,7 +17,12 @@ export default async function (fastify, options) {
       return reply.code(401).send({ error: 'invalid password' });
     }
 
-    const token = fastify.generateToken({ username });
+    const token = fastify.generateToken({
+      id: user.id,
+      username: user.username,
+      role: user.role
+    });
+
     fastify.stat.login++;
     return reply.send({ token });
   });

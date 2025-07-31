@@ -7,15 +7,15 @@ export default async function (fastify, options) {
   fastify.post('/', async (request, reply) => {
     const { username, password } = request.body;
 
-    const user = await fastify.showUser(fastify.db, username);
+    const user = await fastify.showUserByUsername(fastify.db, username);
 
     if (user) {
       return reply.code(401).send({ error: 'username already use' });
     }
 
-    const validation = validatePassword(password);
+    const validation = await fastify.validatePassword(password);
     if (!validation.valid) {
-      const message = passwordFeedback(validation.errors);
+      const message = await fastify.passwordFeedback(validation.errors);
 
       return reply.code(400).send({
         error: "Bad Request",
@@ -25,44 +25,15 @@ export default async function (fastify, options) {
     }
 
     fastify.stat.signup++;
-    await fastify.createUser(fastify.db, { username: username, password: password});
-    const token = fastify.generateToken({ username });
+    const newUser = await fastify.createUser(fastify.db, { username: username, password: password});
+    const token = fastify.generateToken({
+      id: newUser.userId,
+      username: newUser.username,
+      role: newUser.role
+    });
     return reply.send({ token });
   });
 }
-
-function validatePassword(password) {
-  const minLength = 8;
-
-  const hasMinLength = password.length >= minLength;
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasDigit = /[0-9]/.test(password);
-  const hasSymbol = /[^A-Za-z0-9]/.test(password);
-
-  return {
-    valid: hasMinLength && hasUppercase && hasLowercase && hasDigit && hasSymbol,
-    errors: {
-      minLength: hasMinLength,
-      uppercase: hasUppercase,
-      lowercase: hasLowercase,
-      digit: hasDigit,
-      symbol: hasSymbol
-    }
-  };
-}
-
-function passwordFeedback(errors) {
-  const messages = [];
-  if (!errors.minLength) messages.push("at least 8 characters");
-  if (!errors.uppercase) messages.push("at least one uppercase letter");
-  if (!errors.lowercase) messages.push("at least one lowercase letter");
-  if (!errors.digit) messages.push("at least one digit");
-  if (!errors.symbol) messages.push("at least one symbol");
-
-  return `Password must contain ${messages.join(", ")}.`;
-}
-
 
 // Longueur et complexité raisonnables
 //  Minimum 8-12 caractères
