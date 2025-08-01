@@ -1,6 +1,6 @@
 import i18next from 'i18next'
-import en from './lang/en.json'
-import fr from './lang/fr.json'
+import en from '../../lang/en.json'
+import fr from '../../lang/fr.json'
 
 const savedLang = localStorage.getItem('lang')
 const browserLang = navigator.language.slice(0, 2)
