@@ -8,8 +8,7 @@ export async function createUser(db, { username, password }) {
 
   const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
 
-  const stmt = db.prepare(`INSERT INTO users (username, password_hash) VALUES (?, ?)`);
-  const info = stmt.run(username, hashedPassword);
+  const info = db.prepare(`INSERT INTO users (username, password_hash) VALUES (?, ?)`).run(username, hashedPassword);
 
   return {
     success: true,
@@ -38,8 +37,7 @@ export async function updateUser(db, id, { username, password }) {
 
   const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
 
-  const stmt = db.prepare('UPDATE users SET username = ?, password_hash = ? WHERE id = ?');
-  const result = stmt.run(username, hashedPassword, id);
+  const result = db.prepare('UPDATE users SET username = ?, password_hash = ? WHERE id = ?').run(username, hashedPassword, id);
 
   return {
     success: true,
@@ -50,8 +48,7 @@ export async function updateUser(db, id, { username, password }) {
 }
 
 export async function deleteUser(db, id) {
-  const stmt = db.prepare('DELETE FROM users WHERE id = ?');
-  const result = stmt.run(id);
+  const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
 
   return { success: true, id };
 }

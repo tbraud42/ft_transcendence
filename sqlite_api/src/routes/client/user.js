@@ -17,7 +17,7 @@ export default async function (fastify, options) {
   fastify.get('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
     if (parseInt(req.params.id) === req.user.id  || req.user.role === 'admin') {
       const user = await fastify.showUserById(fastify.db, parseInt(req.params.id));
-      if (!user && req.user.role === 'admin') { // deuxieme condition normalement pas utile
+      if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
       reply.send(user); // savoir quelle info on renvoie, par defaut *
@@ -32,7 +32,7 @@ export default async function (fastify, options) {
 
     if (targetId === req.user.id  || req.user.role === 'admin') {
       const user = await fastify.showUserById(fastify.db, targetId);
-      if (!user && req.user.role === 'admin') { // deuxieme condition normalement pas utile
+      if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
       const double = await fastify.showUserByUsername(fastify.db, username);
@@ -60,7 +60,7 @@ export default async function (fastify, options) {
 
     if (targetId === req.user.id || req.user.role === 'admin') {
       const user = await fastify.showUserById(fastify.db, targetId);
-      if (!user && req.user.role === 'admin') { // deuxieme condition normalement pas utile
+      if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
       await fastify.deleteUser(fastify.db, req.params.id);

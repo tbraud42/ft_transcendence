@@ -16,16 +16,16 @@ import {
   updateUser,
   deleteUser,
   showAllData,
-  clearDatabase,
+  clearDatabase
 } from './database/manage.js';
 
 import {
   getAllTournaments,
   getTournamentById,
+  getTournamentByName,
   createTournament,
   updateTournament,
   deleteTournament,
-  requireCreatorOrAdmin, // ici fonction utiliser en prehandler, changemement de fichier ?
   getParticipantsByTournamentId,
   addParticipant,
   updateParticipant,
@@ -70,10 +70,10 @@ const start = async () => {
   fastify.decorate('clearDatabase', clearDatabase);
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
+  fastify.decorate('getTournamentByName', getTournamentByName);
   fastify.decorate('createTournament', createTournament);
   fastify.decorate('updateTournament', updateTournament);
   fastify.decorate('deleteTournament', deleteTournament);
-  fastify.decorate('requireCreatorOrAdmin', requireCreatorOrAdmin);
   fastify.decorate('getParticipantsByTournamentId', getParticipantsByTournamentId);
   fastify.decorate('addParticipant', addParticipant);
   fastify.decorate('updateParticipant', updateParticipant);
@@ -113,6 +113,7 @@ const start = async () => {
   await fastify.register(statRoutes, { prefix: '/stat' });
 
   const ADDRESS = '0.0.0.0';
+  const PORT = process.env.DATABASE_PORT || 3000;
 
   try {
     await fastify.register(cors, {
@@ -141,7 +142,7 @@ const start = async () => {
       optionsSuccessStatus: 204
     })
 
-    fastify.listen({ port: 3000, host: ADDRESS });
+    fastify.listen({ port: PORT, host: ADDRESS });
     // await fastify.clearDatabase(fastify.db); // clear all data, remove for futur
     // const username = 'admin';
     // const email = 'admin@example.com';
@@ -162,45 +163,3 @@ const start = async () => {
 };
 
 start();
-
-// ----------test auth---------------
-import axios from 'axios';
-
-const API_URL = 'http://localhost:3000';
-
-const user = {
-  username: 'testuser',
-  password: 'Testpass1@'
-};
-
-let token = '';
-let createdPlayerId = null;
-
-async function signup() {
-  try {
-    const res = await axios.post(`${API_URL}/auth/signup`, user);
-    token = res.data.token;
-    console.log('✅ Login success. Token reçu :', token);
-  } catch (err) {
-    console.error('❌ Échec du login :', err.response?.data || err.message);
-  }
-}
-
-async function isAuthenticated() {
-  try {
-    const res = await axios.get(`${API_URL}/auth/isLogin`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    console.log('✅ Authentifié :', res.data);
-  } catch (err) {
-    console.error('❌ Auth invalide :', err.response?.data || err.message);
-  }
-}
-
-async function runAllTests() {
-  console.log('\n🔐 LOGIN ET AUTH TEST\n');
-  await signup();
-  await isAuthenticated();
-}
-
-// runAllTests();

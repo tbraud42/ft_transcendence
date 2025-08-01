@@ -12,13 +12,11 @@ CREATE TABLE tournaments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name VARCHAR(50) NOT NULL,
   description VARCHAR(255),
-  created_by INTEGER NOT NULL,        -- id vers users
   creator_id INTEGER NOT NULL,        -- doublon de created_by ?
   difficulty VARCHAR(15),             -- par ex: 'easy', 'medium', 'hard'
   maxPlayers INTEGER DEFAULT 16,
   isPrivate BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (created_by) REFERENCES users(id),
   FOREIGN KEY (creator_id) REFERENCES users(id)
 );
 
