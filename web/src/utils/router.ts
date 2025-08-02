@@ -10,7 +10,9 @@ import { createFooter } from '../components/footer'
 
 export function router(): void {
     const app = document.getElementById('app')
-    if (!app) return
+    if (!app) {
+        return
+    }
 
     const hash = window.location.hash || '#/'
     const routeParts = hash.slice(2).split('/')

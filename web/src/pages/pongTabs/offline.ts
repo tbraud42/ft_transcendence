@@ -1,8 +1,14 @@
 import i18next from '../../utils/lang/i18n'
-import { createButton } from '../../components/button'
-import { createInput } from '../../components/input'
-import { createOptionSelector } from '../../components/optionSelector'
-import { setSecondPlayerName, setSelectedDifficulty, setSelectedGameMode } from '../../games/pong/pongState'
+import {createButton} from '../../components/button'
+import {createInput} from '../../components/input'
+import {createOptionSelector} from '../../components/optionSelector'
+import {
+    Difficulty,
+    GameMode,
+    setSecondPlayerName,
+    setSelectedDifficulty,
+    setSelectedGameMode
+} from '../../games/pong/pongState'
 
 export function renderOfflineTab(): HTMLElement {
     const container = document.createElement('div')
@@ -34,8 +40,8 @@ export function renderOfflineTab(): HTMLElement {
         }
 
         setSecondPlayerName(secondPlayerName)
-        setSelectedGameMode('pvp')
-        setSelectedDifficulty(difficulty.getValue() as 'easy' | 'medium' | 'hard')
+        setSelectedGameMode(GameMode.LOCAL)
+        setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
         window.location.hash = '#/pong/play'
     }
 

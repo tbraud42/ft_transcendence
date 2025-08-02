@@ -1,17 +1,28 @@
 import {Room} from "./engine/Room.js";
+import {config} from "../config.js";
+import {connectionManager} from "../server.js";
 
 export class RoomManager {
     constructor() {
         this.rooms = new Map();
     }
 
-    createRoom(id, name, creatorId, difficulty = "medium", isPrivate = false) {
+    async createRoom(id, creatorId) {
         if (this.rooms.has(id)) {
-            throw new Error(`Room with id ${id} already exists`);
+            throw new Error(`Room with id ${id} already exists`)
         }
-        const room = new Room(id, name, creatorId, difficulty, isPrivate);
-        this.rooms.set(id, room);
-        return room;
+
+        const userToken = connectionManager.getSocketByUserId(creatorId)
+        const roomData = await this.getRoomDataThroughApi(id, userToken)
+
+        const name = roomData.name || 'Pong'
+        const difficulty = roomData.difficulty || "medium"
+        const maxPlayers = roomData.maxPlayers || 2
+        const isPrivate = roomData.isPrivate || false
+
+        const room = new Room(id, name, creatorId, difficulty, maxPlayers, isPrivate)
+        this.rooms.set(id, room)
+        return room
     }
 
     getRoomById(id) {
@@ -20,6 +31,7 @@ export class RoomManager {
 
     removeRoomById(id) {
         this.rooms.delete(id)
+        //TODO: api call to delete the room
     }
 
     getRoomByClientId(clientId) {
@@ -31,7 +43,25 @@ export class RoomManager {
         return null
     }
 
-    listPublicRooms() {
-        return Array.from(this.rooms.values()).filter(r => !r.private)
+    async getRoomDataThroughApi(roomId, userToken) {
+        try {
+            const response = await fetch(`${config.API_URL}/tournaments/${roomId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`)
+            }
+
+            return await response.json()
+
+        } catch (error) {
+            console.error(`Error fetching room data: ${error.message}`)
+            throw error
+        }
     }
 }

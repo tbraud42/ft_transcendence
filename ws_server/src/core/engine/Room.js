@@ -1,13 +1,29 @@
+import {roomManager} from "../../server.js";
+
 export class Room {
-    constructor(id, name, creatorId, difficulty = "medium", isPrivate = false) {
+    constructor(id, name, creatorId, difficulty = "medium", maxPlayers = 2, isPrivate = false) {
         this.id = id;
         this.name = name;
         this.creatorId = creatorId;
         this.difficulty = difficulty;
+        this.maxPlayers = maxPlayers;
         this.private = isPrivate;
         this.clients = new Set();
         this.createdAt = Date.now();
         this.maxClients = 2;
+    }
+
+    toJSON() {
+        return {
+            id: this.id,
+            name: this.name,
+            creatorId: this.creatorId,
+            difficulty: this.difficulty,
+            maxPlayers: this.maxPlayers,
+            isPrivate: this.private,
+            createdAt: this.createdAt,
+            clientCount: this.getClientCount(),
+        };
     }
 
     getId() {
@@ -35,7 +51,21 @@ export class Room {
     }
 
     addClient(client) {
+        if (this.getClientCount() > this.maxClients) {
+            throw new Error('Room is full');
+        }
         this.clients.add(client);
+        this.broadcast(
+            JSON.stringify({
+                type: 'join',
+                client: {
+                    id: client.id,
+                    name: client.name,
+                },
+                room: this.toJSON(),
+            })
+        )
+        console.log("Client added to room:", this.id, "Client ID:", client.id);
         client.ws.on('message', (raw) => {
             const message = JSON.parse(raw);
             if (message.type === 'leave') {
@@ -49,6 +79,9 @@ export class Room {
 
     removeClient(client) {
         this.clients.delete(client);
+        if (this.getClientCount() === 0) {
+            roomManager.removeRoomById(this.id);
+        }
     }
 
     getClientById(clientId) {

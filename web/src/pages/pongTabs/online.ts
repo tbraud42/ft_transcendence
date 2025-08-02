@@ -1,11 +1,17 @@
 import i18next from '../../utils/lang/i18n'
-import { createButton } from '../../components/button'
-import { createInput } from '../../components/input'
-import { createOverlayCard } from '../../components/overlayCard'
-import { createOptionSelector } from '../../components/optionSelector'
-import { setSelectedDifficulty, setSelectedGameMode } from '../../games/pong/pongState'
-import { createTournament, fetchTournaments } from '../../api/game'
-import { createList } from "../../components/list";
+import {createButton} from '../../components/button'
+import {createInput} from '../../components/input'
+import {createOverlayCard} from '../../components/overlayCard'
+import {createOptionSelector} from '../../components/optionSelector'
+import {
+    Difficulty,
+    GameMode, setIsPrivate,
+    setMaxPlayers,
+    setSelectedDifficulty,
+    setSelectedGameMode
+} from '../../games/pong/pongState'
+import {createTournament, fetchTournaments} from '../../api/game'
+import {createList} from "../../components/list";
 
 export function renderOnlineTab(): HTMLElement {
     const container = document.createElement('div')
@@ -22,34 +28,38 @@ export function renderOnlineTab(): HTMLElement {
     container.appendChild(roomList)
 
     // === Load public rooms ===
-    fetchTournaments().then((rooms) => {
-        if (rooms.length === 0) {
+    fetchTournaments().then((tournaments) => {
+        if (tournaments.length === 0) {
             lobbiesStatus.textContent = i18next.t('pong_online_no_lobbies')
             return
         }
 
         container.removeChild(lobbiesStatus) // remove loading text
 
-        const items = rooms.map(room => {
+        const items = tournaments.map(tournament => {
             const card = document.createElement('div')
             card.className = 'bg-gray-800 p-4 rounded flex justify-between items-center hover:bg-gray-700 transition'
 
             const info = document.createElement('div')
+
             const title = document.createElement('h3')
             title.className = 'font-semibold text-white'
-            title.textContent = room.name
+            title.textContent = tournament.name
 
-            const players = document.createElement('p')
-            players.className = 'text-sm text-gray-400'
-            players.textContent = `👤 ${room.players.length} joueurs`
+            const details = document.createElement('p')
+            details.className = 'text-sm text-gray-400'
+            const isPrivate = tournament.isPrivate ? i18next.t('private') : i18next.t('public')
+            const difficulty = tournament.difficulty || i18next.t('pong_ai_difficulty_unknown')
+            details.textContent = `${isPrivate} • ${difficulty} • Max ${tournament.maxPlayers} players`
 
-            info.append(title, players)
+            info.append(title, details)
 
             const joinBtn = document.createElement('button')
             joinBtn.textContent = i18next.t('pong_join')
             joinBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded'
             joinBtn.onclick = () => {
-                window.location.hash = `#/pong/lobby/${room.id}`
+                setSelectedGameMode(GameMode.ONLINE)
+                window.location.hash = `#/pong/lobby/${tournament.id}`
             }
 
             card.append(info, joinBtn)
@@ -83,8 +93,10 @@ export function renderOnlineTab(): HTMLElement {
             })
 
             confirm.onclick = () => {
-                setSelectedDifficulty(difficulty.getValue() as 'easy' | 'medium' | 'hard')
-                setSelectedGameMode(mode)
+                setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
+                setSelectedGameMode(GameMode.ONLINE)
+                setMaxPlayers(2)
+                setIsPrivate(true)
                 overlay.close()
                 createTournament(nameInput.value, mode === 'private', difficulty.getValue() as 'easy' | 'medium' | 'hard')
                     .then(room => {

@@ -1,9 +1,7 @@
 import i18next from '../../utils/lang/i18n'
-import { createButton } from '../../components/button'
-import { createOverlayCard } from '../../components/overlayCard'
-import { createOptionSelector } from '../../components/optionSelector'
-import {setSecondPlayerName, setSelectedDifficulty, setSelectedGameMode} from '../../games/pong/pongState'
-import {createInput} from "../../components/input";
+import {createButton} from '../../components/button'
+import {createOptionSelector} from '../../components/optionSelector'
+import {Difficulty, GameMode, setSelectedDifficulty, setSelectedGameMode} from '../../games/pong/pongState'
 
 export function renderAITab(): HTMLElement {
     const container = document.createElement('div')
@@ -21,8 +19,8 @@ export function renderAITab(): HTMLElement {
 
     const btn = createButton(i18next.t('pong_local_2p'), 'submit', 'blue')
     btn.onclick = () => {
-        setSelectedGameMode('ai')
-        setSelectedDifficulty(difficulty.getValue() as 'easy' | 'medium' | 'hard')
+        setSelectedGameMode(GameMode.AI)
+        setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
         window.location.hash = '#/pong/play'
     }
 

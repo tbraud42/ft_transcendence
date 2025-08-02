@@ -1,15 +1,31 @@
 import {connectionManager, roomManager} from "../server.js";
 
 export function JoinRoomHandler(ws, msg, payload) {
-    if (!msg.id) {
+    if (!msg.data.id) {
         ws.send(JSON.stringify({ type: 'join_room', success: false, error: 'Room ID is required' }));
         return;
     }
 
+    console.log("JOIN ROOM REQUEST:", msg.data.id, "USER ID:", payload.id);
+
     const user = connectionManager.getUser(ws);
-    const room = roomManager.getRoomById(msg.id);
+    let room = roomManager.getRoomById(msg.data.id);
     if (!room) {
-        ws.send(JSON.stringify({ type: 'join_room', success: false, error: 'Room not found' }));
+        roomManager.createRoom(msg.data.id, user.id)
+            .then(newRoom => {
+                room = newRoom;
+                console.log("CREATED NEW ROOM:", room.id, "USER ID:", user.id);
+                if (room.isFull()) {
+                    ws.send(JSON.stringify({ type: 'join_room', success: false, error: 'Room is full' }));
+                    return;
+                }
+                room.addClient(user);
+                ws.send(JSON.stringify({ type: 'join_room', success: true, room: room.toJSON() }));
+            }
+        ).catch(err => {
+            console.error(`Error creating room: ${err.message}`);
+            ws.send(JSON.stringify({ type: 'join_room', success: false, error: 'Failed to create room' }));
+        });
         return;
     }
 
@@ -23,6 +39,7 @@ export function JoinRoomHandler(ws, msg, payload) {
         return;
     }
 
+    console.log("NEW USER JOINING ROOM:", room.id, "USER ID:", user.id);
     room.addClient(user);
     ws.send(JSON.stringify({ type: 'join_room', success: true, room: room.toJSON() }));
 }

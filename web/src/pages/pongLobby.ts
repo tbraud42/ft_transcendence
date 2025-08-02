@@ -1,5 +1,14 @@
-import { createButton } from '../components/button'
-import { env } from '../utils/env'
+import {createButton} from '../components/button'
+import {Room} from "../games/pong/engine/Room";
+import {OnlinePlayer} from "../games/pong/engine/players/OnlinePlayer";
+import {
+    isPrivate,
+    maxPlayers,
+    selectedDifficulty,
+    selectedGameMode
+} from "../games/pong/pongState";
+
+let room: Room
 
 export function renderPongLobby(roomId: string): HTMLElement {
     const container = document.createElement('div')
@@ -16,50 +25,22 @@ export function renderPongLobby(roomId: string): HTMLElement {
     const playersList = document.createElement('ul')
     playersList.className = 'mb-6 flex flex-col gap-2'
 
+    room = new Room(roomId, selectedDifficulty, selectedGameMode, maxPlayers, isPrivate)
+
     const leaveBtn = createButton('Retour au menu', 'button', 'red')
     leaveBtn.onclick = () => {
-        socket?.close()
+        room.close()
         window.location.hash = '#/pong'
     }
 
-    // === WebSocket Logic ===
-    const socketUrl = `wss://${env.PONG_WS_URL}/${roomId}`
-    const socket = new WebSocket(socketUrl)
-
-    socket.onopen = () => {
-        status.textContent = 'En attente de joueurs...'
-    }
-
-    socket.onmessage = (event) => {
-        const data = JSON.parse(event.data)
-
-        if (data.type === 'players') {
-            // Expected format: { type: 'players', list: ['Alice', 'Bob'] }
-            playersList.innerHTML = ''
-            for (const name of data.list) {
-                const li = document.createElement('li')
-                li.textContent = name
-                li.className = 'text-white bg-gray-800 px-4 py-2 rounded'
-                playersList.appendChild(li)
-            }
-        }
-
-        if (data.type === 'start') {
-            status.textContent = 'Partie en cours...'
-            setTimeout(() => {
-                window.location.hash = '#/pong/play'
-            }, 1000)
-        }
-    }
-
-    socket.onerror = () => {
-        status.textContent = 'Erreur de connexion WebSocket.'
-    }
-
-    socket.onclose = () => {
-        status.textContent = 'Connexion fermée.'
-    }
-
     container.append(title, status, playersList, leaveBtn)
+
+    room.init().then(() => {
+        room.join(new OnlinePlayer('Player1', 'randomId1', 5));
+    }).catch((err) => {
+        console.error('Room init error:', err);
+        status.textContent = 'Erreur de connexion à la room.';
+    });
+
     return container
 }

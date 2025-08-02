@@ -70,6 +70,7 @@ services:
     expose:
       - "3000"
     environment:
+      - API_URL=api.${DOMAIN_NAME}
       - JWT_SECRET=${JWT_SECRET}
     restart: unless-stopped
     networks:

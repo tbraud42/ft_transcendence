@@ -30,8 +30,10 @@ export function createTournament(
 
     const body = {
         name,
+        description: '',
+        difficulty,
+        maxPlayers: 2,
         isPrivate,
-        difficulty
     }
 
     return fetch(url, {
@@ -45,6 +47,23 @@ export function createTournament(
         if (!res.ok) {
             const err = res.text().catch(() => '')
             throw new Error(`Failed to create tournament: ${res.status} ${err}`)
+        }
+        return res.json()
+    })
+}
+
+export function getTournament(id: string): Promise<any> {
+    const url = `https://${API_URL}/tournaments/${id}`
+
+    return fetch(url, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+        }
+    }).then(res => {
+        if (!res.ok) {
+            const err = res.text().catch(() => '')
+            throw new Error(`Failed to fetch tournament: ${res.status} ${err}`)
         }
         return res.json()
     })

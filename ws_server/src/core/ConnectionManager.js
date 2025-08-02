@@ -15,4 +15,13 @@ export class ConnectionManager {
     getUser(socket) {
         return this.clients.get(socket)
     }
+
+    getSocketByUserId(userId) {
+        for (const [socket, client] of this.clients.entries()) {
+            if (client.id === userId) {
+                return socket
+            }
+        }
+        return null
+    }
 }

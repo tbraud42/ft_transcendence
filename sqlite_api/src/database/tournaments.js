@@ -16,8 +16,8 @@ export async function getTournamentByName(db, name) {
 }
 
 export async function createTournament(db, data) {
-  const { name, description, creator_id } = data;
-  const result = db.prepare('INSERT INTO tournaments (name, description, creator_id) VALUES (?, ?, ?)').run(name, description, creator_id);
+  const { name, description, creator_id, difficulty, maxPlayers } = data;
+  const result = db.prepare('INSERT INTO tournaments (name, description, creator_id, difficulty, maxPlayers) VALUES (?, ?, ?, ?, ?)').run(name, description, creator_id, difficulty, maxPlayers);
   return result;
 }
 

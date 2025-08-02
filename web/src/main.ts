@@ -15,4 +15,3 @@ if (savedTheme === 'dark') {
 
 window.addEventListener('DOMContentLoaded', router)
 window.addEventListener('hashchange', router)
-window.addEventListener('load', router)
