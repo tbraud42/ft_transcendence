@@ -1,11 +1,11 @@
 // routes/auth/signup.js
 // | Method   | Route              | Description                            | Access           |
 // | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/signup`          | signup, reply by JWT token             | Public           |
+// | `POST`   | `/auth/signup`     | signup, reply by JWT token             | Public           |
 
 export default async function (fastify, options) {
-  fastify.post('/', async (request, reply) => {
-    const { username, password } = request.body;
+  fastify.post('/', async (req, reply) => {
+    const { username, password } = req.body;
 
     const user = await fastify.showUserByUsername(fastify.db, username);
 

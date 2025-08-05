@@ -32,6 +32,7 @@ import {
 } from './database/tournaments.js';
 
 // import routes
+import twoFaRoute from './routes/auth/2fa.js';
 import loginRoute from './routes/auth/login.js';
 import signupRoutes from './routes/auth/signup.js';
 import isLoginRoute from './routes/auth/isLogin.js';
@@ -40,7 +41,6 @@ import tournamentRoute from './routes/matchs/tournaments.js';
 import tournamentClientRoute from './routes/matchs/tournaments_client.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
-// import googleRoutes from './routes/auth/google.js';
 
 // importe all security function
 import {
@@ -99,12 +99,10 @@ const start = async () => {
     timeWindow: '1 minute'
   });
 
-
-  // await fastify.register(googleRoutes, { prefix: '/google' });
-  // await fastify.register(securityPlugin); // nique toi
+  await fastify.register(twoFaRoute, { prefix: '/auth/2fa' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
-  await fastify.register(isLoginRoute, { prefix: '/auth/isLogin' });
+  await fastify.register(isLoginRoute, { prefix: '/auth/isAuth' });
   await fastify.register(userRoutes, { prefix: '/users' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
   await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });

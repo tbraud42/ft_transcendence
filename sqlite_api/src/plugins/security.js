@@ -1,13 +1,13 @@
 // plugins/decorate.js
 import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
-// const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import cle JWT depuis vault
+// const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import key JWT depuis vault
 
 // import verif mdp
 import bcrypt from 'bcrypt';
 
 export function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' }); // tmp changer expires
+  return jwt.sign(payload, JWT_SECRET, {expiresIn: '12h'}); // tmp changer expiresIn
 }
 
 export function requireRole(role) {
@@ -18,7 +18,7 @@ export function requireRole(role) {
   };
 }
 
-export function authenticate(fastify) { // msg d'erreur personnaliser ??
+export function authenticate(fastify) {
   return async function Authenticate(request, reply) {
     try {
       const authHeader = request.headers.authorization;
@@ -34,7 +34,10 @@ export function authenticate(fastify) { // msg d'erreur personnaliser ??
         return reply.code(401).send({ error: 'Unauthorized' }); // : user no longer exists
       }
 
-      request.user = user;
+      request.user = { // spread decoded et user
+        ...decoded,
+        ...user
+      };
     } catch (err) {
       return reply.code(401).send({ error: 'Unauthorized', message: err.message }); // Invalid token
     }
