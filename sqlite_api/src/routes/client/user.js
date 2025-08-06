@@ -9,21 +9,31 @@
 
 export default async function (fastify, options) {
   fastify.get('/me', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => {
-    // const user = await fastify.showUser(fastify.db, req.user.id);
-    // if (!user) return reply.code(404).send({ error: 'User not found' }); // should never happen
-    reply.send(req.user.id); // include id, username, maybe role but no password ofc
+    reply.send(req.user.id);
   });
 
-  fastify.get('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    if (parseInt(req.params.id) === req.user.id  || req.user.role === 'admin') {
-      const user = await fastify.showUserById(fastify.db, parseInt(req.params.id));
+  fastify.get('/:id', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => {
+    const targetId = parseInt(req.params.id);
+
+    if (targetId === req.user.id || req.user.role === 'admin') {
+      const user = await fastify.showUserById(fastify.db, targetId);
+
       if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
-      reply.send(user); // savoir quelle info on renvoie, par defaut *
-      return ;
+
+      return reply.send({
+        user: {
+          id: user.id,
+          username: user.username,
+          password_hash: 'Not displayed for security reasons (RGPD)',
+          role: user.role,
+          created_at: user.created_at,
+        }
+      });
     }
-    return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+
+    return reply.code(403).send({ error: 'Access denied' });
   });
 
   fastify.patch('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
@@ -35,6 +45,7 @@ export default async function (fastify, options) {
       if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
+
       const double = await fastify.showUserByUsername(fastify.db, username);
       if (double) {
         return reply.code(401).send({ error: 'username already use' });
@@ -63,6 +74,7 @@ export default async function (fastify, options) {
       if (!user) {
         return reply.code(404).send({ error: 'User not found' });
       }
+
       await fastify.deleteUser(fastify.db, req.params.id);
       return reply.send({ success: true });
     }
@@ -70,9 +82,7 @@ export default async function (fastify, options) {
   });
 
   fastify.get('/:id/tournaments', {preHandler: [fastify.authenticate(fastify), fastify.allowSelfOrAdmin]}, async (req, reply) => { // faire et tester quand les tournaments sont implementer
-    const tournaments = await fastify.db.prepare(
-      `SELECT * FROM tournaments WHERE user_id = ?`
-    ).all(req.params.id); // facoriser dans manage.js ?
+    const tournaments = await fastify.db.prepare(`SELECT * FROM tournaments WHERE user_id = ?`).all(req.params.id); // facoriser dans manage.js ?
 
     reply.send(tournaments);
   });

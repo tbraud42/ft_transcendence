@@ -6,8 +6,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 // import verif mdp
 import bcrypt from 'bcrypt';
 
-export function generateToken(payload) {
-  return jwt.sign(payload, JWT_SECRET, {expiresIn: '12h'}); // tmp changer expiresIn
+export function generateToken(payload, twofa = true, expiresIn = '12h') {
+  const fullPayload = {
+    ...payload,
+    twofa
+  };
+
+  return jwt.sign(fullPayload, JWT_SECRET, { expiresIn });
 }
 
 export function requireRole(role) {

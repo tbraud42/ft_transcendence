@@ -30,9 +30,9 @@ export default async function (fastify, options) {
   });
 
   fastify.post('/verify', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    // if (req.user.twofa !== false) {
-    //   return reply.code(400).send({ error: '2FA already verified' });
-    // }
+    if (req.user.twofa !== false) {
+      return reply.code(400).send({ error: '2FA already verified' });
+    }
 
     const isValid = speakeasy.totp.verify({
       secret: req.user.twofa_secret,

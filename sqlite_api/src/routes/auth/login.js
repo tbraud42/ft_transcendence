@@ -8,7 +8,6 @@ export default async function (fastify, options) {
     const { username, password } = req.body;
 
     const user = await fastify.showUserByUsername(fastify.db, username);
-
     if (!user) {
       return reply.code(401).send({ error: 'User not found' });
     }

@@ -35,7 +35,7 @@ import {
 import twoFaRoute from './routes/auth/2fa.js';
 import loginRoute from './routes/auth/login.js';
 import signupRoutes from './routes/auth/signup.js';
-import isLoginRoute from './routes/auth/isLogin.js';
+import isLoginRoute from './routes/auth/isAuth.js';
 import userRoutes from './routes/client/user.js';
 import tournamentRoute from './routes/matchs/tournaments.js';
 import tournamentClientRoute from './routes/matchs/tournaments_client.js';

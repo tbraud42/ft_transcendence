@@ -31,6 +31,7 @@ export default async function (fastify, options) {
       if (err.code === 'SQLITE_CONSTRAINT') {
         return reply.code(400).send({ error: 'User already joined or invalid foreign key' });
       }
+
       reply.code(500).send({ error: 'Internal server error' });
     }
   });
@@ -40,7 +41,6 @@ export default async function (fastify, options) {
     const { score, rank } = req.body;
 
     const result = fastify.db.prepare(`UPDATE tournament_participants SET score = COALESCE(?, score), rank = COALESCE(?, rank) WHERE tournament_id = ? AND user_id = ?`).run(score, rank, tournament_id, user_id);
-
     if (result.changes === 0) {
       return reply.code(404).send({ error: 'Participant not found or no change' });
     }
@@ -52,7 +52,6 @@ export default async function (fastify, options) {
     const { id: tournament_id, userId: user_id } = req.params;
 
     const result = fastify.db.prepare(`DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?`).run(tournament_id, user_id);
-
     if (result.changes === 0) {
       return reply.code(404).send({ error: 'Participant not found' });
     }
