@@ -6,15 +6,12 @@ export function JoinRoomHandler(ws, msg, payload) {
         return;
     }
 
-    console.log("JOIN ROOM REQUEST:", msg.data.id, "USER ID:", payload.id);
-
     const user = connectionManager.getUser(ws);
     let room = roomManager.getRoomById(msg.data.id);
     if (!room) {
         roomManager.createRoom(msg.data.id, user.id)
             .then(newRoom => {
                 room = newRoom;
-                console.log("CREATED NEW ROOM:", room.id, "USER ID:", user.id);
                 if (room.isFull()) {
                     ws.send(JSON.stringify({ type: 'join_room', success: false, error: 'Room is full' }));
                     return;

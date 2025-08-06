@@ -4,7 +4,8 @@ import { Difficulty, GameMode } from "../pongState";
 import { getTournament } from "../../../api/game";
 import { env } from "../../../utils/env";
 import { getToken } from "../../../utils/auth/auth";
-import { joinRoomPacket } from "./packets";
+import { joinRoomPacket } from "./handler/packets";
+import {handlePacket} from "./handler/PacketHandler";
 
 export interface RoomState {
     id: string;
@@ -93,8 +94,12 @@ export class Room {
             };
 
             this.socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                console.log("Received message:", data);
+                try {
+                    const data = JSON.parse(event.data)
+                    handlePacket(data)
+                } catch (err) {
+                    console.error("Error parsing WebSocket message", err);
+                }
             };
         });
     }
@@ -106,7 +111,6 @@ export class Room {
             this.state.players.push(player);
             if (this.state.gameMode === GameMode.ONLINE && this.socket?.readyState === WebSocket.OPEN) {
                 const packet = JSON.stringify(joinRoomPacket(this.state.id))
-                console.log(packet)
                 this.socket.send(packet);
             }
         }

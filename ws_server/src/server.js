@@ -36,7 +36,7 @@ wss.on('connection', (ws, req) => {
     }
 
     console.log(`${payload.username} connected`)
-    connectionManager.register(ws, payload)
+    connectionManager.register(ws, payload, token)
 
     ws.on('message', (raw) => {
         let msg

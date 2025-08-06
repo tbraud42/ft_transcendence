@@ -4,12 +4,16 @@ export class OnlinePlayer extends LocalPlayer {
     protected readonly id: string
 
     constructor(
-        playerName: string,
+        name: string,
         playerId: string,
         speed: number = 5
     ) {
-        super(true, document.createElement('canvas'), playerName, speed)
+        super(true, document.createElement('canvas'), name, speed)
         this.id = playerId
+    }
+
+    getName(): string {
+        return this.name
     }
 
     getId(): string {

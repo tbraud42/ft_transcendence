@@ -66,5 +66,11 @@
   "pong_spectate": "Spectateur",
 
   "pong_list_rooms_title": "Salles disponibles",
-  "pong_no_rooms": "Aucune salle trouvée."
+  "pong_no_rooms": "Aucune salle trouvée.",
+
+  "room_title": "Partie",
+  "room_players": "Joueurs",
+  "room_mode": "Mode",
+  "room_difficulty": "Difficulté",
+  "room_player_ready": "Prêt"
 }

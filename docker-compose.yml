@@ -73,6 +73,8 @@ services:
       - API_URL=api.${DOMAIN_NAME}
       - JWT_SECRET=${JWT_SECRET}
     restart: unless-stopped
+    extra_hosts:
+      - "api.dev.local:host-gateway"
     networks:
       - backend
 

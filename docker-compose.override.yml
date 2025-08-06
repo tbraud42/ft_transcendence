@@ -31,4 +31,6 @@ services:
   ws_server:
     volumes:
       - ./ws_server/src:/app/src
+    environment:
+      - NODE_ENV=development
     command: npm run dev

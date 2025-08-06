@@ -7,6 +7,8 @@ import {
     selectedDifficulty,
     selectedGameMode
 } from "../games/pong/pongState";
+import {renderRoomInfo} from "../components/room/roomInfo";
+import {renderPlayerList} from "../components/room/playerList";
 
 let room: Room
 
@@ -14,13 +16,9 @@ export function renderPongLobby(roomId: string): HTMLElement {
     const container = document.createElement('div')
     container.className = 'min-h-screen flex flex-col items-center justify-center text-white px-4 py-8 text-center'
 
-    const title = document.createElement('h2')
-    title.textContent = `Lobby: ${roomId}`
-    title.className = 'text-2xl font-bold mb-4'
-
     const status = document.createElement('p')
     status.className = 'text-gray-400 mb-4'
-    status.textContent = 'Connecting to room...'
+    status.textContent = `Connecting to room #${roomId}...`
 
     const playersList = document.createElement('ul')
     playersList.className = 'mb-6 flex flex-col gap-2'
@@ -33,14 +31,18 @@ export function renderPongLobby(roomId: string): HTMLElement {
         window.location.hash = '#/pong'
     }
 
-    container.append(title, status, playersList, leaveBtn)
+    container.append(status, playersList, leaveBtn)
 
     room.init().then(() => {
-        room.join(new OnlinePlayer('Player1', 'randomId1', 5));
+        room.join(new OnlinePlayer('Player1', 'randomId1', 5))
+
+        status.replaceWith(renderRoomInfo(room.state))
+        playersList.replaceWith(renderPlayerList(room.state.players))
+
     }).catch((err) => {
-        console.error('Room init error:', err);
-        status.textContent = 'Erreur de connexion à la room.';
-    });
+        console.error('Room init error:', err)
+        status.textContent = 'Error connecting to room.'
+    })
 
     return container
 }

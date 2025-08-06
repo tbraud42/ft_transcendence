@@ -63,7 +63,8 @@ export class Room {
                     name: client.name,
                 },
                 room: this.toJSON(),
-            })
+            }),
+            client
         )
         console.log("Client added to room:", this.id, "Client ID:", client.id);
         client.ws.on('message', (raw) => {
@@ -72,7 +73,7 @@ export class Room {
                 this.removeClient(client);
                 client.ws.close();
             } else {
-                this.broadcast(raw);
+                this.broadcast(raw, client);
             }
         })
     }
@@ -101,10 +102,13 @@ export class Room {
         return this.getClientCount() >= this.maxClients;
     }
 
-    broadcast(message) {
+    broadcast(message, excludeClient = null) {
         for (const client of this.clients) {
+            if (client === excludeClient) {
+                continue;
+            }
             if (client.readyState === client.OPEN) {
-                client.send(message);
+                client.ws.send(message);
             }
         }
     }

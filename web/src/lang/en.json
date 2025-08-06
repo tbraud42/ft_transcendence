@@ -66,5 +66,11 @@
   "pong_spectate": "Spectate",
 
   "pong_list_rooms_title": "Available Rooms",
-  "pong_no_rooms": "No rooms found."
+  "pong_no_rooms": "No rooms found.",
+
+  "room_title": "Game",
+  "room_players": "Players",
+  "room_mode": "Mode",
+  "room_difficulty": "Difficulty",
+  "room_player_ready": "Ready"
 }

@@ -1,6 +1,8 @@
 import {Room} from "./engine/Room.js";
 import {config} from "../config.js";
 import {connectionManager} from "../server.js";
+import fetch from 'node-fetch';
+import https from 'https'
 
 export class RoomManager {
     constructor() {
@@ -12,8 +14,8 @@ export class RoomManager {
             throw new Error(`Room with id ${id} already exists`)
         }
 
-        const userToken = connectionManager.getSocketByUserId(creatorId)
-        const roomData = await this.getRoomDataThroughApi(id, userToken)
+        const token = connectionManager.getTokenByUserId(creatorId)
+        const roomData = await this.getRoomDataThroughApi(id, token)
 
         const name = roomData.name || 'Pong'
         const difficulty = roomData.difficulty || "medium"
@@ -45,22 +47,31 @@ export class RoomManager {
 
     async getRoomDataThroughApi(roomId, userToken) {
         try {
-            const response = await fetch(`${config.API_URL}/tournaments/${roomId}`, {
+            const url = `https://${config.API_URL}/tournaments/${roomId}`
+
+            const agent = new https.Agent({
+                rejectUnauthorized: config.NODE_ENV !== 'development',
+            })
+
+            const response = await fetch(url, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${userToken}`,
                     'Content-Type': 'application/json'
-                }
+                },
+                agent
             })
+
+            const text = await response.text()
 
             if (!response.ok) {
                 throw new Error(`API request failed with status ${response.status}`)
             }
 
-            return await response.json()
+            return JSON.parse(text)
 
         } catch (error) {
-            console.error(`Error fetching room data: ${error.message}`)
+            console.error('Error fetching room data:', error)
             throw error
         }
     }
