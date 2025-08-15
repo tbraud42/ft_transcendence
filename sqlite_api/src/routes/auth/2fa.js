@@ -41,6 +41,7 @@ export default async function (fastify, options) {
     });
 
     if (isValid) {
+      await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(req.user.id);
       const fullToken = fastify.generateToken(
         {
           id: req.user.id,

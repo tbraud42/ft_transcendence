@@ -3,8 +3,9 @@ CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username VARCHAR(30) NOT NULL UNIQUE,
   password_hash VARCHAR(100) NOT NULL,
-  role VARCHAR(10) DEFAULT 'user', -- 'user' ou 'admin'
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  role VARCHAR(10) DEFAULT 'user', -- 'user' or 'admin'
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2FA
@@ -17,7 +18,7 @@ CREATE TABLE tournaments (
   name VARCHAR(50) NOT NULL,
   description VARCHAR(255),
   creator_id INTEGER NOT NULL,
-  difficulty VARCHAR(15),             -- par ex: 'easy', 'medium', 'hard'
+  difficulty VARCHAR(15), -- par ex: 'easy', 'medium', 'hard'
   maxPlayers INTEGER DEFAULT 16,
   isPrivate BOOLEAN DEFAULT 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

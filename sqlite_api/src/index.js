@@ -6,6 +6,9 @@ dotenv.config();
 import Fastify from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 
+// import crontab module
+import cron from 'node-cron';
+
 // import database function
 import db from './database/db.js'
 import {
@@ -15,7 +18,8 @@ import {
   updateUser,
   deleteUser,
   showAllData,
-  clearDatabase
+  clearDatabase,
+  crontab
 } from './database/manage.js';
 
 import {
@@ -109,12 +113,13 @@ const start = async () => {
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
+  cron.schedule('0 0 0 * * *', () => crontab(fastify), { timezone: 'Europe/Paris' });
+
   const ADDRESS = '0.0.0.0';
   const PORT = process.env.DATABASE_PORT || 3000;
 
   try {
     fastify.listen({ port: PORT, host: ADDRESS });
-    // await fastify.clearDatabase(fastify.db); // clear all data, remove for futur
     // const username = 'admin';
     // const email = 'admin@example.com';
     // const password = 'supersecurepassword';
@@ -123,6 +128,8 @@ const start = async () => {
 
     // const insertUser = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
     // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
+    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE id = ?`).run(2); // tmp pour test crontab
+
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);

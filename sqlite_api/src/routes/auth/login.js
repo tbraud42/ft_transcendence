@@ -16,7 +16,9 @@ export default async function (fastify, options) {
       return reply.code(401).send({ error: 'Invalid password' });
     }
 
+    await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
     fastify.stat.login++;
+
     if (user.is_twofa_enabled) {
       const token = fastify.generateToken({id: user.id, username: user.username, role: user.role,}, false, '5m');
 
