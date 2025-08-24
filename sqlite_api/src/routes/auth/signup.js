@@ -1,14 +1,13 @@
 // routes/auth/signup.js
 // | Method   | Route              | Description                            | Access           |
 // | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/signup`          | signup, reply by JWT token             | Public           |
+// | `POST`   | `/auth/signup`     | signup, reply by JWT token             | Public           |
 
 export default async function (fastify, options) {
-  fastify.post('/', async (request, reply) => {
-    const { username, password } = request.body;
+  fastify.post('/', async (req, reply) => {
+    const { username, password } = req.body;
 
     const user = await fastify.showUserByUsername(fastify.db, username);
-
     if (user) {
       return reply.code(401).send({ error: 'username already use' });
     }
@@ -26,11 +25,7 @@ export default async function (fastify, options) {
 
     fastify.stat.signup++;
     const newUser = await fastify.createUser(fastify.db, { username: username, password: password});
-    const token = fastify.generateToken({
-      id: newUser.userId,
-      username: newUser.username,
-      role: newUser.role
-    });
+    const token = fastify.generateToken({id: newUser.userId, username: newUser.username, role: newUser.role,}, true, '12h');
     return reply.send({ token });
   });
 }

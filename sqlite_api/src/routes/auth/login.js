@@ -1,29 +1,32 @@
 // routes/auth/login.js
 // | Method   | Route              | Description                            | Access           |
 // | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/login`           | login, reply by JWT token              | Public           |
+// | `POST`   | `/auth/login`      | login, reply by JWT token              | Public           |
 
 export default async function (fastify, options) {
-  fastify.post('/', async (request, reply) => {
-    const { username, password } = request.body;
+  fastify.post('/', async (req, reply) => {
+    const { username, password } = req.body;
 
     const user = await fastify.showUserByUsername(fastify.db, username);
-
     if (!user) {
       return reply.code(401).send({ error: 'User not found' });
     }
 
     if (!(await fastify.verifyPassword(password, user.password_hash))) {
-      return reply.code(401).send({ error: 'invalid password' });
+      return reply.code(401).send({ error: 'Invalid password' });
     }
 
-    const token = fastify.generateToken({
-      id: user.id,
-      username: user.username,
-      role: user.role
-    });
-
+    await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
     fastify.stat.login++;
-    return reply.send({ token });
+
+    if (user.is_twofa_enabled) {
+      const token = fastify.generateToken({id: user.id, username: user.username, role: user.role,}, false, '5m');
+
+      return reply.send({twofa_required: true, tmp_token: token,});
+    } else {
+      const token = fastify.generateToken({id: user.id, username: user.username, role: user.role, }, true, '12h');
+
+      return reply.send({ token });
+    }
   });
 }

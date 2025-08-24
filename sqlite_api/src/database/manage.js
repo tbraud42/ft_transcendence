@@ -53,6 +53,27 @@ export async function deleteUser(db, id) {
   return { success: true, id };
 }
 
+export async function crontab(fastify) {
+  fastify.db.exec('BEGIN');
+
+  try {
+    const inactiveUsers = fastify.db.prepare(`SELECT id, username, last_timestamp FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
+
+    const anonymizeStmt = fastify.db.prepare(`UPDATE users SET username = 'deleted_' || id, password_hash = hex(randomblob(32)), role = 'user' WHERE id = ?`);
+
+    for (const user of inactiveUsers) {
+      anonymizeStmt.run(user.id);
+      fastify.log.info(`User ${user.username} (ID: ${user.id}) anonymized due to inactivity (RGPD)`);
+    }
+
+    fastify.db.exec('COMMIT');
+  } catch (err) {
+    fastify.db.exec('ROLLBACK');
+    fastify.log.error({ err }, 'RGPD anonymization failed');
+    throw err;
+  }
+}
+
 
 // tmp pour le debug
 export async function showAllData(db) {
