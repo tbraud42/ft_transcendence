@@ -13,6 +13,8 @@ services:
     volumes:
       - ./web:/app
       - /app/node_modules
+    environment:
+      - NODE_ENV=development
     expose:
       - "5173"
     healthcheck:

@@ -1,9 +1,18 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from "dotenv";
 
-export const config = {
-    API_URL: process.env.API_URL || 'http://localhost:3000',
-    JWT_SECRET: process.env.JWT_SECRET || 'default_secret',
-    WS_PORT: process.env.WS_PORT || 3000,
-    NODE_ENV: process.env.NODE_ENV || 'development'
+export function loadEnv() {
+    dotenv.config();
+    if (!process.env.JWT_SECRET) {
+        console.warn("[config] Missing JWT_SECRET (using insecure default for dev!)");
+        process.env.JWT_SECRET = "dev-insecure-secret";
+    }
 }
+
+export const CONFIG = {
+    tokenHeader: "authorization",
+    tokenQueryParam: "token",
+    tokenSubprotocol: "jwt",
+    heartbeatMs: 30000,
+    tickMs: 1000 / 60,
+    broadcastEvery: 1
+};
