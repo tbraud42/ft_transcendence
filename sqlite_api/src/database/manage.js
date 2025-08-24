@@ -1,37 +1,106 @@
-// src/database/.js
-export async function createUser(db, { username, password_hash }) {
-  try {
-    const stmt = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
-    const info = stmt.run(username, password_hash);
+// database/.js
+import bcrypt from 'bcrypt';
 
-    return { success: true, id: info.lastInsertRowid, user: { id: info.lastInsertRowid, username, password_hash } };
-  } catch (err) {
-
-    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-      return { success: false, error: 'user_exists' };
-    }
-    throw err;
+export async function createUser(db, { username, password }) {
+  if (!password || typeof password !== 'string') {
+    throw new Error("Password is required and must be a string");
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
+
+  const info = db.prepare(`INSERT INTO users (username, password_hash) VALUES (?, ?)`).run(username, hashedPassword);
+
+  return {
+    success: true,
+    userId: info.lastInsertRowid,
+    username,
+    role: 'user'
+  };
 }
 
-export async function showUser(db, username) {
-  const stmt = db.prepare('SELECT * FROM users WHERE username = ?');
-  const user = stmt.get(username);
+export function showUserByUsername(db, username) {
+  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 
   return user || null;
 }
 
-export function updateUser(db, id, { username, password_hash }) {
-  const stmt = db.prepare('UPDATE users SET username = ?, password_hash = ? WHERE id = ?');
-  const result = stmt.run(username, password_hash, id);
+export function showUserById(db, id) {
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
 
-  return { success: true, id };
+  return user || null;
+}
+
+export async function updateUser(db, id, { username, password }) {
+  if (!password || typeof password !== 'string') {
+    throw new Error("Password is required and must be a string");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
+
+  const result = db.prepare('UPDATE users SET username = ?, password_hash = ? WHERE id = ?').run(username, hashedPassword, id);
+
+  return {
+    success: true,
+    userId: result.lastInsertRowid,
+    username,
+    role: 'user'
+  };
 }
 
 export async function deleteUser(db, id) {
-  const stmt = db.prepare('DELETE FROM users WHERE id = ?');
-  const result = stmt.run(id);
+  const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
 
   return { success: true, id };
 }
 
+export async function crontab(fastify) {
+  fastify.db.exec('BEGIN');
+
+  try {
+    const inactiveUsers = fastify.db.prepare(`SELECT id, username, last_timestamp FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
+
+    const anonymizeStmt = fastify.db.prepare(`UPDATE users SET username = 'deleted_' || id, password_hash = hex(randomblob(32)), role = 'user' WHERE id = ?`);
+
+    for (const user of inactiveUsers) {
+      anonymizeStmt.run(user.id);
+      fastify.log.info(`User ${user.username} (ID: ${user.id}) anonymized due to inactivity (RGPD)`);
+    }
+
+    fastify.db.exec('COMMIT');
+  } catch (err) {
+    fastify.db.exec('ROLLBACK');
+    fastify.log.error({ err }, 'RGPD anonymization failed');
+    throw err;
+  }
+}
+
+
+// tmp pour le debug
+export async function showAllData(db) {
+  const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
+
+  for (const { name } of tables) {
+    console.log(`\nTable: ${name}`);
+
+    const rows = db.prepare(`SELECT * FROM ${name}`).all();
+
+    if (rows.length === 0) {
+      console.log('empty db');
+    } else {
+      for (const row of rows) {
+        console.log(row);
+      }
+    }
+  }
+}
+
+export function clearDatabase(db) {
+  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
+
+  for (const table of tables) {
+    const tableName = table.name;
+    db.prepare(`DELETE FROM ${tableName}`).run();
+    db.prepare(`DELETE FROM sqlite_sequence WHERE name = ?`).run(tableName); // Reset AUTOINCREMENT
+    console.log(`database clear : ${tableName}`);
+  }
+}

@@ -4,6 +4,7 @@ set -e
 
 CERT_DIR="/etc/nginx/certs"
 DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
+WEB_PORT="${WEB_PORT:-80}"
 ADMIN_EMAIL="admin@${DOMAIN_NAME}"
 LE_LIVE_DIR="/etc/letsencrypt/live/$DOMAIN_NAME"
 CERT_FILE="$CERT_DIR/fullchain.pem_$DOMAIN_NAME"
@@ -29,16 +30,18 @@ else
         --email "$ADMIN_EMAIL" \
         -d "$DOMAIN_NAME" \
         -d "api.$DOMAIN_NAME" \
-        --verbose --debug --quiet || {
-            echo "[WARN] Let's Encrypt certificate generation failed."
-            echo "[INFO] Generating fallback self-signed certificates..."
+        -d "pong.ws.$DOMAIN_NAME" \
+        --verbose --debug --quiet 2>/dev/null
+    CERTBOT_EXIT_CODE=$?
+    set -e
 
-            selfsigned_cert "$DOMAIN_NAME"
-            selfsigned_cert "api.$DOMAIN_NAME"
-            exit 0
-        }
+    if [[ $CERTBOT_EXIT_CODE -ne 0 ]]; then
+        echo "[WARN] Let's Encrypt certificate generation failed (exit code $CERTBOT_EXIT_CODE)."
+        echo "[INFO] Generating fallback self-signed certificates..."
 
-    if [[ -f "$LE_LIVE_DIR/fullchain.pem" && -f "$LE_LIVE_DIR/privkey.pem" ]]; then
+        selfsigned_cert "$DOMAIN_NAME"
+        selfsigned_cert "api.$DOMAIN_NAME"
+    elif [[ -f "$LE_LIVE_DIR/fullchain.pem" && -f "$LE_LIVE_DIR/privkey.pem" ]]; then
         cp "$LE_LIVE_DIR/fullchain.pem" "$CERT_FILE"
         cp "$LE_LIVE_DIR/privkey.pem" "$KEY_FILE"
         echo "[SUCCESS] Let's Encrypt certificates copied to $CERT_DIR"
@@ -47,12 +50,13 @@ else
         echo "[INFO] Generating fallback self-signed certificates..."
         selfsigned_cert "$DOMAIN_NAME"
         selfsigned_cert "api.$DOMAIN_NAME"
+        selfsigned_cert "pong.ws.$DOMAIN_NAME"
     fi
 fi
 
-echo "[INFO] Replacing DOMAIN_NAME and API_PORT in Nginx configuration..."
+echo "[INFO] Replacing DOMAIN_NAME and WEB_PORT in Nginx configuration..."
 sed -i "s/DOMAIN_NAME/$DOMAIN_NAME/g" /etc/nginx/nginx.conf
-sed -i "s/API_PORT/$API_PORT/g" /etc/nginx/nginx.conf
+sed -i "s/WEB_PORT/$WEB_PORT/g" /etc/nginx/nginx.conf
 
 echo "[INFO] Starting Nginx..."
 exec nginx -g "daemon off;"

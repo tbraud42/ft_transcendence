@@ -3,29 +3,22 @@ FROM node:20 AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm i
 
 COPY . .
 
 FROM node:20-slim
 
-# RUN useradd -m appuser
-
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y sqlite3 \
+RUN apt-get update && apt-get install -y sqlite3 curl \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./
-
-# RUN chown -R appuser:appuser /app
-
-# USER appuser
+COPY --from=builder /app/package*.json ./
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
-# CMD ["npm", "start"]
+CMD ["npm", "start"]
