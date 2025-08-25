@@ -17,8 +17,8 @@ import {
   showUserById,
   updateUser,
   deleteUser,
+  isAdminOrCreator,
   showAllData,
-  clearDatabase,
   crontab
 } from './database/manage.js';
 
@@ -27,6 +27,8 @@ import {
   getTournamentById,
   getTournamentByName,
   createTournament,
+  changeTournamentStatus,
+  getTournamentsByStatus,
   updateTournament,
   deleteTournament,
   getParticipantsByTournamentId,
@@ -37,6 +39,7 @@ import {
 
 // import routes
 import twoFaRoute from './routes/auth/2fa.js';
+import ftRoutes from './routes/auth/42auth.js';
 import loginRoute from './routes/auth/login.js';
 import signupRoutes from './routes/auth/signup.js';
 import isLoginRoute from './routes/auth/isAuth.js';
@@ -54,7 +57,8 @@ import {
   verifyPassword,
   allowSelfOrAdmin,
   validatePassword,
-  passwordFeedback
+  passwordFeedback,
+  usernameEndsWith42
 } from './plugins/security.js'
 
 import bcrypt from 'bcrypt'; // tmp pour clean database
@@ -62,19 +66,20 @@ import bcrypt from 'bcrypt'; // tmp pour clean database
 const start = async () => {
   const fastify = Fastify({ logger: true });
 
-  // trouver un moyen de changer tout sa ??
   fastify.decorate('db', db);
   fastify.decorate('createUser', createUser);
   fastify.decorate('showUserByUsername', showUserByUsername);
   fastify.decorate('showUserById', showUserById);
   fastify.decorate('updateUser', updateUser);
   fastify.decorate('deleteUser', deleteUser);
+  fastify.decorate('isAdminOrCreator', isAdminOrCreator);
   fastify.decorate('showAllData', showAllData);
-  fastify.decorate('clearDatabase', clearDatabase);
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
   fastify.decorate('getTournamentByName', getTournamentByName);
   fastify.decorate('createTournament', createTournament);
+  fastify.decorate('changeTournamentStatus', changeTournamentStatus);
+  fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
   fastify.decorate('updateTournament', updateTournament);
   fastify.decorate('deleteTournament', deleteTournament);
   fastify.decorate('getParticipantsByTournamentId', getParticipantsByTournamentId);
@@ -88,6 +93,7 @@ const start = async () => {
   fastify.decorate('allowSelfOrAdmin', allowSelfOrAdmin);
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
+  fastify.decorate('usernameEndsWith42', usernameEndsWith42);
   fastify.decorate('stat', {
     request: 0,
     login: 0,
@@ -98,12 +104,13 @@ const start = async () => {
     fastify.stat.request++;
   });
 
-  fastify.register(rateLimit, { // c'est drole
-    max: 20,
+  fastify.register(rateLimit, {
+    max: 100,
     timeWindow: '1 minute'
   });
 
   await fastify.register(twoFaRoute, { prefix: '/auth/2fa' });
+  await fastify.register(ftRoutes, { prefix: '/auth/42' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(isLoginRoute, { prefix: '/auth/isAuth' });
@@ -129,7 +136,6 @@ const start = async () => {
     // const insertUser = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
     // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
     // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE id = ?`).run(2); // tmp pour test crontab
-
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);

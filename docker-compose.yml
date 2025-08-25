@@ -51,6 +51,9 @@ services:
     environment:
       JWT_SECRET: ${JWT_SECRET}
       DATABASE_PORT: ${DATABASE_PORT}
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      REDIRECT_URI: ${REDIRECT_URI}
     volumes:
       - ./sqlite_api/src:/app/src
       - ./sqlite_api/data:/app/data

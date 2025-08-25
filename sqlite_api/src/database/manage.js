@@ -53,6 +53,23 @@ export async function deleteUser(db, id) {
   return { success: true, id };
 }
 
+export async function isAdminOrCreator(fastify, tournamentId, userId) {
+  const resultAdmin = await fastify.db.prepare(`SELECT role FROM users WHERE id = ?`).get([userId]);
+
+  if (resultAdmin && resultAdmin.role === 'admin') {
+    return true;
+  }
+
+  const resultUser = await fastify.db.prepare(`SELECT creator_id FROM tournaments WHERE id = ?`).get([tournamentId]);
+
+  if (resultUser && resultUser.creator_id === userId) {
+    return true;
+  }
+
+  return false;
+}
+
+
 export async function crontab(fastify) {
   fastify.db.exec('BEGIN');
 
@@ -74,8 +91,6 @@ export async function crontab(fastify) {
   }
 }
 
-
-// tmp pour le debug
 export async function showAllData(db) {
   const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
 
@@ -94,13 +109,3 @@ export async function showAllData(db) {
   }
 }
 
-export function clearDatabase(db) {
-  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
-
-  for (const table of tables) {
-    const tableName = table.name;
-    db.prepare(`DELETE FROM ${tableName}`).run();
-    db.prepare(`DELETE FROM sqlite_sequence WHERE name = ?`).run(tableName); // Reset AUTOINCREMENT
-    console.log(`database clear : ${tableName}`);
-  }
-}

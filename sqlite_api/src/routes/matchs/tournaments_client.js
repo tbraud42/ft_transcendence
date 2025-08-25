@@ -6,7 +6,6 @@
 // | `PATCH`  | `/tournaments/:id/participants/:userId` | Update score or rank         | Admin, creator              |
 // | `DELETE` | `/tournaments/:id/participants/:userId` | Remove a participant         | Admin, creator, or self     |
 
-// en construction
 export default async function (fastify, options) {
   fastify.get('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
     const { id: tournament_id, userId: user_id } = req.params;
@@ -59,15 +58,3 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 }
-
-// CREATE TABLE tournament_participants (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   tournament_id INTEGER NOT NULL,
-//   user_id INTEGER NOT NULL,
-//   score INTEGER DEFAULT 0,
-//   rank INTEGER, -- classement final s’il y a
-//   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-//   FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
-//   FOREIGN KEY (user_id) REFERENCES users(id),
-//   UNIQUE(tournament_id, user_id)
-// );

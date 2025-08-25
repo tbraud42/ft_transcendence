@@ -9,6 +9,11 @@ import qrcode from 'qrcode';
 
 export default async function (fastify, options) {
   fastify.post('/setup', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const ftUser = await fastify.usernameEndsWith42(req.user.username);
+    if (ftUser) {
+      return reply.code(400).send({ error: '2FA not allowed for 42 users' });
+    }
+
     if (req.user.is_twofa_enabled) {
       return reply.code(400).send({ error: '2FA already enabled' });
     }
@@ -17,7 +22,7 @@ export default async function (fastify, options) {
         name: `ft_transcendence:${req.user.username}`,
     });
 
-    try { // si on peu le virer on le fait
+    try {
       await fastify.db.prepare('UPDATE users SET twofa_secret = ?, is_twofa_enabled = 1 WHERE id = ?').run(secret.base32, req.user.id);
     } catch (err) {
       console.error('SQL ERROR:', err);

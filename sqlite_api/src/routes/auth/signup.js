@@ -12,6 +12,10 @@ export default async function (fastify, options) {
       return reply.code(401).send({ error: 'username already use' });
     }
 
+    if (await fastify.usernameEndsWith42(username)) {
+      return reply.code(401).send({ error: 'invalide username' });
+    }
+
     const validation = await fastify.validatePassword(password);
     if (!validation.valid) {
       const message = await fastify.passwordFeedback(validation.errors);
@@ -29,25 +33,3 @@ export default async function (fastify, options) {
     return reply.send({ token });
   });
 }
-
-// Longueur et complexité raisonnables
-//  Minimum 8-12 caractères
-//  Inclure majuscules, minuscules, chiffres, symboles
-
-// Hachage sécurisé
-//  Utiliser argon2, bcrypt, ou PBKDF2 avec un sel unique
-
-// Pas de stockage en clair
-//  Même en base locale, tout doit être hashé
-
-// 2FA fortement recommandé
-//  Surtout si des données sensibles sont accessibles
-
-// Gestion des tentatives
-//  Limiter les tentatives de connexion (ex: rate limit, CAPTCHA)
-
-// Réinitialisation sécurisée
-//  Token temporaire, expiration rapide, lien à usage unique
-
-// Journalisation des connexions
-//  Pour détecter les comportements suspects (conforme à l’obligation de surveillance)

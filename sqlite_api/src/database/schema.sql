@@ -18,9 +18,10 @@ CREATE TABLE tournaments (
   name VARCHAR(50) NOT NULL,
   description VARCHAR(255),
   creator_id INTEGER NOT NULL,
-  difficulty VARCHAR(15), -- par ex: 'easy', 'medium', 'hard'
+  difficulty VARCHAR(15), -- ex: 'easy', 'medium', 'hard'
   maxPlayers INTEGER DEFAULT 16,
   isPrivate BOOLEAN DEFAULT 0,
+  status INTEGER DEFAULT 0, -- 0=waiting, 1=playing, 2=finished
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (creator_id) REFERENCES users(id)
 );
