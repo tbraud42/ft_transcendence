@@ -4,7 +4,7 @@
 // | `GET`    | `/ping`            | reply ping by pong                     | Public           |
 
 export default async function (fastify, opts) {
-  fastify.get('/', async (req, reply) => {
+  fastify.get('/', { logLevel: 'silent' }, async (req, reply) => {
     const ip = req.ip;
     reply.type('application/json').send({ message: 'pong', from: ip });
   });

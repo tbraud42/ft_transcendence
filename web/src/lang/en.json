@@ -13,6 +13,15 @@
   "home_game_2_locked_msg": "This game is not yet available.",
   "home_logout": "Logout",
 
+  "login_pseudo": "Username",
+  "login_password": "Password",
+  "signup_password_confirm": "Confirm Password",
+  "login_login": "Login",
+  "login_signup": "Sign Up",
+  "login_switch_to_signup": "No account? Sign up",
+  "signup_switch_to_login": "Already have an account? Log in",
+  "login_or": "or",
+  "login_error_failed": "Login failed. Please check your credentials.",
   "login_error_empty": "Please fill in all fields.",
   "signup_error_mismatch": "Passwords do not match.",
 
@@ -37,12 +46,9 @@
 
   "pong_online_title": "Online Games",
   "pong_online_loading": "Loading available rooms...",
-  "pong_online_no_lobbies": "No public rooms found.",
+  "pong_online_no_lobbies": "No rooms found.",
   "pong_online_players": "{{count}} players",
-  "pong_online_create_public": "Create Public Room",
-  "pong_online_create_private": "Create Private Room",
-  "pong_online_private_join": "Join with code",
-  "pong_online_code": "Enter room code",
+  "pong_online_create_public": "Create Room",
   "pong_online_name": "Room name",
   "pong_online_error_create": "Failed to create room. Please try again.",
 

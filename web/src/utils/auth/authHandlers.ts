@@ -61,6 +61,6 @@ export async function handleSignup(
     }
 }
 
-export function handleGoogleLogin(): void {
-    login('GoogleUser')
+export function handleFtLogin(): void {
+    login('User_42')
 }

@@ -23,7 +23,6 @@ export async function fetchTournaments(): Promise<any[]> {
 
 export function createTournament(
     name: string,
-    isPrivate: boolean,
     difficulty: string
 ): Promise<any> {
     const url = `https://${API_URL}/tournaments`
@@ -33,7 +32,7 @@ export function createTournament(
         description: '',
         difficulty,
         maxPlayers: 2,
-        isPrivate,
+        isPrivate: false
     }
 
     return fetch(url, {
@@ -52,7 +51,7 @@ export function createTournament(
     })
 }
 
-export function getTournament(id: string): Promise<any> {
+export function getTournament(id: number): Promise<any> {
     const url = `https://${API_URL}/tournaments/${id}`
 
     return fetch(url, {

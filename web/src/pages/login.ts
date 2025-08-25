@@ -1,10 +1,10 @@
 import i18next from '../utils/lang/i18n'
-import googleIcon from '../img/google.webp'
+import ftIcon from '../img/42.webp'
 import { createInput } from '../components/input'
 import { createButton } from '../components/button'
 import { createAuthContainer } from '../components/authContainer'
 import { createDivider } from '../components/divider'
-import {handleGoogleLogin, handleLogin, handleSignup} from '../utils/auth/authHandlers'
+import {handleFtLogin, handleLogin, handleSignup} from '../utils/auth/authHandlers'
 
 export function renderLogin(): HTMLElement {
     const isSignup = window.location.hash === '#/signup'
@@ -14,8 +14,8 @@ export function renderLogin(): HTMLElement {
     const title = document.createElement('h2')
     title.className = 'text-2xl font-bold text-center'
     title.textContent = isSignup
-        ? i18next.t('login_title')
-        : i18next.t('login_signup')
+        ? i18next.t('login_signup')
+        : i18next.t('login_login')
 
     // --- Form ---
     const form = document.createElement('form')
@@ -86,16 +86,15 @@ function createGoogleButton(): HTMLButtonElement {
         'bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition'
     btn.onclick = (e) => {
         e.preventDefault()
-        handleGoogleLogin()
+        handleFtLogin()
     }
 
     const icon = document.createElement('img')
-    icon.src = googleIcon
-    icon.alt = 'Google logo'
-    icon.className = 'w-5 h-5'
+    icon.src = ftIcon
+    icon.alt = '42 logo'
+    icon.className = 'w-6 h-6'
 
     const text = document.createElement('span')
-    text.textContent = i18next.t('login_google')
 
     btn.append(icon, text)
     return btn

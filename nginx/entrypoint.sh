@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 CERT_DIR="/etc/nginx/certs"
 DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
 WEB_PORT="${WEB_PORT:-80}"

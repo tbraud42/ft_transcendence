@@ -100,7 +100,7 @@ const start = async () => {
   });
 
   fastify.register(rateLimit, { // c'est drole
-    max: 20,
+    max: 100,
     timeWindow: '1 minute'
   });
 

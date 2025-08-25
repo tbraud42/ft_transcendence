@@ -14,6 +14,6 @@ export function logout(): void {
     window.location.hash = '#/'
 }
 
-export function getToken(): string | null {
-    return localStorage.getItem(USER_KEY)
+export function getToken(): string {
+    return localStorage.getItem(USER_KEY) || ''
 }
