@@ -53,6 +53,12 @@ export async function deleteUser(db, id) {
   return { success: true, id };
 }
 
+export function isAdmin(db, userId) { // pas bon encore
+  const result = db.prepare('SELECT LOWER(role) AS role FROM users WHERE id = ?').get(userId);
+
+  return result?.role === ROLE.ADMIN;
+}
+
 export async function isAdminOrCreator(fastify, tournamentId, userId) {
   const resultAdmin = await fastify.db.prepare(`SELECT role FROM users WHERE id = ?`).get([userId]);
 

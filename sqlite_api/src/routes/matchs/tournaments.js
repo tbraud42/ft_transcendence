@@ -96,16 +96,17 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 
-  fastify.get('/state/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a faire
+  fastify.patch('/state/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
     if (!fastify.isAdminOrCreator(fastify, req.params.id, req.user.id)) {
       return reply.code(403).send({ error: 'Access denied' });
     }
 
-    const result = fastify.changeTournamentStatus(fastify.db, req.params.id);
+    const result = await fastify.changeTournamentStatus(fastify.db, req.params.id);
     if (result.error) {
       return reply.code(404).send({ error: 'no tournament availible' });
     }
-    reply.send({ status: result }); // pas bon
+
+    reply.send({ status: result }); // a revoir
   });
 
   fastify.delete('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a corriger si on appel deux fois

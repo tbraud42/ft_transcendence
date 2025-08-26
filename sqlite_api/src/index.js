@@ -17,6 +17,7 @@ import {
   showUserById,
   updateUser,
   deleteUser,
+  isAdmin,
   isAdminOrCreator,
   showAllData,
   crontab
@@ -72,6 +73,7 @@ const start = async () => {
   fastify.decorate('showUserById', showUserById);
   fastify.decorate('updateUser', updateUser);
   fastify.decorate('deleteUser', deleteUser);
+  fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
   fastify.decorate('showAllData', showAllData);
   fastify.decorate('getAllTournaments', getAllTournaments);
@@ -128,7 +130,6 @@ const start = async () => {
   try {
     fastify.listen({ port: PORT, host: ADDRESS });
     // const username = 'admin';
-    // const email = 'admin@example.com';
     // const password = 'supersecurepassword';
 
     // const password_hash = await bcrypt.hash(password, 10);

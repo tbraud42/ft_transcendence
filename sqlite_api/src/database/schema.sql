@@ -3,7 +3,8 @@ CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username VARCHAR(30) NOT NULL UNIQUE,
   password_hash VARCHAR(100) NOT NULL,
-  role VARCHAR(10) DEFAULT 'user', -- 'user' or 'admin'
+  role VARCHAR(10) NOT NULL DEFAULT 'user'
+    CHECK (role IN ('user', 'admin')), -- 'user' or 'admin'
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );
