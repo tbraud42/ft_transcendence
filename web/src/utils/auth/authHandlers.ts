@@ -22,7 +22,7 @@ export async function handleLogin(
             errorMsg.textContent = i18next.t('login_error_failed')
             return
         }
-        login(token)
+        login(token, user)
     } catch {
         errorMsg.textContent = i18next.t('login_error_failed')
     }
@@ -55,12 +55,12 @@ export async function handleSignup(
             errorMsg.textContent = i18next.t('signup_error_failed')
             return
         }
-        login(token)
+        login(token, user)
     } catch {
         errorMsg.textContent = i18next.t('signup_error_failed')
     }
 }
 
 export function handleFtLogin(): void {
-    login('User_42')
+    login('User_42', 'User_42')
 }

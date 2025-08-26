@@ -2,7 +2,8 @@ import i18next from '../utils/lang/i18n'
 import { createInput } from '../components/input'
 import { createButton } from '../components/button'
 import { createSidebar } from '../components/sidebar'
-import { logout } from '../utils/auth/auth'
+import {getUsername, logout} from '../utils/auth/auth'
+import {env} from "../utils/env";
 
 export function renderProfile(): HTMLElement {
     const container = document.createElement('div')
@@ -12,6 +13,7 @@ export function renderProfile(): HTMLElement {
         { label: i18next.t('profile_sidebar_home'), href: '#/home' },
         { label: i18next.t('profile_sidebar_profile'), href: '#/profile' },
         { label: i18next.t('profile_sidebar_settings'), href: '#/profile/settings' },
+        { label: i18next.t('profile_sidebar_2fa'), href: '#/profile/2fa' },
         { label: i18next.t('home_logout'), href: () => logout(), color: 'red' },
     ])
 
@@ -22,6 +24,8 @@ export function renderProfile(): HTMLElement {
     const hash = window.location.hash
     if (hash === '#/profile/settings') {
         content.appendChild(renderSettingsView())
+    } else if (hash === '#/profile/2fa') {
+        content.appendChild(render2faView())
     } else {
         content.appendChild(renderProfileView())
     }
@@ -60,9 +64,9 @@ export function renderSettingsView(): HTMLElement {
     const form = document.createElement('form')
     form.className = 'space-y-4'
 
-    const pseudoInput = createInput('text', i18next.t('settings_new_username'))
-    const currentPasswordInput = createInput('password', i18next.t('settings_current_password'))
     const newPasswordInput = createInput('password', i18next.t('settings_new_password'))
+    const confirmNewPasswordInput = createInput('password', i18next.t('settings_confirm_new_password'))
+    const currentPasswordInput = createInput('password', i18next.t('settings_current_password'))
 
     const message = document.createElement('p')
     message.className = 'text-sm text-green-500 h-5'
@@ -71,27 +75,55 @@ export function renderSettingsView(): HTMLElement {
 
     form.onsubmit = (e) => {
         e.preventDefault()
-        const pseudo = pseudoInput.value.trim()
-        const current = currentPasswordInput.value.trim()
         const newPass = newPasswordInput.value.trim()
+        const confirmNewPass = confirmNewPasswordInput.value.trim()
+        const current = currentPasswordInput.value.trim()
 
-        if (!pseudo || !current || !newPass) {
+        if (!confirmNewPass || !newPass || !current) {
             message.textContent = i18next.t('settings_error_empty_fields')
             return
         }
 
-        // TODO: Simulate success for now, replace with actual API call
-        setTimeout(() => {
+        const url = `https://${env.API_URL}/users`
+        fetch(url, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: getUsername(), oldPassword: current, newPassword: newPass }),
+        }).then(res => {
+            if (!res.ok) {
+                if (res.status === 401) {
+                    message.textContent = i18next.t('settings_error_incorrect_password')
+                } else {
+                    message.textContent = i18next.t('settings_error_mismatch')
+                }
+                return
+            }
             message.textContent = i18next.t('settings_success_update')
-            pseudoInput.value = ''
-            currentPasswordInput.value = ''
             newPasswordInput.value = ''
-        }, 1000)
+            confirmNewPasswordInput.value = ''
+            currentPasswordInput.value = ''
+        })
     }
 
-    form.append(pseudoInput, currentPasswordInput, newPasswordInput, submitBtn, message)
+    form.append(newPasswordInput, confirmNewPasswordInput, currentPasswordInput, submitBtn, message)
     container.append(title, form)
     wrapper.appendChild(container)
 
     return wrapper
+}
+
+export function render2faView(): HTMLElement {
+    const section = document.createElement('section')
+    section.className = 'h-full flex flex-col justify-center items-center text-center gap-4'
+
+    const title = document.createElement('h2')
+    title.className = 'text-2xl font-bold text-gray-800 dark:text-white'
+    title.textContent = i18next.t('2fa_title')
+
+    const desc = document.createElement('p')
+    desc.className = 'text-gray-600 dark:text-gray-300'
+    desc.textContent = i18next.t('2fa_subtitle')
+
+    section.append(title, desc)
+    return section
 }

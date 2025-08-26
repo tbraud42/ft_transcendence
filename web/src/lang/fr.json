@@ -28,6 +28,8 @@
   "profile_sidebar_home": "Accueil",
   "profile_sidebar_profile": "Profil",
   "profile_sidebar_settings": "Paramètres",
+  "profile_sidebar_2fa": "2FA",
+
   "profile_title": "Votre Profil",
   "profile_welcome": "Bienvenue sur votre page de profil.",
 
@@ -36,8 +38,24 @@
   "settings_new_username": "Nouveau pseudo",
   "settings_current_password": "Mot de passe actuel",
   "settings_new_password": "Nouveau mot de passe",
+  "settings_confirm_new_password": "Confirmer votre nouveau mot de passe",
+  "settings_error_mismatch": "Les nouveaux mots de passe ne correspondent pas.",
+  "settings_error_incorrect_password": "Mot de passe actuel incorrect.",
   "settings_success_update": "Paramètres mis à jour avec succès.",
   "settings_error_empty_fields": "Tous les champs doivent être remplis.",
+
+  "2fa_title": "Authentification à deux facteurs",
+  "2fa_subtitle": "Renforcez la sécurité de votre compte avec la 2FA.",
+  "2fa_enable": "Activer la 2FA",
+  "2fa_disable": "Désactiver la 2FA",
+  "2fa_scan_qr": "Scannez le code QR avec votre application d'authentification.",
+  "2fa_enter_code": "Entrez le code à 6 chiffres de votre application.",
+  "2fa_code": "Code d'authentification",
+  "2fa_submit": "Confirmer",
+  "2fa_error_invalid": "Code invalide. Veuillez réessayer.",
+  "2fa_success_enabled": "La 2FA a été activée.",
+  "2fa_success_disabled": "La 2FA a été désactivée.",
+  "2fa_already_enabled": "La 2FA est déjà activée sur votre compte.",
 
   "pong_back_home": "Retour",
   "pong_tab_online": "En ligne",

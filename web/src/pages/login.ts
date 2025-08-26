@@ -65,8 +65,8 @@ export function renderLogin(): HTMLElement {
         submitBtn
     )
 
-    // --- Google button ---
-    const googleBtn = createGoogleButton()
+    // --- 42 button ---
+    const ftBtn = createFtButton()
 
     // --- Final assembly ---
     container.append(
@@ -74,13 +74,13 @@ export function renderLogin(): HTMLElement {
         form,
         switchLink,
         createDivider(i18next.t('login_or')),
-        googleBtn
+        ftBtn
     )
 
     return container
 }
 
-function createGoogleButton(): HTMLButtonElement {
+function createFtButton(): HTMLButtonElement {
     const btn = document.createElement('button')
     btn.className = 'flex items-center justify-center gap-2 w-full py-2 rounded-xl border border-gray-300 dark:border-gray-600 ' +
         'bg-white hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 transition'
