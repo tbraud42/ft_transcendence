@@ -35,11 +35,11 @@ export function authenticate(fastify) {
       const decoded = jwt.verify(token, JWT_SECRET);
 
       const user = await fastify.showUserById(fastify.db, parseInt(decoded.id));
-      if (!user) {
+      if (!user || !decoded.twofa) {
         return reply.code(401).send({ error: 'Unauthorized' }); // : user no longer exists
       }
 
-      request.user = { // spread decoded et user
+      request.user = {
         ...decoded,
         ...user
       };
@@ -99,4 +99,10 @@ export async function passwordFeedback(errors) {
   if (!errors.symbol) messages.push("at least one symbol");
 
   return `Password must contain ${messages.join(", ")}.`;
+}
+
+const FORBIDDEN_SUFFIX = '_42';
+
+export async function usernameEndsWith42(name) {
+  return name.toLowerCase().endsWith(FORBIDDEN_SUFFIX);
 }
