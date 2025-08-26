@@ -14,16 +14,16 @@ up:
 
 
 build:
-	docker compose -f $(COMPOSE_FILE) build --no-cache
+	docker-compose -f $(COMPOSE_FILE) build --no-cache
 
 logs:
-	docker compose -f $(COMPOSE_FILE) logs -f
+	docker-compose -f $(COMPOSE_FILE) logs -f
 
 dev:
 	docker-compose -f $(COMPOSE_FILE) -f $(DEV_OVERRIDE) up --build
 
 down:
-	docker compose -f $(COMPOSE_FILE) down
+	docker-compose -f $(COMPOSE_FILE) down
 
 clean:
 	docker-compose -f $(COMPOSE_FILE) down --volumes --remove-orphans

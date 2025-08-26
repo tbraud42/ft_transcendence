@@ -12,6 +12,6 @@ export class Packet {
     }
 }
 
-export function joinRoomPacket(roomId: string): Packet {
+export function joinRoomPacket(roomId: number): Packet {
     return new Packet(PacketType.JOIN_ROOM, { roomId });
 }

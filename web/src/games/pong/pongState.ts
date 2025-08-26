@@ -10,11 +10,16 @@ export enum Difficulty {
     HARD = 'hard',
 }
 
+export let roomId: number | null = null
 export let selectedDifficulty: Difficulty = Difficulty.MEDIUM
 export let selectedGameMode: GameMode = GameMode.AI
 export let maxPlayers: number = 2
 export let isPrivate: boolean = false
 export let secondPlayerName: string | null = null
+
+export function setRoomId(id: number) {
+    roomId = id
+}
 
 export function setSelectedDifficulty(diff: Difficulty) {
     selectedDifficulty = diff

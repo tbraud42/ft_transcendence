@@ -12,7 +12,7 @@ import {renderPlayerList} from "../components/room/playerList";
 
 let room: Room
 
-export function renderPongLobby(roomId: string): HTMLElement {
+export function renderPongLobby(roomId: number): HTMLElement {
     const container = document.createElement('div')
     container.className = 'min-h-screen flex flex-col items-center justify-center text-white px-4 py-8 text-center'
 

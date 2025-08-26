@@ -1,14 +1,15 @@
 import { OnlinePlayer } from "./players/OnlinePlayer";
 import { PlayerBase } from "./players/PlayerBase";
-import { Difficulty, GameMode } from "../pongState";
+import {Difficulty, GameMode, roomId} from "../pongState";
 import { getTournament } from "../../../api/game";
 import { env } from "../../../utils/env";
 import { getToken } from "../../../utils/auth/auth";
 import { joinRoomPacket } from "./handler/packets";
 import {handlePacket} from "./handler/PacketHandler";
+import {WSClient} from "../../../socket/WSClient";
 
 export interface RoomState {
-    id: string;
+    id: number;
     difficulty: Difficulty;
     gameMode: GameMode;
     maxPlayers: number;
@@ -21,10 +22,10 @@ export interface RoomState {
 
 export class Room {
     protected state: RoomState | undefined;
-    protected socket?: WebSocket;
+    protected client?: WSClient;
 
     constructor(
-        private id: string,
+        private id: number,
         private difficulty: Difficulty,
         private gameMode: GameMode,
         private maxPlayers: number,
@@ -45,10 +46,11 @@ export class Room {
                 gameStarted: false,
                 createdAt: new Date(),
             };
-
-            if (this.gameMode === GameMode.ONLINE) {
+            if (this.gameMode === GameMode.ONLINE && this.id !== roomId) {
                 getTournament(this.id).then((tournament) => {
-                    if (!tournament) return reject(new Error(`Tournament with ID ${this.id} not found`));
+                    if (!tournament) {
+                        return reject(new Error(`Tournament with ID ${this.id} not found`));
+                    }
 
                     this.state = {
                         ...commonState,
@@ -71,36 +73,15 @@ export class Room {
         });
     }
 
-    initOnlineMode(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!this.state) return reject(new Error('State is undefined'));
+    async initOnlineMode(): Promise<void> {
+        this.client = new WSClient(`wss://${env.PONG_WS_URL}`, this.id, getToken());
 
-            this.socket = new WebSocket(
-                `wss://${env.PONG_WS_URL}/${this.state.id}?token=${getToken()}`
-            );
+        await this.client.ready();
 
-            this.socket.onopen = () => {
-                console.log("WebSocket connected");
-                resolve();
-            };
+        this.client.send("say", { text: "hello from client" });
 
-            this.socket.onerror = (err) => {
-                console.error("WebSocket error", err);
-                reject(err);
-            };
-
-            this.socket.onclose = () => {
-                console.info("WebSocket closed");
-            };
-
-            this.socket.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data)
-                    handlePacket(data)
-                } catch (err) {
-                    console.error("Error parsing WebSocket message", err);
-                }
-            };
+        this.client.on("broadcast", (p) => {
+            console.log(p.from?.name, ":", p.text);
         });
     }
 

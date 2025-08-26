@@ -45,7 +45,7 @@ export function router(): void {
                 if (subPage === 'play') {
                     main.appendChild(renderPongPlay())
                 } else if (subPage === 'lobby' && param) {
-                    main.appendChild(renderPongLobby(param))
+                    main.appendChild(renderPongLobby(param as unknown as number))
                 } else {
                     main.appendChild(renderPong())
                 }

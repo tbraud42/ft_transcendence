@@ -6,7 +6,7 @@ import {createOptionSelector} from '../../components/optionSelector'
 import {
     Difficulty,
     GameMode, setIsPrivate,
-    setMaxPlayers,
+    setMaxPlayers, setRoomId,
     setSelectedDifficulty,
     setSelectedGameMode
 } from '../../games/pong/pongState'
@@ -48,9 +48,8 @@ export function renderOnlineTab(): HTMLElement {
 
             const details = document.createElement('p')
             details.className = 'text-sm text-gray-400'
-            const isPrivate = tournament.isPrivate ? i18next.t('private') : i18next.t('public')
             const difficulty = tournament.difficulty || i18next.t('pong_ai_difficulty_unknown')
-            details.textContent = `${isPrivate} • ${difficulty} • Max ${tournament.maxPlayers} players`
+            details.textContent = `${difficulty} • ${tournament.maxPlayers} players`
 
             info.append(title, details)
 
@@ -96,11 +95,13 @@ export function renderOnlineTab(): HTMLElement {
                 setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
                 setSelectedGameMode(GameMode.ONLINE)
                 setMaxPlayers(2)
-                setIsPrivate(true)
+                setIsPrivate(false)
                 overlay.close()
-                createTournament(nameInput.value, mode === 'private', difficulty.getValue() as 'easy' | 'medium' | 'hard')
+                createTournament(nameInput.value, difficulty.getValue() as 'easy' | 'medium' | 'hard')
                     .then(room => {
-                        window.location.hash = `#/pong/lobby/${room.id}`
+                        // lastInsertRowid is the id of the newly created room
+                        setRoomId(room.lastInsertRowid)
+                        window.location.hash = `#/pong/lobby/${room.lastInsertRowid}`
                     })
                     .catch(() => alert(i18next.t('pong_online_error_create')))
             }
@@ -113,7 +114,6 @@ export function renderOnlineTab(): HTMLElement {
 
     container.append(
         createOnlineButton(i18next.t('pong_online_create_public'), 'public'),
-        createOnlineButton(i18next.t('pong_online_create_private'), 'private')
     )
 
     return container
