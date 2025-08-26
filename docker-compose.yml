@@ -44,20 +44,20 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
-  api:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    hostname: api
-    environment:
-      API_PORT: ${API_PORT}
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
+  # api:
+  #   build:
+  #     context: ./api
+  #     dockerfile: Dockerfile
+  #   hostname: api
+  #   environment:
+  #     API_PORT: ${API_PORT}
+  #   networks:
+  #     - backend
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
 
 
   sqlite_api:
@@ -83,27 +83,27 @@ services:
     restart: unless-stopped
     networks:
       - backend
-  vault:
-    build:
-      context: ./vault
-      dockerfile: Dockerfile
-    container_name: vault
-    hostname: vault
-    cap_add:
-      - IPC_LOCK
-    ports:
-      - "8200:8200"
-    volumes:
-      - ./nginx/data/certs:/vault/certs
-      - ./vault/config:/vault/config
-      - ./vault_data:/vault/data
-    environment:
-      VAULT_ADDR: http://vault:8200 # TODO: Change 8200 by an env var VAULT_PORT
-    entrypoint: ["", "arg"]
-    command: vault server -config=/vault/config/vault.hcl
-    restart: unless-stopped
-    networks:
-      - backend
+  # vault:
+  #   build:
+  #     context: ./vault
+  #     dockerfile: Dockerfile
+  #   container_name: vault
+  #   hostname: vault
+  #   cap_add:
+  #     - IPC_LOCK
+  #   ports:
+  #     - "8200:8200"
+  #   volumes:
+  #     - ./nginx/data/certs:/vault/certs
+  #     - ./vault/config:/vault/config
+  #     - ./vault_data:/vault/data
+  #   environment:
+  #     VAULT_ADDR: http://vault:8200 # TODO: Change 8200 by an env var VAULT_PORT
+  #   entrypoint: ["", "arg"]
+  #   command: vault server -config=/vault/config/vault.hcl
+  #   restart: unless-stopped
+  #   networks:
+  #     - backend
 
 
   ws_server:

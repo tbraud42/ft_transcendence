@@ -1,5 +1,5 @@
-FROM hashicorp/vault:latest
+# FROM hashicorp/vault:latest
 
-COPY /
+# COPY /
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
