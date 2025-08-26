@@ -83,28 +83,29 @@ services:
     restart: unless-stopped
     networks:
       - backend
-  # vault:
-  #   build:
-  #     context: ./vault
-  #     dockerfile: Dockerfile
-  #   container_name: vault
-  #   hostname: vault
-  #   cap_add:
-  #     - IPC_LOCK
-  #   ports:
-  #     - "8200:8200"
-  #   volumes:
-  #     - ./nginx/data/certs:/vault/certs
-  #     - ./vault/config:/vault/config
-  #     - ./vault_data:/vault/data
-  #   environment:
-  #     VAULT_ADDR: http://vault:8200 # TODO: Change 8200 by an env var VAULT_PORT
-  #   entrypoint: ["", "arg"]
-  #   command: vault server -config=/vault/config/vault.hcl
-  #   restart: unless-stopped
-  #   networks:
-  #     - backend
 
+  vault:
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    container_name: vault
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    tmpfs:
+      - /run:rw,noexec,nosuid,nodev
+      - /tmp:rw,noexec,nosuid,nodev
+    environment:
+      VAULT_ADDR: https://vault:8200 # TODO: Change 8200 by an env variable
+      # VAULT_CACERT: "/vault/certs/vault.crt" #TODO: Check certs
+    volumes:
+      - ./data/file:/vault/file
+      - ./vault/config:/vault/config
+      - ./vault/certs:/vault/certs
+      - vault_data:/vault/data
+      - ./secrets:/run/secrets:ro
+      - ./nginx/data/certs:/vault/certs
 
   ws_server:
     build:

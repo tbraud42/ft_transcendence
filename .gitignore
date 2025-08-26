@@ -11,6 +11,7 @@
 
 nginx/data
 web/dist
+vault_data
 
 # Dev
 
@@ -25,3 +26,6 @@ build_and_push.sh
 .DS_Store
 
 *test.sh
+
+# Vault 
+secrets/ 
