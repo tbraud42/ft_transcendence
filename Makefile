@@ -7,18 +7,20 @@ else
 endif
 
 COMPOSE_FILE = docker-compose.yml
+DEV_OVERRIDE = docker-compose.override.yml
 
 up:
-	docker-compose -f $(COMPOSE_FILE) up -d
+	docker-compose -f $(COMPOSE_FILE) up --build -d
+
 
 build:
-	docker-compose -f $(COMPOSE_FILE) build
+	docker-compose -f $(COMPOSE_FILE) build --no-cache
 
 logs:
 	docker-compose -f $(COMPOSE_FILE) logs -f
 
-dev: build
-	docker-compose -f $(COMPOSE_FILE) up
+dev:
+	docker-compose -f $(COMPOSE_FILE) -f $(DEV_OVERRIDE) up --build
 
 down:
 	docker-compose -f $(COMPOSE_FILE) down
@@ -28,6 +30,4 @@ clean:
 	$(RM) .$(DIRSEP)nginx$(DIRSEP)data
 	$(RM) .$(DIRSEP)web$(DIRSEP)dist
 
-rebuild: clean build up
-
-.PHONY: up build logs dev down clean rebuild
+.PHONY: up build logs dev down clean

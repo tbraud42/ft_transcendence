@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 CERT_DIR="/etc/nginx/certs"
 DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
 WEB_PORT="${WEB_PORT:-80}"
@@ -27,13 +25,13 @@ if [[ -f "$CERT_FILE" && -f "$KEY_FILE" ]]; then
 else
     echo "[INFO] Attempting to generate SSL certificate for $DOMAIN_NAME , api.$DOMAIN_NAME & vault.$DOMAIN_NAME..."
 
-    # Désactiver "exit on error" temporairement
-    set +e
     certbot certonly --standalone --non-interactive --agree-tos \
         --email "$ADMIN_EMAIL" \
         -d "$DOMAIN_NAME" \
         -d "api.$DOMAIN_NAME" \
-        -d "vault.$DOMAIN_NAME" \
+#TODO: Check if needed
+#        -d "vault.$DOMAIN_NAME" \
+        -d "pong.ws.$DOMAIN_NAME" \
         --verbose --debug --quiet 2>/dev/null
     CERTBOT_EXIT_CODE=$?
     set -e
@@ -55,15 +53,18 @@ else
         echo "[INFO] Generating fallback self-signed certificates..."
         selfsigned_cert "$DOMAIN_NAME"
         selfsigned_cert "api.$DOMAIN_NAME"
-        selfsigned_cert "vault.$DOMAIN_NAME"
+#TODO: Check here too
+#        selfsigned_cert "vault.$DOMAIN_NAME"
+        selfsigned_cert "pong.ws.$DOMAIN_NAME"
     fi
 fi
 
-echo "[INFO] Replacing DOMAIN_NAME and API_PORT in Nginx configuration..."
+echo "[INFO] Replacing DOMAIN_NAME and WEB_PORT in Nginx configuration..."
 sed -i "s/DOMAIN_NAME/$DOMAIN_NAME/g" /etc/nginx/nginx.conf
-sed -i "s/API_PORT/$API_PORT/g" /etc/nginx/nginx.conf
+#TODO: Check for API AND VAULT
+#sed -i "s/API_PORT/$API_PORT/g" /etc/nginx/nginx.conf
 sed -i "s/WEB_PORT/$WEB_PORT/g" /etc/nginx/nginx.conf
-sed -i "s/VAULT_PORT/$VAULT_PORT/g" /etc/nginx/nginx.conf
+#sed -i "s/VAULT_PORT/$VAULT_PORT/g" /etc/nginx/nginx.conf
 
 echo "[INFO] Starting Nginx..."
 exec nginx -g "daemon off;"

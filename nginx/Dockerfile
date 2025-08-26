@@ -19,6 +19,7 @@ RUN sed -i 's/IncludeOptional/Include/g' /usr/share/modsecurity-crs/owasp-crs.lo
 
 RUN rm -rf /usr/share/modsecurity-crs/owasp-crs.load
 
+
 RUN apt-get update && \
     apt-get install -y certbot python3-certbot-nginx && \
     apt-get clean && \
@@ -27,12 +28,12 @@ RUN apt-get update && \
 # Copy the nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy basic ModSecurity configuration then copy the custom ModSecurity rules
-COPY modsecurity/ /etc/modsecurity/
-
 # Copy entrypoint script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Remove default nginx index page
+RUN rm -rf /usr/share/nginx/html/*
 
 # Expose port 80
 EXPOSE 80

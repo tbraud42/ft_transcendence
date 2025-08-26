@@ -16,9 +16,8 @@ services:
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
-      - ./nginx/modsecurity:/etc/modsecurity
     depends_on:
-      api:
+      sqlite_api:
         condition: service_healthy
       web:
         condition: service_healthy
@@ -33,7 +32,9 @@ services:
     image: ft_transcendence-web:prod
     hostname: web
     environment:
-      API_URL: api.${DOMAIN_NAME}
+      VITE_DOMAIN: ${DOMAIN_NAME}
+      VITE_API_URL: api.${DOMAIN_NAME}
+      VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
     expose:
       - "80"
     networks:
@@ -43,7 +44,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
-
   api:
     build:
       context: ./api
@@ -59,24 +59,25 @@ services:
       timeout: 3s
       retries: 3
 
+
   sqlite_api:
     build:
       context: ./sqlite_api
       dockerfile: Dockerfile
     container_name: sqlite_api
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
       DATABASE_PORT: ${DATABASE_PORT}
+      CLIENT_ID: ${CLIENT_ID}
+      CLIENT_SECRET: ${CLIENT_SECRET}
+      REDIRECT_URI: ${REDIRECT_URI}
     volumes:
-      - ./sqlite_api/src:/app/src
       - ./sqlite_api/data:/app/data
-      - ./sqlite_api/package.json:/app/package.json
-    command: npm run dev
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/ping"]
-      interval: 10s
+      interval: 5s
       timeout: 3s
       retries: 3
     restart: unless-stopped
@@ -97,13 +98,29 @@ services:
       - ./vault/config:/vault/config
       - ./vault_data:/vault/data
     environment:
-      VAULT_ADDR: http://vault:8200
+      VAULT_ADDR: http://vault:8200 # TODO: Change 8200 by an env var VAULT_PORT
     entrypoint: ["", "arg"]
     command: vault server -config=/vault/config/vault.hcl
     restart: unless-stopped
     networks:
       - backend
 
+
+  ws_server:
+    build:
+      context: ./ws_server
+      dockerfile: Dockerfile
+    container_name: ws_server
+    expose:
+      - "3000"
+    environment:
+      - API_URL=api.${DOMAIN_NAME}
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
+    extra_hosts:
+      - "api.dev.local:host-gateway"
+    networks:
+      - backend
 
 networks:
   frontend:
