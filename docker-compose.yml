@@ -12,6 +12,7 @@ services:
       API_PORT: ${API_PORT}
       MODSEC_MODE: ${MODSEC_MODE}
       WEB_PORT: 80
+      VAULT_PORT: ${VAULT_PORT}
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
@@ -81,14 +82,28 @@ services:
     restart: unless-stopped
     networks:
       - backend
+  vault:
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    container_name: vault
+    hostname: vault
+    cap_add:
+      - IPC_LOCK
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./nginx/data/certs:/vault/certs
+      - ./vault/config:/vault/config
+      - ./vault_data:/vault/data
+    environment:
+      VAULT_ADDR: http://vault:8200
+    entrypoint: ["", "arg"]
+    command: vault server -config=/vault/config/vault.hcl
+    restart: unless-stopped
+    networks:
+      - backend
 
-# vault:
-#   build:
-#     context: ./vault
-#     dockerfile: Dockerfile
-#     hostname: vault
-#   ports:
-#     - "8200:8200"
 
 networks:
   frontend:
@@ -104,3 +119,6 @@ networks:
     driver_opts:
       com.docker.network.bridge.name: "backend"
       com.docker.network.bridge.enable_icc: "true"
+
+volumes:
+  vault_data:
