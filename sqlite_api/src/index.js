@@ -5,6 +5,7 @@ dotenv.config();
 // import fastify
 import Fastify from 'fastify';
 import rateLimit from '@fastify/rate-limit';
+import cors from '@fastify/cors'
 
 // import crontab module
 import cron from 'node-cron';
@@ -128,6 +129,32 @@ const start = async () => {
   const PORT = process.env.DATABASE_PORT || 3000;
 
   try {
+    await fastify.register(cors, {
+      origin: (origin, cb) => {
+        const isDev = process.env.NODE_ENV === 'development'
+
+        if (isDev) {
+          cb(null, true) // autorise tout en dev
+        } else {
+          const allowedOrigins = [
+            `https://${process.env.VITE_DOMAIN}`,
+            `https://www.${process.env.VITE_DOMAIN}`
+          ]
+
+          if (!origin || allowedOrigins.includes(origin)) {
+            cb(null, true)
+          } else {
+            cb(new Error('Not allowed'), false)
+          }
+        }
+      },
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+      preflightContinue: false,
+      optionsSuccessStatus: 204
+    })
+
     fastify.listen({ port: PORT, host: ADDRESS });
     // const username = 'admin';
     // const password = 'supersecurepassword';
@@ -140,7 +167,7 @@ const start = async () => {
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:3000`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

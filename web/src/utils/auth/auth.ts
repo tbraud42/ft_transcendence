@@ -4,8 +4,8 @@ export function isLoggedIn(): boolean {
     return !!localStorage.getItem(USER_KEY)
 }
 
-export function login(pseudo: string): void {
-    localStorage.setItem(USER_KEY, pseudo)
+export function login(token: string): void {
+    localStorage.setItem(USER_KEY, token)
     window.location.hash = '#/home'
 }
 
@@ -14,6 +14,6 @@ export function logout(): void {
     window.location.hash = '#/'
 }
 
-export function getUsername(): string | null {
-    return localStorage.getItem(USER_KEY)
+export function getToken(): string {
+    return localStorage.getItem(USER_KEY) || ''
 }
