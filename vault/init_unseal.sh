@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -Eeuo pipefail
 
-: "${VAULT_ADDR:=https://127.0.0.1:8200}"
+: "${VAULT_ADDR:=https://vault:8200}"
 export VAULT_ADDR
 [ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
 
@@ -17,9 +17,10 @@ done
 umask 077
 
 #	TODO: Remove tls-skip-verify when certs are in place
-if vault status -tls-skip-verify | grep -q "Initialized.*false"; then
+if vault status -format=json -tls-skip-verify | jq -e 'initialized' | grep -q true; then
   echo "Initializing Vault..."
   vault operator init -key-shares=1 -key-threshold=1 > /vault/file/init.txt
+  echo "init txt file created"
 fi
 
 #	Key extraction

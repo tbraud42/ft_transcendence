@@ -44,20 +44,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
-  # api:
-  #   build:
-  #     context: ./api
-  #     dockerfile: Dockerfile
-  #   hostname: api
-  #   environment:
-  #     API_PORT: ${API_PORT}
-  #   networks:
-  #     - backend
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/ping"]
-  #     interval: 10s
-  #     timeout: 3s
-  #     retries: 3
 
 
   sqlite_api:
@@ -102,7 +88,7 @@ services:
     volumes:
       - ./data/file:/vault/file
       - ./vault/config:/vault/config
-      - ./vault/certs:/vault/certs
+      # - ./vault/certs:/vault/certs
       - vault_data:/vault/data
       - ./secrets:/run/secrets:ro
       - ./nginx/data/certs:/vault/certs
