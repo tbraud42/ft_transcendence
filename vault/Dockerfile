@@ -2,6 +2,8 @@ FROM hashicorp/vault:latest
 
 RUN apk add --no-cache curl
 
+RUN apk add --no-cache jq
+
 COPY config/vault.hcl /vault/config/vault.hcl
 COPY init_unseal.sh /usr/local/bin/init_unseal.sh
 COPY vault_config.sh /usr/local/bin/vault_config.sh

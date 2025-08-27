@@ -17,7 +17,7 @@ done
 umask 077
 
 #	TODO: Remove tls-skip-verify when certs are in place
-if vault status -format=json -tls-skip-verify | jq -e 'initialized' | grep -q true; then
+if vault status -format=json -tls-skip-verify | jq -e '.initialized' | grep -q true; then
   echo "Initializing Vault..."
   vault operator init -key-shares=1 -key-threshold=1 > /vault/file/init.txt
   echo "init txt file created"
