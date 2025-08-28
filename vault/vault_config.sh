@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 umask 077
 
-: "${VAULT_ADDR:=https://vault:8200}"
+: "${VAULT_ADDR:=https://dev.local:8200}"
 export VAULT_ADDR
 [ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
 

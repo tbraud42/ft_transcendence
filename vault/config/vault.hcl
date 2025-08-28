@@ -18,7 +18,7 @@ listener "tcp" {
 #    - Or : https://vault.example.com:8200
 api_addr = "https://vault:8200"
 
-# cluster_addr = "https://vault.example.com:8201"
+cluster_addr = "https://vault:8201"
 
 # mlock security 
 disable_mlock = true

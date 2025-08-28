@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -Eeuo pipefail
 
-: "${VAULT_ADDR:=https://vault:8200}"
+: "${VAULT_ADDR:=https://dev.local:8200}"
 export VAULT_ADDR
 [ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
 
@@ -17,21 +17,24 @@ done
 umask 077
 
 #	TODO: Remove tls-skip-verify when certs are in place
-if vault status -format=json -tls-skip-verify | jq -e '.initialized' | grep -q true; then
+if ! vault status -format=json -tls-skip-verify | jq -e '.initialized==true' >/dev/null; then
   echo "Initializing Vault..."
-  vault operator init -key-shares=1 -key-threshold=1 > /vault/file/init.txt
-  echo "init txt file created"
+  vault operator init -key-shares=1 -key-threshold=1 > /vault/file/init.json
+  echo "init json file created"
 fi
 
 #	Key extraction
-UNSEAL_KEY="$(awk '/Unseal Key 1:/ {print $NF}' /vault/file/init.txt)"
-ROOT_TOKEN="$(awk '/Initial Root Token:/ {print $NF}' /vault/file/init.txt)"
+UNSEAL_KEY="$(jq -r '.unseal_keys_b64[0]' /vault/file/init.json)"
+ROOT_TOKEN="$(jq -r '.root_token'        /vault/file/init.json)"
 export VAULT_TOKEN="$ROOT_TOKEN"
 
 #	Unseal
-echo "Unsealing..."
 #	TODO: Remove tls-skip-verify when certs are in place
-vault operator unseal -tls-skip-verify "$UNSEAL_KEY"
+if vault status -format=json -tls-skip-verify | jq -e '.sealed==true' >/dev/null; then
+  echo "Unsealing..."
+  vault operator unseal -tls-skip-verify "$UNSEAL_KEY"
+fi
+
 
 echo "Running Vault config..."
 /usr/local/bin/vault_config.sh
