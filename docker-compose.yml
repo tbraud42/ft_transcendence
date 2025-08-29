@@ -147,7 +147,8 @@ services:
     expose:
       - "3000"
     command: ["/scripts/vault-run.sh", "/secrets/ws_server/app.env", "node", "src/index.js"]
-    # environment:
+    environment:
+      - DEBUG=1 
     #   - API_URL=api.${DOMAIN_NAME}
     #   - JWT_SECRET=${JWT_SECRET}
     volumes:
@@ -155,7 +156,8 @@ services:
       - ./shared:/scripts:ro
     restart: unless-stopped
     depends_on:
-      - vault_agent
+      vault_agent:
+        condition: service_healthy
     extra_hosts:
       - "api.dev.local:host-gateway"
     networks:

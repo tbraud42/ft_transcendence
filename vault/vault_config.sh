@@ -26,16 +26,15 @@ if [ ! -d /run/secrets ]; then
   exit 1
 fi
 
+
 TMP_JSON="/run/vault_seed.$$.json"
 {
-  printf '{ "data": {'
+  printf '{'
   first=true
   for f in /run/secrets/*; do
     [ -f "$f" ] || continue
-    key=$(basename "$f")
-    val=$(cat "$f")
-    # Escape properly for JSON
-    val=$(printf '%s' "$val" | jq -Rsa .)
+    key="$(basename "$f")"
+    val="$(cat "$f" | jq -Rsa .)"   # JSON-escape the file content
     if [ "$first" = true ]; then
       first=false
     else
@@ -43,7 +42,7 @@ TMP_JSON="/run/vault_seed.$$.json"
     fi
     printf '"%s": %s' "$key" "$val"
   done
-  printf '} }'
+  printf '}'
 } > "$TMP_JSON"
 
 # DB_USER_FILE="/run/secrets/db_user"
