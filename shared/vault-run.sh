@@ -1,18 +1,42 @@
 #!/bin/sh
-# Usage: vault-run.sh /path/to/app.env <command> [args...]
 set -eu
-ENV_PATH="${1:?error env path is empty}"; shift
 
-# Wait until Vault Agent rendered the file and it's non-empty
+ENV_PATH="${1:?error env path is empty}"
+shift || true
+
+# Attendre que le fichier soit non-vide
 until [ -s "$ENV_PATH" ]; do
   echo "Waiting for $ENV_PATH from Vault Agent..."
   sleep 1
 done
 
-# Export env vars from the file into this process
-set -a
-. "$ENV_PATH"
-set +a
+while IFS= read -r raw || [ -n "$raw" ]; do
+  # strip CR, trim
+  line=$(printf '%s' "$raw" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+  [ -z "$line" ] && continue
+  case "$line" in \#*) continue ;; esac
 
-# Chain to the real process (become PID 1)
+  # Tolérer KEY:VALUE (convertir le 1er ":" en "=")
+  case "$line" in
+    *=*) ;;            # OK
+    *:*) line=${line/:/=} ;;
+  esac
+
+  case "$line" in
+    *=*)
+      key=${line%%=*}
+      val=${line#*=}
+      # Valider un nom de var POSIX
+      if printf '%s' "$key" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$'; then
+        export "$key=$val"
+      else
+        echo "ignore bad key: $key" >&2
+      fi
+      ;;
+    *)
+      echo "ignore malformed line: $line" >&2
+      ;;
+  esac
+done < "$ENV_PATH"
+
 exec "$@"

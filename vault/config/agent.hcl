@@ -23,6 +23,8 @@ auto_auth {
 template {
   source      = "/vault/templates/app.env.tpl"
   destination = "/secrets/app.env"
+  perms       = "0640"
+
 }
 
 # Separate credential
@@ -30,8 +32,12 @@ template {
 template {
   source      = "/vault/templates/app.env.tpl"
   destination = "/secrets/sqlite_api/app.env"
+  perms       = "0640"
+
 }
 template {
   source      = "/vault/templates/app.env.tpl"
   destination = "/secrets/ws_server/app.env"
+  perms       = "0640"
+
 }

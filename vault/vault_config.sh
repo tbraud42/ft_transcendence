@@ -3,11 +3,11 @@
 set -Eeuo pipefail
 umask 077
 
-: "${VAULT_ADDR:=https://dev.local:8200}"
+: "${VAULT_ADDR:=https://vault:8200}"
 export VAULT_ADDR
 [ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
 
-until vault status -tls-skip-verify | grep -q 'Sealed.*false'; do
+until [ "$(curl -sk "$VAULT_ADDR/v1/sys/health" | jq -r '.sealed')" = "false" ]; do
   echo "Waiting for Vault to be unsealed..."
   sleep 2
 done
@@ -18,21 +18,50 @@ echo "Configuring Vault..."
 vault secrets disable secret/ || true
 vault secrets enable -path=secret -version=2 kv
 
-# Load DB
-DB_USER_FILE="/run/secrets/db_user"
-DB_PASS_FILE="/run/secrets/db_pass"
-DB_URL_FILE="/run/secrets/db_url"
-if [ ! -r "$DB_USER_FILE" ] || [ ! -r "$DB_PASS_FILE" ] || [ ! -r "$DB_URL_FILE" ]; then
-  echo "Could not find db_user|db_pass|db_url in /run/secrets"
+# # Load DB
+
+# --- Load all secrets dynamically from /run/secrets ---
+if [ ! -d /run/secrets ]; then
+  echo "No /run/secrets directory found!"
   exit 1
 fi
 
-# Create JSON payload on tmpfs
 TMP_JSON="/run/vault_seed.$$.json"
-printf '{ "data": { "DB_USER": "%s", "DB_PASS": "%s", "DB_URL": "%s" } }\n' \
-  "$(cat "$DB_USER_FILE")" \
-  "$(cat "$DB_PASS_FILE")" \
-  "$(cat "$DB_URL_FILE")" > "$TMP_JSON"
+{
+  printf '{ "data": {'
+  first=true
+  for f in /run/secrets/*; do
+    [ -f "$f" ] || continue
+    key=$(basename "$f")
+    val=$(cat "$f")
+    # Escape properly for JSON
+    val=$(printf '%s' "$val" | jq -Rsa .)
+    if [ "$first" = true ]; then
+      first=false
+    else
+      printf ','
+    fi
+    printf '"%s": %s' "$key" "$val"
+  done
+  printf '} }'
+} > "$TMP_JSON"
+
+# DB_USER_FILE="/run/secrets/db_user"
+# DB_PASS_FILE="/run/secrets/db_pass"
+# DB_URL_FILE="/run/secrets/db_url"
+# JWT_TOKEN="/run/secrets/JWT_TOKEN"
+# if [ ! -r "$DB_USER_FILE" ] || [ ! -r "$DB_PASS_FILE" ] || [ ! -r "$DB_URL_FILE" ]; then
+#   echo "Could not find db_user|db_pass|db_url in /run/secrets"
+#   exit 1
+# fi
+
+# # Create JSON payload on tmpfs
+# TMP_JSON="/run/vault_seed.$$.json"
+# printf '{ "data": { "DB_USER": "%s", "DB_PASS": "%s", "DB_URL": "%s" } }\n' \
+#   "$(cat "$DB_USER_FILE")" \
+#   "$(cat "$JWT_TOKEN")" \
+#   "$(cat "$DB_PASS_FILE")" \
+#   "$(cat "$DB_URL_FILE")" > "$TMP_JSON"
 
 # Write secret on CAS = 0 to avoid overwriting
 # CAS (Check-And-Set) : create only if not exists
