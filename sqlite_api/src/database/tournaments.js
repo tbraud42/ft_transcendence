@@ -27,14 +27,13 @@ export async function createTournament(db, data) {
   return result;
 }
 
-export async function changeTournamentStatus(db, tournamentId) {
-  const result = db.prepare(`UPDATE tournaments SET status = CASE WHEN status < ${T_STATUS.FINISHED} THEN status + 1 ELSE status END WHERE id = ? RETURNING status`).get(tournamentId);
+export function changeTournamentStatus(db, tournamentId) {
+  const result = db.prepare(`UPDATE tournaments SET status = CASE WHEN status < ? THEN status + 1 ELSE status END WHERE id = ? RETURNING id, status`).get(T_STATUS.FINISHED, tournamentId);
 
-  if (!result) {
-    throw new Error('Tournament not found');
-  }
-  return result.status;
+  if (!result) throw new Error('Tournament not found');
+  return result;
 }
+
 
 export async function getTournamentsByStatus(db, status) {
   return db.prepare(`SELECT * FROM tournaments WHERE status = ? ORDER BY created_at DESC, id DESC`).all(status);

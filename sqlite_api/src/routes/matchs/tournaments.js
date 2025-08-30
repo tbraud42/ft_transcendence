@@ -19,8 +19,10 @@ export default async function (fastify, options) {
     reply.send(tournaments);
   });
 
-  fastify.get('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const tournaments = await fastify.getTournamentById(fastify.db, req.params.id);
+  fastify.get('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const id = Number(req.params.id);
+
+    const tournaments = await fastify.getTournamentById(fastify.db, id);
     if (!tournaments) return reply.code(404).send({ error: 'tournaments not found' });
 
     reply.send(tournaments);
@@ -47,19 +49,29 @@ export default async function (fastify, options) {
     reply.send(tournaments);
   });
 
-  fastify.post('/', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const { name, description, difficulty, maxPlayers, isPrivate } = req.body;
-    // difficulter ne marche pas, maxplayers, is private
+  fastify.post('/', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a tester
+    const body = req.body ?? {};
+
+    const name        = typeof body.name === 'string' ? body.name.trim() : '';
+    const description = typeof body.description === 'string' ? body.description.trim() : '';
+    const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
+    const maxPlayers  = body.maxPlayers === undefined ? 16 : body.maxPlayers; // number only
+    const isPrivate   = body.isPrivate === undefined ? false : body.isPrivate; // boolean only
+
+    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
+
+    if (!name || name.length > 50) return bad();
+    if (description && description.length > 255) return bad();
+    if (!['easy','medium','hard'].includes(difficulty)) return bad();
+    if (typeof maxPlayers !== 'number' || !Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > 16) return bad();
+    if (typeof isPrivate !== 'boolean') return bad();
+
     const result = await fastify.getTournamentByName(fastify.db, name)
     if (result)  {
       return reply.status(400).send({ error: 'Name already token' });
     }
 
     const creator_id = req.user.id;
-
-    if (!name || !creator_id || !difficulty || !maxPlayers) { // rajouter les test de grandeur de chaine de caracter ?
-      return reply.status(400).send({ error: 'Missing required fields' });
-    }
 
     const data = {
       name,
@@ -74,15 +86,28 @@ export default async function (fastify, options) {
     reply.send(tournaments);
   });
 
-  fastify.patch('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    if (!fastify.isAdminOrCreator(fastify, req.params.id, req.user.id)) {
+  fastify.patch('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const id = Number(req.params.id);
+
+    if (!fastify.isAdminOrCreator(fastify, id, req.user.id)) {
       return reply.code(403).send({ error: 'Access denied' });
     }
 
-    const { name, description, difficulty, maxPlayers, isPrivate } = req.body;
-    if (!name || !difficulty || !maxPlayers) { // rajouter les test de grandeur de chaine de caracter ?
-      return reply.status(400).send({ error: 'Missing required fields' });
-    }
+    const body = req.body ?? {};
+
+    const name        = typeof body.name === 'string' ? body.name.trim() : '';
+    const description = typeof body.description === 'string' ? body.description.trim() : '';
+    const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
+    const maxPlayers  = body.maxPlayers === undefined ? 16 : body.maxPlayers; // number only
+    const isPrivate   = body.isPrivate === undefined ? false : body.isPrivate; // boolean only
+
+    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
+
+    if (!name || name.length > 50) return bad();
+    if (description && description.length > 255) return bad();
+    if (!['easy','medium','hard'].includes(difficulty)) return bad();
+    if (typeof maxPlayers !== 'number' || !Number.isInteger(maxPlayers) || maxPlayers < 2 || maxPlayers > 16) return bad();
+    if (typeof isPrivate !== 'boolean') return bad();
 
     const data = {
       name,
@@ -96,25 +121,33 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 
-  fastify.patch('/state/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    if (!fastify.isAdminOrCreator(fastify, req.params.id, req.user.id)) {
-      return reply.code(403).send({ error: 'Access denied' });
-    }
+  fastify.patch('/state/:id(\\d+)', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => { // tester le retour
+    const id = Number(req.params.id);
 
-    const result = await fastify.changeTournamentStatus(fastify.db, req.params.id);
-    if (result.error) {
-      return reply.code(404).send({ error: 'no tournament availible' });
-    }
+    const allowed = await fastify.isAdminOrCreator(fastify, id, req.user.id);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
-    reply.send({ status: result }); // a revoir
+    try {
+      const result = await fastify.changeTournamentStatus(fastify.db, id);
+      return reply.send({ id: result.id, status: result.status});
+    } catch (e) {
+      if (String(e?.message || '').includes('Tournament not found')) {
+        return reply.code(404).send({ error: 'Not found' });
+      }
+      req.log?.error(e);
+      return reply.code(500).send({ error: 'Internal Server Error' });
+    }
   });
 
-  fastify.delete('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a corriger si on appel deux fois
-    if (!fastify.isAdminOrCreator(fastify, req.params.id, req.user.id)) {
+
+  fastify.delete('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a corriger si on appel deux fois
+    const id = Number(req.params.id);
+
+    if (!fastify.isAdminOrCreator(fastify, id, req.user.id)) {
       return reply.code(403).send({ error: 'Access denied' });
     }
 
-    const tournaments = await fastify.deleteTournament(fastify.db, req.params.id);
+    const tournaments = await fastify.deleteTournament(fastify.db, id);
     if (!tournaments) return reply.code(404).send({ error: 'tournaments not found' });
 
     reply.send({ success: true });
