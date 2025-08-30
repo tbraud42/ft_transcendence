@@ -31,3 +31,4 @@ build_and_push.sh
 secrets/ 
 data/
 certs/
+waf_test.sh
