@@ -1,25 +1,16 @@
 #!/bin/sh
-# vault-run.sh — robust .env loader for Vault Agent rendered files
-# DEBUG=1 will enable verbose prints
+# This file here parse and export env variables from /secret/../app.env created by vault-agent
 
 set -eu
 
-DEBUG="${DEBUG:-0}"
-
-log() {
-  if [ "$DEBUG" = "1" ]; then
-    echo "[vault-run] $*" >&2
-  fi
-}
-
-ENV_PATH="${1:?error: env file path is required, e.g. /secrets/svc/app.env}"
+ENV_PATH="${1:?error: env file path is required, e.g. /secrets/service/app.env}"
 shift || true
 
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-60}"
 
 start_ts=$(date +%s 2>/dev/null || echo 0)
 while [ ! -s "$ENV_PATH" ]; do
-  log "Waiting for $ENV_PATH..."
+  echo "Waiting for $ENV_PATH..."
   sleep 1
   if [ "${WAIT_TIMEOUT}" -gt 0 ]; then
     now=$(date +%s 2>/dev/null || echo 0)
@@ -30,7 +21,6 @@ while [ ! -s "$ENV_PATH" ]; do
     fi
   fi
 done
-log "Found env file: $ENV_PATH"
 
 strip_bom() {
   printf '%s' "$1" | awk 'BEGIN{ORS=""}{if(NR==1){sub(/^\xEF\xBB\xBF/,"")}print}'
@@ -51,21 +41,12 @@ while IFS= read -r raw || [ -n "$raw" ]; do
   fi
   line=$(trim "$line")
 
-  [ -z "$line" ] && { log "skip: empty line"; continue; }
-  case "$line" in \#*) log "skip: comment: $line"; continue ;; esac
-
-  # optional "export "
-  case "$line" in
-    export[[:space:]]*)
-      log "strip export prefix: $line"
-      line=$(printf '%s' "$line" | sed 's/^export[[:space:]]\+//')
-      ;;
-  esac
+  [ -z "$line" ] && continue;
+  case "$line" in \#*) continue ;; esac
 
   case "$line" in
     *=*) ;; 
     *:*) 
-      log "convert ':' -> '=': $line"
       line=${line/:/=} ;;
   esac
 
@@ -75,30 +56,23 @@ while IFS= read -r raw || [ -n "$raw" ]; do
       val=${line#*=}
       key=$(trim "$key")
 
-      # strip quotes if matching
       case "$val" in
         \"*\"|\'*\')
           q1=$(printf '%s' "$val" | cut -c1)
           qn=$(printf '%s' "$val" | awk '{print substr($0,length,1)}')
           if [ "$q1" = "$qn" ]; then
-            log "strip quotes around value for $key"
             val=$(printf '%s' "$val" | sed 's/^.\(.*\).$/\1/')
           fi
           ;;
       esac
 
       if is_valid_key "$key"; then
-        log "export $key=${val}"
         export "${key}=${val}"
-      else
-        log "invalid key ignored: $key"
       fi
       ;;
     *)
-      log "malformed line ignored: $line"
       ;;
   esac
 done < "$ENV_PATH"
 
-log "Executing command: $*"
 exec "$@"

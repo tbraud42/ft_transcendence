@@ -5,7 +5,7 @@ umask 077
 
 : "${VAULT_ADDR:=https://vault:8200}"
 export VAULT_ADDR
-[ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
+# [ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
 
 until [ "$(curl -sk "$VAULT_ADDR/v1/sys/health" | jq -r '.sealed')" = "false" ]; do
   echo "Waiting for Vault to be unsealed..."

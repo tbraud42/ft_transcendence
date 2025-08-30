@@ -1,13 +1,35 @@
 #!/usr/bin/env sh
-set -Eeuo pipefail
+set -eu
 
-# TODO: debug lines, need to be remove
-set -x
-trap 'echo "ERR at line $LINENO"; exit 1' ERR
+CERT_DIR="${CERT_DIR:-/vault/certs}"
+KEY_FILE="${KEY_FILE:-$CERT_DIR/vault.key}"
+CERT_FILE="${CERT_FILE:-$CERT_DIR/vault.cert}"
+VAULT_SANS="${VAULT_SANS:-vault,dev.local}"    # Noms séparés par des virgules
+export VAULT_ADDR="${VAULT_ADDR:-https://vault:8200}"
 
-: "${VAULT_ADDR:=https://vault:8200}"
-export VAULT_ADDR
-[ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
+#Generate Certs if needed
+umask 077
+mkdir -p "$CERT_DIR"
+SAN_LIST=$(echo "$VAULT_SANS" | awk -F, '{for(i=1;i<=NF;i++){printf (i>1?",DNS:%s":"DNS:%s"), $i}}')
+if [ ! -s "$KEY_FILE" ] || [ ! -s "$CERT_FILE" ]; then
+  echo "[vault-entrypoint] Génération d’un cert auto-signé CN=vault SAN=$SAN_LIST"
+  openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+    -keyout "$KEY_FILE" \
+    -out "$CERT_FILE" \
+    -subj "/CN=vault" \
+    -addext "basicConstraints=CA:TRUE" \
+    -addext "keyUsage=digitalSignature,keyEncipherment,keyCertSign" \
+    -addext "extendedKeyUsage=serverAuth" \
+    -addext "subjectAltName=$SAN_LIST"
+    
+  chmod 600 "$KEY_FILE"
+  chmod 644 "$CERT_FILE"
+  cp -f "$CERT_FILE" /usr/local/share/ca-certificates/vault.crt || true
+  update-ca-certificates || true
+else
+  echo "[vault-entrypoint] Certificat déjà présent, on ne régénère pas."
+fi
+
 
 # Launching
 vault server -config=/vault/config/vault.hcl & VAULT_PID=$!
@@ -48,7 +70,7 @@ export VAULT_TOKEN="$ROOT_TOKEN"
 #	TODO: Remove tls-skip-verify when certs are in place
 if [ "$(curl -sk "$VAULT_ADDR/v1/sys/health" | jq -r '.sealed')" = "true" ]; then
   echo "Unsealing..."
-  vault operator unseal -tls-skip-verify "$UNSEAL_KEY"
+  vault operator unseal "$UNSEAL_KEY"
 fi
 
 

@@ -8,8 +8,8 @@ storage "file" {
 
 listener "tcp" {
 	address = "0.0.0.0:8200"
-	tls_cert_file = "/vault/certs/fullchain.pem_dev.local"
-	tls_key_file  = "/vault/certs/privkey.pem_dev.local"
+	tls_cert_file = "/vault/certs/vault.cert"
+	tls_key_file  = "/vault/certs/vault.key"
 	tls_min_version = "tls12"
 }
 
