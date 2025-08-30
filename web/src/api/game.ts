@@ -2,7 +2,6 @@ import { env } from '../utils/env'
 import {getToken} from "../utils/auth/auth";
 
 const API_URL = env.API_URL || 'game-api.example.com'
-const PONG_WS_URL = env.PONG_WS_URL || 'pong.ws.example.com'
 
 export async function fetchTournaments(): Promise<any[]> {
     const url = `https://${API_URL}/tournaments`

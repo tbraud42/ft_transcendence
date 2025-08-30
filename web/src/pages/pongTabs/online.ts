@@ -17,24 +17,21 @@ export function renderOnlineTab(): HTMLElement {
     const container = document.createElement('div')
     container.className = 'flex flex-col gap-4 w-full max-w-md'
 
-    // === Loading placeholder ===
     const lobbiesStatus = document.createElement('div')
     lobbiesStatus.textContent = i18next.t('pong_online_loading')
     lobbiesStatus.className = 'text-sm text-gray-400 text-center'
     container.appendChild(lobbiesStatus)
 
-    // === Scrollable list container ===
     const { element: roomList, setElements } = createList()
     container.appendChild(roomList)
 
-    // === Load public rooms ===
     fetchTournaments().then((tournaments) => {
         if (tournaments.length === 0) {
             lobbiesStatus.textContent = i18next.t('pong_online_no_lobbies')
             return
         }
 
-        container.removeChild(lobbiesStatus) // remove loading text
+        container.removeChild(lobbiesStatus)
 
         const items = tournaments.map(tournament => {
             const card = document.createElement('div')
@@ -49,7 +46,7 @@ export function renderOnlineTab(): HTMLElement {
             const details = document.createElement('p')
             details.className = 'text-sm text-gray-400'
             const difficulty = tournament.difficulty || i18next.t('pong_ai_difficulty_unknown')
-            details.textContent = `${difficulty} • ${tournament.maxPlayers} players`
+            details.textContent = `${difficulty} • ${tournament.maxPlayers} ` + i18next.t("pong_online_players")
 
             info.append(title, details)
 
@@ -70,7 +67,6 @@ export function renderOnlineTab(): HTMLElement {
         lobbiesStatus.textContent = i18next.t('pong_online_error_fetch')
     })
 
-    // === Room creation buttons ===
     const createOnlineButton = (label: string, mode: 'public' | 'private'): HTMLButtonElement => {
         const btn = createButton(label, 'button', mode === 'public' ? 'blue' : 'black')
         btn.onclick = () => {

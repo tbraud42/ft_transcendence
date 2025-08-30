@@ -65,10 +65,13 @@
   "pong_online_title": "Online Games",
   "pong_online_loading": "Loading available rooms...",
   "pong_online_no_lobbies": "No rooms found.",
-  "pong_online_players": "{{count}} players",
+  "pong_online_players": "slots",
   "pong_online_create_public": "Create Room",
   "pong_online_name": "Room name",
   "pong_online_error_create": "Failed to create room. Please try again.",
+
+  "pong_online_connecting_to": "Connecting to room #{{roomId}}...",
+  "pong_online_error_connect": "Failed to connect to room. It might be full or no longer available.",
 
   "pong_local_title": "Local",
   "pong_local_2p_name": "Player 2 Name",
@@ -93,7 +96,7 @@
   "pong_no_rooms": "No rooms found.",
 
   "room_title": "Game",
-  "room_players": "Players",
+  "room_players": "slots",
   "room_mode": "Mode",
   "room_difficulty": "Difficulty",
   "room_player_ready": "Ready"

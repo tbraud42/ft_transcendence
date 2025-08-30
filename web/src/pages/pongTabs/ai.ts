@@ -24,7 +24,6 @@ export function renderAITab(): HTMLElement {
         window.location.hash = '#/pong/play'
     }
 
-    // === Assemble ===
     container.append(
         difficulty.element,
         btn

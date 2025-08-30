@@ -5,7 +5,7 @@ import fr from '../../lang/fr.json'
 const savedLang = localStorage.getItem('lang')
 const browserLang = navigator.language.slice(0, 2)
 const supportedLangs = ['en', 'fr']
-const initialLang = savedLang || (supportedLangs.includes(browserLang) ? browserLang : 'en')
+const initialLang = savedLang || (supportedLangs.includes(browserLang) ? browserLang : 'fr')
 
 i18next.init({
     lng: initialLang,

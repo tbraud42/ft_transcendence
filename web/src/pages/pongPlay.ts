@@ -44,7 +44,6 @@ export function renderPongPlay(): HTMLElement {
     timerDisplay.textContent = '00:00'
     container.appendChild(timerDisplay)
 
-    // === Game logic ===
     const game = new PongGame(canvas, selectedGameMode, selectedDifficulty, scoreLeft, scoreRight)
     currentGame = game
     game.start()
@@ -77,8 +76,6 @@ export function renderPongPlay(): HTMLElement {
     container.append(exitBtn, canvasWrapper, countdown, scoreOverlay)
     return container
 }
-
-// === Helpers ===
 
 function createExitButton(onConfirm: () => void): HTMLButtonElement {
     const btn = createButton(i18next.t('button_exit'), 'button', 'red')

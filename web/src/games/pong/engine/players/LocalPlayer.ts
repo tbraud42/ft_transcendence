@@ -9,7 +9,6 @@ export class LocalPlayer extends PlayerBase {
         this.setupControls()
     }
 
-    // Setup keyboard controls
     private setupControls(): void {
         document.addEventListener('keydown', (e) => {
             if (this.isLeft) {
@@ -48,7 +47,6 @@ export class LocalPlayer extends PlayerBase {
         })
     }
 
-    // Move the paddle each frame
     update(ball?: BallBase): void {
         if (this.moveUp) {
             this.y -= this.speed

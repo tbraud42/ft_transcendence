@@ -3,11 +3,12 @@ import { login } from './auth'
 import { apiSignup, apiLogin } from "../../api/auth";
 
 export async function handleLogin(
+    e: Event,
     pseudoInput: HTMLInputElement,
     passwordInput: HTMLInputElement,
     errorMsg: HTMLElement
-): void {
-    event.preventDefault()
+): Promise<void> {
+    e.preventDefault()
     const user = pseudoInput.value.trim()
     const pass = passwordInput.value
 
@@ -16,25 +17,23 @@ export async function handleLogin(
         return
     }
 
-    try {
-        const token = await apiLogin(user, pass)
-        if (!token) {
-            errorMsg.textContent = i18next.t('login_error_failed')
-            return
-        }
+    const token = await apiLogin(user, pass)
+
+    if (token) {
         login(token, user)
-    } catch {
+    } else {
         errorMsg.textContent = i18next.t('login_error_failed')
     }
 }
 
 export async function handleSignup(
+    e: Event,
     pseudoInput: HTMLInputElement,
     passwordInput: HTMLInputElement,
     passwordConfirm: HTMLInputElement,
     errorMsg: HTMLElement
 ): Promise<void> {
-    event.preventDefault()
+    e.preventDefault()
     const user = pseudoInput.value.trim()
     const pass = passwordInput.value
     const confirm = passwordConfirm.value

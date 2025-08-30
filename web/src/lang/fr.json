@@ -70,6 +70,9 @@
   "pong_online_name": "Nom de la partie",
   "pong_online_error_create": "Échec de la création de la partie. Veuillez réessayer.",
 
+  "pong_online_connecting_to": "Connexion à la partie #{{roomId}}...",
+  "pong_online_error_connect": "Échec de la connexion à la partie. Elle pourrait être pleine ou plus disponible.",
+
   "pong_local_title": "Local",
   "pong_local_2p_name": "Nom du joueur 2",
   "pong_local_2p_error_name": "Veuillez entrer un nom pour le joueur 2.",
@@ -93,7 +96,7 @@
   "pong_no_rooms": "Aucune salle trouvée.",
 
   "room_title": "Partie",
-  "room_players": "Joueurs",
+  "room_players": "Joueurs max",
   "room_mode": "Mode",
   "room_difficulty": "Difficulté",
   "room_player_ready": "Prêt"

@@ -1,4 +1,3 @@
-// src/components/gameCard.ts
 import { createButton } from './button'
 
 export interface GameButton {

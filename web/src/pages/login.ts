@@ -10,14 +10,12 @@ export function renderLogin(): HTMLElement {
     const isSignup = window.location.hash === '#/signup'
     const container = createAuthContainer()
 
-    // --- Title ---
     const title = document.createElement('h2')
     title.className = 'text-2xl font-bold text-center'
     title.textContent = isSignup
         ? i18next.t('login_signup')
         : i18next.t('login_login')
 
-    // --- Form ---
     const form = document.createElement('form')
     form.className = 'space-y-4'
 
@@ -51,9 +49,9 @@ export function renderLogin(): HTMLElement {
 
     form.onsubmit = (e) => {
         if (isSignup) {
-            handleSignup(pseudoInput, passwordInput, passwordConfirm, errorMsg)
+            handleSignup(e, pseudoInput, passwordInput, passwordConfirm, errorMsg)
         } else {
-            handleLogin(pseudoInput, passwordInput, errorMsg)
+            handleLogin(e, pseudoInput, passwordInput, errorMsg)
         }
     }
 
@@ -65,10 +63,8 @@ export function renderLogin(): HTMLElement {
         submitBtn
     )
 
-    // --- 42 button ---
     const ftBtn = createFtButton()
 
-    // --- Final assembly ---
     container.append(
         title,
         form,
