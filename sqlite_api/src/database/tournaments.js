@@ -1,5 +1,11 @@
 // database/tournaments.js
 
+export const T_STATUS = {
+  WAITING: 0,
+  PLAYING: 1,
+  FINISHED: 2
+};
+
 export async function getAllTournaments(db) {
   const result = db.prepare('SELECT * FROM tournaments').all();
   return result;
@@ -20,6 +26,19 @@ export async function createTournament(db, data) {
   const result = db.prepare('INSERT INTO tournaments (name, description, creator_id, difficulty, maxPlayers) VALUES (?, ?, ?, ?, ?)').run(name, description, creator_id, difficulty, maxPlayers);
   return result;
 }
+
+export function changeTournamentStatus(db, tournamentId) {
+  const result = db.prepare(`UPDATE tournaments SET status = CASE WHEN status < ? THEN status + 1 ELSE status END WHERE id = ? RETURNING id, status`).get(T_STATUS.FINISHED, tournamentId);
+
+  if (!result) throw new Error('Tournament not found');
+  return result;
+}
+
+
+export async function getTournamentsByStatus(db, status) {
+  return db.prepare(`SELECT * FROM tournaments WHERE status = ? ORDER BY created_at DESC, id DESC`).all(status);
+}
+
 
 export async function updateTournament(db, id, data) {
   const fields = [];
@@ -59,7 +78,6 @@ export async function addParticipant(db, tournamentId, userId) {
 }
 
 export async function updateParticipant(db, tournamentId, userId, data) {
-  // mise à jour du score tmp avant amelioration
   const result = db.prepare('UPDATE participants SET score = ? WHERE tournament_id = ? AND user_id = ?').run(data.score, tournamentId, userId);
   return result;
 }
@@ -68,3 +86,4 @@ export async function deleteParticipant(db, tournamentId, userId) {
   const result = db.prepare('DELETE FROM participants WHERE tournament_id = ? AND user_id = ?').run(tournamentId, userId);
   return result;
 }
+

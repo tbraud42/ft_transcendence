@@ -30,27 +30,57 @@ export function showUserById(db, id) {
   return user || null;
 }
 
-export async function updateUser(db, id, { username, password }) {
-  if (!password || typeof password !== 'string') {
-    throw new Error("Password is required and must be a string");
+export async function updateUser(db, id, password) {
+  const userId = Number(id);
+  if (!Number.isFinite(userId)) {
+    throw new Error('Invalid user id');
+  }
+
+  if (typeof password !== 'string' || password.length === 0) {
+    throw new Error('Password is required and must be a string');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
 
-  const result = db.prepare('UPDATE users SET username = ?, password_hash = ? WHERE id = ?').run(username, hashedPassword, id);
+  const info = db
+    .prepare(`UPDATE users
+              SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP
+              WHERE id = ?`)
+    .run(hashedPassword, userId);
 
-  return {
-    success: true,
-    userId: result.lastInsertRowid,
-    username,
-    role: 'user'
-  };
+  if (info.changes === 0) {
+    throw new Error('User not found');
+  }
+
+  return { success: true, id: userId };
 }
 
 export async function deleteUser(db, id) {
   const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
 
   return { success: true, id };
+}
+
+export function isAdmin(db, userId) { // pas bon encore
+  const result = db.prepare('SELECT LOWER(role) AS role FROM users WHERE id = ?').get(userId);
+
+  return result?.role === ROLE.ADMIN;
+}
+
+export async function isAdminOrCreator(fastify, tournamentId, userId) {
+  const resultAdmin = await fastify.db.prepare(`SELECT role FROM users WHERE id = ?`).get([userId]);
+
+  if (resultAdmin && resultAdmin.role === 'admin') {
+    return true;
+  }
+
+  const resultUser = await fastify.db.prepare(`SELECT creator_id FROM tournaments WHERE id = ?`).get([tournamentId]);
+
+  if (resultUser && resultUser.creator_id === userId) {
+    return true;
+  }
+
+  return false;
 }
 
 export async function crontab(fastify) {
@@ -74,33 +104,20 @@ export async function crontab(fastify) {
   }
 }
 
-
-// tmp pour le debug
 export async function showAllData(db) {
   const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
 
   for (const { name } of tables) {
     console.log(`\nTable: ${name}`);
 
-    const rows = db.prepare(`SELECT * FROM ${name}`).all();
+    const result = db.prepare(`SELECT * FROM ${name}`).all();
 
-    if (rows.length === 0) {
+    if (result.length === 0) {
       console.log('empty db');
     } else {
-      for (const row of rows) {
+      for (const row of result) {
         console.log(row);
       }
     }
-  }
-}
-
-export function clearDatabase(db) {
-  const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all();
-
-  for (const table of tables) {
-    const tableName = table.name;
-    db.prepare(`DELETE FROM ${tableName}`).run();
-    db.prepare(`DELETE FROM sqlite_sequence WHERE name = ?`).run(tableName); // Reset AUTOINCREMENT
-    console.log(`database clear : ${tableName}`);
   }
 }

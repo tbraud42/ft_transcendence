@@ -6,10 +6,10 @@
 // | `PATCH`  | `/tournaments/:id/participants/:userId` | Update score or rank         | Admin, creator              |
 // | `DELETE` | `/tournaments/:id/participants/:userId` | Remove a participant         | Admin, creator, or self     |
 
-// en construction
 export default async function (fastify, options) {
-  fastify.get('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const { id: tournament_id, userId: user_id } = req.params;
+  fastify.get('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const id = Number(req.params.id);
+    const user_id = Number(req.params.user_id);
 
     const participant = fastify.db.prepare(`SELECT * FROM tournament_participants WHERE tournament_id = ? AND user_id = ?`).get(tournament_id, user_id);
 
@@ -20,8 +20,9 @@ export default async function (fastify, options) {
     reply.send(participant);
   });
 
-  fastify.post('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const { id: tournament_id, userId: user_id } = req.params;
+  fastify.post('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const id = Number(req.params.id);
+    const user_id = Number(req.params.user_id);
 
     try {
       const insert = fastify.db.prepare(`INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)`).run(tournament_id, user_id);
@@ -36,8 +37,9 @@ export default async function (fastify, options) {
     }
   });
 
-  fastify.patch('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const { id: tournament_id, userId: user_id } = req.params;
+  fastify.patch('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const id = Number(req.params.id);
+    const user_id = Number(req.params.user_id);
     const { score, rank } = req.body;
 
     const result = fastify.db.prepare(`UPDATE tournament_participants SET score = COALESCE(?, score), rank = COALESCE(?, rank) WHERE tournament_id = ? AND user_id = ?`).run(score, rank, tournament_id, user_id);
@@ -48,8 +50,9 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 
-  fastify.delete('/:id/participants/:userId', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const { id: tournament_id, userId: user_id } = req.params;
+  fastify.delete('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+    const id = Number(req.params.id);
+    const user_id = Number(req.params.user_id);
 
     const result = fastify.db.prepare(`DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?`).run(tournament_id, user_id);
     if (result.changes === 0) {
@@ -59,15 +62,3 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 }
-
-// CREATE TABLE tournament_participants (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   tournament_id INTEGER NOT NULL,
-//   user_id INTEGER NOT NULL,
-//   score INTEGER DEFAULT 0,
-//   rank INTEGER, -- classement final s’il y a
-//   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-//   FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
-//   FOREIGN KEY (user_id) REFERENCES users(id),
-//   UNIQUE(tournament_id, user_id)
-// );
