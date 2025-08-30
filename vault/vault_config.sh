@@ -5,7 +5,6 @@ umask 077
 
 : "${VAULT_ADDR:=https://vault:8200}"
 export VAULT_ADDR
-# [ -n "${VAULT_CACERT:-}" ] || export VAULT_SKIP_VERIFY=true
 
 until [ "$(curl -sk "$VAULT_ADDR/v1/sys/health" | jq -r '.sealed')" = "false" ]; do
   echo "Waiting for Vault to be unsealed..."
@@ -14,18 +13,17 @@ done
 
 echo "Configuring Vault..."
 
-# Activate kv v2, could check if secret engine already exist by vault secrets list -detailed -format=json and check responses
+# Activate kv v2
 vault secrets disable secret/ || true
 vault secrets enable -path=secret -version=2 kv
 
 # # Load DB
 
-# --- Load all secrets dynamically from /run/secrets ---
+# Check for secrets directory then load all secrets
 if [ ! -d /run/secrets ]; then
   echo "No /run/secrets directory found!"
   exit 1
 fi
-
 
 TMP_JSON="/run/vault_seed.$$.json"
 {
@@ -34,7 +32,7 @@ TMP_JSON="/run/vault_seed.$$.json"
   for f in /run/secrets/*; do
     [ -f "$f" ] || continue
     key="$(basename "$f")"
-    val="$(cat "$f" | jq -Rsa .)"   # JSON-escape the file content
+    val="$(cat "$f" | jq -Rsa .)"
     if [ "$first" = true ]; then
       first=false
     else
@@ -45,36 +43,11 @@ TMP_JSON="/run/vault_seed.$$.json"
   printf '}'
 } > "$TMP_JSON"
 
-# DB_USER_FILE="/run/secrets/db_user"
-# DB_PASS_FILE="/run/secrets/db_pass"
-# DB_URL_FILE="/run/secrets/db_url"
-# JWT_TOKEN="/run/secrets/JWT_TOKEN"
-# if [ ! -r "$DB_USER_FILE" ] || [ ! -r "$DB_PASS_FILE" ] || [ ! -r "$DB_URL_FILE" ]; then
-#   echo "Could not find db_user|db_pass|db_url in /run/secrets"
-#   exit 1
-# fi
-
-# # Create JSON payload on tmpfs
-# TMP_JSON="/run/vault_seed.$$.json"
-# printf '{ "data": { "DB_USER": "%s", "DB_PASS": "%s", "DB_URL": "%s" } }\n' \
-#   "$(cat "$DB_USER_FILE")" \
-#   "$(cat "$JWT_TOKEN")" \
-#   "$(cat "$DB_PASS_FILE")" \
-#   "$(cat "$DB_URL_FILE")" > "$TMP_JSON"
-
 # Write secret on CAS = 0 to avoid overwriting
 # CAS (Check-And-Set) : create only if not exists
 vault kv put -mount=secret -cas=0 myapp/config @"$TMP_JSON" || true
 rm -f "$TMP_JSON"
 echo "KV written at secret/data/myapp/config"
-
-# Creation of minimal policy
-cat > /vault/file/myapp-policy.hcl <<'HCL'
-path "secret/data/myapp/config" {
-  capabilities = ["read"]
-}
-HCL
-vault policy write myapp-policy /vault/file/myapp-policy.hcl
 
 # Approle enable
 if ! vault auth list -format=json | grep -q '"approle/"'; then

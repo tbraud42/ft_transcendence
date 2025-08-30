@@ -13,9 +13,6 @@ listener "tcp" {
 	tls_min_version = "tls12"
 }
 
-# Public Vault adress for Vault's agent
-#    - If reverse-proxy TLS (nginx) DNS : https://vault.example.com:443
-#    - Or : https://vault.example.com:8200
 api_addr = "https://vault:8200"
 
 cluster_addr = "https://vault:8201"

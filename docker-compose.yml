@@ -7,15 +7,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      DOMAIN_NAME: dev.local
-      API_PORT: 3000
-      MODSEC_MODE: On
-      WEB_PORT: 80
-      VAULT_PORT: 8200
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
     depends_on:
       sqlite_api:
         condition: service_healthy
@@ -31,10 +27,11 @@ services:
       dockerfile: Dockerfile
     image: ft_transcendence-web:prod
     hostname: web
-    environment:
-      VITE_DOMAIN: dev.local #TODO: remove them and use vault env
-      VITE_API_URL: http://api.dev.local
-      VITE_PONG_WS_URL: ws://api.dev.local
+    depends_on:
+      - vault_agent
+    volumes:
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
     expose:
       - "80"
     networks:

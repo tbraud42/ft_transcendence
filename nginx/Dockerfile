@@ -43,7 +43,7 @@ EXPOSE 80
 EXPOSE 443
 
 # Set environment variables for the server
-ENV DOMAIN_NAME=dev.local
+# ENV DOMAIN_NAME=dev.local
 
 # Set the entrypoint to the custom script
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

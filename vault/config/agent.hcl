@@ -33,3 +33,16 @@ template {
   perms       = "0640"
 
 }
+
+template {
+  source      = "/vault/templates/app.env.tpl"
+  destination = "/secrets/web/app.env"
+  perms       = "0640"
+
+}
+template {
+  source      = "/vault/templates/app.env.tpl"
+  destination = "/secrets/nginx/app.env"
+  perms       = "0640"
+
+}
