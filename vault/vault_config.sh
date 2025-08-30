@@ -17,8 +17,6 @@ echo "Configuring Vault..."
 vault secrets disable secret/ || true
 vault secrets enable -path=secret -version=2 kv
 
-# # Load DB
-
 # Check for secrets directory then load all secrets
 if [ ! -d /run/secrets ]; then
   echo "No /run/secrets directory found!"
