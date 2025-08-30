@@ -12,6 +12,8 @@ services:
       - ./nginx/data/certs:/etc/nginx/certs
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
+      - modsec-data:/var/cache/modsecurity
+
     depends_on:
       sqlite_api:
         condition: service_healthy
@@ -151,6 +153,11 @@ networks:
 volumes:
   vault_data:
   vault-secrets:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  modsec-data:
     driver: local
     driver_opts:
       type: tmpfs
