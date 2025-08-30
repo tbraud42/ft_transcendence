@@ -44,7 +44,9 @@ export class WSClient {
 
     private emit<K extends EventKey>(type: K, ...args: Parameters<EventMap[K]>) {
         const arr = this.handlers[type];
-        if (!arr) return;
+        if (!arr) {
+            return;
+        }
         for (const fn of arr) {
             // @ts-ignore
             fn(...args);
@@ -71,26 +73,30 @@ export class WSClient {
 
         this.socket.addEventListener("message", (ev) => {
             let msg: Packet;
-            try { msg = JSON.parse(ev.data); } catch { return; }
+            try {
+                msg = JSON.parse(ev.data); 
+            } catch {
+                return; 
+            }
             this.emit("message", msg);
 
             switch (msg.type) {
-                case "auth_ok":
-                    this.emit("authed", msg.user);
-                    break;
-                case "joined":
-                    this.emit("joined", msg.roomId, msg.slot);
-                    break;
-                case "starting":
-                    this.emit("starting");
-                    break;
-                case "state":
-                    this.emit("state", msg.state);
-                    break;
-                case "pong":
-                case "error":
-                default:
-                    break;
+            case "auth_ok":
+                this.emit("authed", msg.user);
+                break;
+            case "joined":
+                this.emit("joined", msg.roomId, msg.slot);
+                break;
+            case "starting":
+                this.emit("starting");
+                break;
+            case "state":
+                this.emit("state", msg.state);
+                break;
+            case "pong":
+            case "error":
+            default:
+                break;
             }
         });
     }
@@ -109,14 +115,20 @@ export class WSClient {
     }
     off<K extends EventKey>(type: K, handler: EventMap[K]): void {
         const arr = this.handlers[type];
-        if (!arr) return;
+        if (!arr) {
+            return;
+        }
         const i = arr.indexOf(handler as any);
-        if (i >= 0) arr.splice(i, 1);
+        if (i >= 0) {
+            arr.splice(i, 1);
+        }
     }
 
     private auth(): void {
         const token = this.token;
-        if (!token) return;
+        if (!token) {
+            return;
+        }
         this.send("auth", { token });
     }
 
@@ -128,12 +140,16 @@ export class WSClient {
     }
 
     input(up: boolean, down: boolean): void {
-        if (!this.isOpen()) return;
+        if (!this.isOpen()) {
+            return;
+        }
         this.send("input", { up, down });
     }
 
     ping(): void {
-        if (!this.isOpen()) return;
+        if (!this.isOpen()) {
+            return;
+        }
         this.send("ping", { at: Date.now() });
     }
 

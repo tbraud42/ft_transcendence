@@ -15,14 +15,14 @@ export class AiPlayer extends PlayerBase {
         let errorMargin: number
 
         switch (difficulty) {
-            case 'easy':
-                errorMargin = 125
-                break
-            case 'hard':
-                errorMargin = 75
-                break
-            default:
-                errorMargin = 100
+        case 'easy':
+            errorMargin = 125
+            break
+        case 'hard':
+            errorMargin = 75
+            break
+        default:
+            errorMargin = 100
         }
 
         super(isLeft, canvas, 5)
@@ -32,7 +32,9 @@ export class AiPlayer extends PlayerBase {
     }
 
     update(ball?: BallBase): void {
-        if (!ball) return
+        if (!ball) {
+            return
+        }
 
         const now = Date.now()
 

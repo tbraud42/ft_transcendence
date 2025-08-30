@@ -1,7 +1,7 @@
 export function createList(): {
     element: HTMLDivElement,
     setElements: (elements: HTMLElement[]) => void
-} {
+    } {
     const container = document.createElement('div')
     container.className = `
         flex flex-col gap-3 overflow-y-auto

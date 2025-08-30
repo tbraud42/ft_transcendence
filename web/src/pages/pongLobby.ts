@@ -18,7 +18,9 @@ export function renderPongLobby(roomId: string, wsUrl: string, tokenProvider: ()
 
     const room = new Room(ws, canvas);
 
-    ws.on("open", () => { status.textContent = "Connecté. Authentification…"; });
+    ws.on("open", () => {
+        status.textContent = "Connecté. Authentification…"; 
+    });
     ws.on("authed", () => {
         status.textContent = "Authentifié. Rejoindre/Créer la room…";
         room.connectAndJoin(roomId);

@@ -16,7 +16,9 @@ export class Room {
         this.ws = ws;
         this.canvas = canvas;
         const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("2D context not available");
+        if (!ctx) {
+            throw new Error("2D context not available");
+        }
         this.ctx = ctx;
 
         this.attachWS();
@@ -25,7 +27,9 @@ export class Room {
     }
 
     connectAndJoin(roomId: string): void {
-        if (!this.ws.isOpen()) this.ws.connect();
+        if (!this.ws.isOpen()) {
+            this.ws.connect();
+        }
         this.ws.join(roomId);
     }
 
@@ -45,19 +49,45 @@ export class Room {
     }
 
     private attachWS() {
-        this.ws.on("joined", () => { this.inGame = false; });
-        this.ws.on("starting", () => { this.inGame = true; });
-        this.ws.on("state", (s) => { if (this.inGame) this.render(s); });
-        this.ws.on("close", () => { this.inGame = false; });
+        this.ws.on("joined", () => {
+            this.inGame = false; 
+        });
+        this.ws.on("starting", () => {
+            this.inGame = true; 
+        });
+        this.ws.on("state", (s) => {
+            if (this.inGame) {
+                this.render(s);
+            } 
+        });
+        this.ws.on("close", () => {
+            this.inGame = false; 
+        });
     }
 
     private keyDown = (e: KeyboardEvent) => {
-        if (e.code === "ArrowUp")  { if (!this.keys.up)   { this.keys.up = true;  this.sendInput(); } }
-        if (e.code === "ArrowDown"){ if (!this.keys.down) { this.keys.down = true; this.sendInput(); } }
+        if (e.code === "ArrowUp")  {
+            if (!this.keys.up)   {
+                this.keys.up = true;  this.sendInput(); 
+            } 
+        }
+        if (e.code === "ArrowDown"){
+            if (!this.keys.down) {
+                this.keys.down = true; this.sendInput(); 
+            } 
+        }
     };
     private keyUp = (e: KeyboardEvent) => {
-        if (e.code === "ArrowUp")  { if (this.keys.up)   { this.keys.up = false;  this.sendInput(); } }
-        if (e.code === "ArrowDown"){ if (this.keys.down) { this.keys.down = false; this.sendInput(); } }
+        if (e.code === "ArrowUp")  {
+            if (this.keys.up)   {
+                this.keys.up = false;  this.sendInput(); 
+            } 
+        }
+        if (e.code === "ArrowDown"){
+            if (this.keys.down) {
+                this.keys.down = false; this.sendInput(); 
+            } 
+        }
     };
 
     private attachKeyboard() {
@@ -82,7 +112,9 @@ export class Room {
 
         ctx.fillStyle = "#000"; ctx.fillRect(0,0,W,H);
         ctx.fillStyle = "#fff";
-        for (let y=0; y<H; y+=20) ctx.fillRect(W/2-1, y, 2, 10);
+        for (let y=0; y<H; y+=20) {
+            ctx.fillRect(W/2-1, y, 2, 10);
+        }
 
         ctx.font = "24px monospace"; ctx.textAlign = "center";
         ctx.fillText(String(s.s1 ?? 0), W*0.25, 30);

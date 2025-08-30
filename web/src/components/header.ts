@@ -51,7 +51,9 @@ function createLangSelect(): HTMLSelectElement {
         const opt = document.createElement('option')
         opt.value = code
         opt.textContent = emoji
-        if (i18next.language === code) opt.selected = true
+        if (i18next.language === code) {
+            opt.selected = true
+        }
         select.appendChild(opt)
     })
 
@@ -60,7 +62,6 @@ function createLangSelect(): HTMLSelectElement {
         i18next.changeLanguage(lang).then(() => {
             localStorage.setItem('lang', lang)
             router()
-            updateThemeLabel()
         })
     }
 
