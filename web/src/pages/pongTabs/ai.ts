@@ -1,4 +1,4 @@
-import i18next from '../../utils/lang/i18n'
+import i18n from '../../utils/lang/i18n'
 import {createButton} from '../../components/button'
 import {createOptionSelector} from '../../components/optionSelector'
 import {Difficulty, GameMode, setSelectedDifficulty, setSelectedGameMode} from '../../games/pong/pongState'
@@ -8,16 +8,16 @@ export function renderAITab(): HTMLElement {
     container.className = 'flex flex-col gap-4 w-full max-w-md'
 
     const difficulty = createOptionSelector({
-        label: i18next.t('pong_difficulty_label'),
+        label: i18n.t('pong_difficulty_label'),
         values: [
-            { value: 'easy', label: i18next.t('pong_ai_difficulty_easy') },
-            { value: 'medium', label: i18next.t('pong_ai_difficulty_medium') },
-            { value: 'hard', label: i18next.t('pong_ai_difficulty_hard') },
+            { value: Difficulty.EASY, label: i18n.t('pong_ai_difficulty_easy') },
+            { value: Difficulty.MEDIUM, label: i18n.t('pong_ai_difficulty_medium') },
+            { value: Difficulty.HARD, label: i18n.t('pong_ai_difficulty_hard') },
         ],
-        selected: 'medium'
+        selected: Difficulty.MEDIUM
     })
 
-    const btn = createButton(i18next.t('pong_local_2p'), 'submit', 'blue')
+    const btn = createButton(i18n.t('pong_local_2p'), 'submit', 'blue')
     btn.onclick = () => {
         setSelectedGameMode(GameMode.AI)
         setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])

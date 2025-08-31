@@ -1,6 +1,6 @@
-import i18next from '../lang/i18n'
-import { login } from './auth'
-import { apiSignup, apiLogin } from "../../api/auth";
+import i18n from './lang/i18n'
+import { login } from './storage'
+import { apiSignup, apiLogin } from "../api/auth";
 
 export async function handleLogin(
     e: Event,
@@ -13,7 +13,7 @@ export async function handleLogin(
     const pass = passwordInput.value
 
     if (!user || !pass) {
-        errorMsg.textContent = i18next.t('login_error_empty')
+        errorMsg.textContent = i18n.t('login_error_empty')
         return
     }
 
@@ -22,7 +22,7 @@ export async function handleLogin(
     if (token) {
         login(token, user)
     } else {
-        errorMsg.textContent = i18next.t('login_error_failed')
+        errorMsg.textContent = i18n.t('login_error_failed')
     }
 }
 
@@ -39,24 +39,24 @@ export async function handleSignup(
     const confirm = passwordConfirm.value
 
     if (!user || !pass || !confirm) {
-        errorMsg.textContent = i18next.t('login_error_empty')
+        errorMsg.textContent = i18n.t('login_error_empty')
         return
     }
 
     if (pass !== confirm) {
-        errorMsg.textContent = i18next.t('signup_error_mismatch')
+        errorMsg.textContent = i18n.t('signup_error_mismatch')
         return
     }
 
     try {
         const token = await apiSignup(user, pass)
         if (!token) {
-            errorMsg.textContent = i18next.t('signup_error_failed')
+            errorMsg.textContent = i18n.t('signup_error_failed')
             return
         }
         login(token, user)
     } catch {
-        errorMsg.textContent = i18next.t('signup_error_failed')
+        errorMsg.textContent = i18n.t('signup_error_failed')
     }
 }
 

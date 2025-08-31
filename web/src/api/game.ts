@@ -1,5 +1,5 @@
 import { env } from '../utils/env'
-import { getToken } from "../utils/auth/auth";
+import { getToken } from "../utils/storage";
 import {refreshToken} from "./auth";
 
 const API_URL = env.API_URL

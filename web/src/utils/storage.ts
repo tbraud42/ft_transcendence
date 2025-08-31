@@ -1,6 +1,8 @@
 const USERNAME_KEY = 'username'
 const TOKEN_KEY = 'token'
 const LAST_REFRESH_KEY = 'lastTokenRefresh'
+const LANGUAGE_KEY = 'lang'
+const THEME_KEY = 'theme'
 
 export function isLoggedIn(): boolean {
     return !!localStorage.getItem(TOKEN_KEY)
@@ -35,3 +37,22 @@ export function getLastTokenRefresh(): number {
     return parseInt(localStorage.getItem(LAST_REFRESH_KEY) || '0', 10)
 }
 
+export function setLanguage(lang: string): void {
+    localStorage.setItem(LANGUAGE_KEY, lang)
+}
+
+export function getLanguage(): string {
+    return localStorage.getItem(LANGUAGE_KEY) || 'en'
+}
+
+export function setTheme(theme: string): void {
+    localStorage.setItem(THEME_KEY, theme)
+}
+
+export function getTheme(): string {
+    return localStorage.getItem(THEME_KEY) || ''
+}
+
+export function clearStorage(): void {
+    localStorage.clear()
+}

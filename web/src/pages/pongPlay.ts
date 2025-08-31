@@ -1,6 +1,6 @@
 import { createPongCanvas } from '../games/pong/pongCanvas'
 import { PongGame } from '../games/pong/engine/PongGame'
-import i18next from '../utils/lang/i18n'
+import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
 
@@ -52,7 +52,6 @@ export function renderPongPlay(): HTMLElement {
     let timerInterval: ReturnType<typeof setInterval>
 
     function startTimer() {
-        console.log('Timer started')
         startTime = Date.now()
         timerInterval = setInterval(() => {
             const now = Date.now()
@@ -78,7 +77,7 @@ export function renderPongPlay(): HTMLElement {
 }
 
 function createExitButton(onConfirm: () => void): HTMLButtonElement {
-    const btn = createButton(i18next.t('button_exit'), 'button', 'red')
+    const btn = createButton(i18n.t('button_exit'), 'button', 'red')
     btn.className = btn.className.replace('w-full', '')
     btn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20')
 
@@ -87,7 +86,7 @@ function createExitButton(onConfirm: () => void): HTMLButtonElement {
 
     const reset = () => {
         confirmMode = false
-        btn.textContent = i18next.t('button_exit')
+        btn.textContent = i18n.t('button_exit')
         if (timeout) {
             clearTimeout(timeout)
             timeout = null
@@ -97,7 +96,7 @@ function createExitButton(onConfirm: () => void): HTMLButtonElement {
     btn.onclick = () => {
         if (!confirmMode) {
             confirmMode = true
-            btn.textContent = i18next.t('button_exit_confirm')
+            btn.textContent = i18n.t('button_exit_confirm')
             timeout = setTimeout(reset, 3000)
         } else {
             onConfirm()

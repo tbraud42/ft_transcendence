@@ -1,31 +1,33 @@
 import { PlayerBase } from './PlayerBase'
 import { BallBase } from '../balls/BallBase'
+import {Difficulty} from "../../pongState";
 
 export class AiPlayer extends PlayerBase {
     private targetY: number = 0
     private lastUpdate = 0
     private visionDelay = 1000 // ms
-    private errorMargin: number
+    private readonly errorMargin: number
 
     constructor(
         isLeft: boolean,
         canvas: HTMLCanvasElement,
-        difficulty: 'easy' | 'medium' | 'hard' = 'medium'
+        name: string,
+        difficulty: Difficulty
     ) {
         let errorMargin: number
 
         switch (difficulty) {
-        case 'easy':
+        case Difficulty.EASY:
             errorMargin = 125
             break
-        case 'hard':
+        case Difficulty.HARD:
             errorMargin = 75
             break
         default:
             errorMargin = 100
         }
 
-        super(isLeft, canvas, 5)
+        super(isLeft, canvas, name, 5)
         this.errorMargin = errorMargin
         this.targetY = canvas.height / 2
         this.lastUpdate = Date.now()

@@ -7,10 +7,6 @@
   "home_game_play": "Jouer",
   "home_game_pong_title": "Pong",
   "home_game_pong_desc": "Testez vos réflexes en ligne ou hors ligne.",
-  "home_game_2_title": "Bientôt disponible",
-  "home_game_2_desc": "De nouveaux jeux arrivent bientôt !",
-  "home_game_2_locked": "Verrouillé",
-  "home_game_2_locked_msg": "Ce jeu n'est pas encore disponible.",
   "home_logout": "Déconnexion",
 
   "login_pseudo": "Pseudo",
@@ -81,10 +77,10 @@
   "pong_ai_play": "Jouer contre l'IA",
   "pong_ai_vs_ai": "IA contre IA",
   "pong_difficulty_label": "Difficulté",
-  "pong_ai_difficulty_label": "Difficulté",
   "pong_ai_difficulty_easy": "Facile",
   "pong_ai_difficulty_medium": "Moyenne",
   "pong_ai_difficulty_hard": "Difficile",
+  "pong_ai_opponent": "IA",
 
   "pong_configuration": "Configuration",
   "pong_start": "Démarrer",
@@ -99,5 +95,19 @@
   "room_players": "Joueurs max",
   "room_mode": "Mode",
   "room_difficulty": "Difficulté",
-  "room_player_ready": "Prêt"
+  "room_player_ready": "Prêt",
+
+  "pong_lobby_connecting": "Connexion…",
+  "pong_lobby_authed": "Authentifié. Rejoindre/Créer la partie…",
+  "pong_lobby_joined_waiting": "Rejoint. En attente d’un autre joueur…",
+  "pong_lobby_starting": "La partie est pleine. Démarrage…",
+  "pong_lobby_stopped": "Partie arrêtée.",
+  "pong_lobby_disconnected": "Déconnecté. Rafraîchissez la page pour réessayer.",
+  "pong_lobby_network_error": "Erreur réseau.",
+  "pong_lobby_opponent_left": "Votre adversaire a quitté la partie.",
+  "pong_lobby_players_count": "{{current}}/{{max}} joueurs",
+  "pong_lobby_you_are_slot": "Vous êtes Joueur {{n}}",
+  "pong_lobby_controls_hint": "Utilisez ↑ et ↓ pour vous déplacer.",
+
+  "pong_winner_announce": "{{player}} gagne !"
 }

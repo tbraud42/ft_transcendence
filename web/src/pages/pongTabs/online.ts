@@ -1,4 +1,4 @@
-import i18next from '../../utils/lang/i18n'
+import i18n from '../../utils/lang/i18n'
 import {createButton} from '../../components/button'
 import {createInput} from '../../components/input'
 import {createOverlayCard} from '../../components/overlayCard'
@@ -18,7 +18,7 @@ export function renderOnlineTab(): HTMLElement {
     container.className = 'flex flex-col gap-4 w-full max-w-md'
 
     const lobbiesStatus = document.createElement('div')
-    lobbiesStatus.textContent = i18next.t('pong_online_loading')
+    lobbiesStatus.textContent = i18n.t('pong_online_loading')
     lobbiesStatus.className = 'text-sm text-gray-400 text-center'
     container.appendChild(lobbiesStatus)
 
@@ -27,7 +27,7 @@ export function renderOnlineTab(): HTMLElement {
 
     fetchTournaments().then((tournaments) => {
         if (tournaments.length === 0) {
-            lobbiesStatus.textContent = i18next.t('pong_online_no_lobbies')
+            lobbiesStatus.textContent = i18n.t('pong_online_no_lobbies')
             return
         }
 
@@ -45,13 +45,13 @@ export function renderOnlineTab(): HTMLElement {
 
             const details = document.createElement('p')
             details.className = 'text-sm text-gray-400'
-            const difficulty = tournament.difficulty || i18next.t('pong_ai_difficulty_unknown')
-            details.textContent = `${difficulty} • ${tournament.maxPlayers} ` + i18next.t("pong_online_players")
+            const difficulty = tournament.difficulty || i18n.t('pong_ai_difficulty_unknown')
+            details.textContent = `${difficulty} • ` + i18n.t("pong_online_players", { count: tournament.maxPlayers })
 
             info.append(title, details)
 
             const joinBtn = document.createElement('button')
-            joinBtn.textContent = i18next.t('pong_join')
+            joinBtn.textContent = i18n.t('pong_join')
             joinBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded'
             joinBtn.onclick = () => {
                 setSelectedGameMode(GameMode.ONLINE)
@@ -64,26 +64,26 @@ export function renderOnlineTab(): HTMLElement {
 
         setElements(items)
     }).catch(() => {
-        lobbiesStatus.textContent = i18next.t('pong_online_error_fetch')
+        lobbiesStatus.textContent = i18n.t('pong_online_error_fetch')
     })
 
-    const createOnlineButton = (label: string, mode: 'public' | 'private'): HTMLButtonElement => {
-        const btn = createButton(label, 'button', mode === 'public' ? 'blue' : 'black')
+    const createOnlineButton = (label: string): HTMLButtonElement => {
+        const btn = createButton(label, 'button', 'blue')
         btn.onclick = () => {
-            const nameInput = createInput('text', i18next.t('pong_online_name'))
+            const nameInput = createInput('text', i18n.t('pong_online_name'))
             const difficulty = createOptionSelector({
-                label: i18next.t('pong_difficulty_label'),
+                label: i18n.t('pong_difficulty_label'),
                 values: [
-                    { value: 'easy', label: i18next.t('pong_ai_difficulty_easy') },
-                    { value: 'medium', label: i18next.t('pong_ai_difficulty_medium') },
-                    { value: 'hard', label: i18next.t('pong_ai_difficulty_hard') },
+                    { value: Difficulty.EASY, label: i18n.t('pong_ai_difficulty_easy') },
+                    { value: Difficulty.MEDIUM, label: i18n.t('pong_ai_difficulty_medium') },
+                    { value: Difficulty.HARD, label: i18n.t('pong_ai_difficulty_hard') },
                 ],
-                selected: 'medium'
+                selected: Difficulty.MEDIUM
             })
 
-            const confirm = createButton(i18next.t('pong_start'), 'button', 'black')
+            const confirm = createButton(i18n.t('pong_start'), 'button', 'black')
             const overlay = createOverlayCard({
-                title: i18next.t('pong_configuration'),
+                title: i18n.t('pong_configuration'),
                 children: [nameInput, difficulty.element, confirm]
             })
 
@@ -93,13 +93,13 @@ export function renderOnlineTab(): HTMLElement {
                 setMaxPlayers(2)
                 setIsPrivate(false)
                 overlay.close()
-                createTournament(nameInput.value, difficulty.getValue() as 'easy' | 'medium' | 'hard')
+                createTournament(nameInput.value, difficulty.getValue() as keyof typeof Difficulty)
                     .then(room => {
                         // lastInsertRowid is the id of the newly created room
                         setRoomId(room.lastInsertRowid)
                         window.location.hash = `#/pong/lobby/${room.lastInsertRowid}`
                     })
-                    .catch(() => alert(i18next.t('pong_online_error_create')))
+                    .catch(() => alert(i18n.t('pong_online_error_create')))
             }
 
             document.body.appendChild(overlay.element)
@@ -109,7 +109,7 @@ export function renderOnlineTab(): HTMLElement {
     }
 
     container.append(
-        createOnlineButton(i18next.t('pong_online_create_public'), 'public'),
+        createOnlineButton(i18n.t('pong_online_create_public')),
     )
 
     return container

@@ -1,4 +1,4 @@
-import i18next from '../../utils/lang/i18n'
+import i18n from '../../utils/lang/i18n'
 import {createButton} from '../../components/button'
 import {createInput} from '../../components/input'
 import {createOptionSelector} from '../../components/optionSelector'
@@ -15,23 +15,23 @@ export function renderOfflineTab(): HTMLElement {
     container.className = 'flex flex-col gap-4 w-full max-w-md'
 
     const difficulty = createOptionSelector({
-        label: i18next.t('pong_difficulty_label'),
+        label: i18n.t('pong_difficulty_label'),
         values: [
-            { value: 'easy', label: i18next.t('pong_ai_difficulty_easy') },
-            { value: 'medium', label: i18next.t('pong_ai_difficulty_medium') },
-            { value: 'hard', label: i18next.t('pong_ai_difficulty_hard') },
+            { value: Difficulty.EASY, label: i18n.t('pong_ai_difficulty_easy') },
+            { value: Difficulty.MEDIUM, label: i18n.t('pong_ai_difficulty_medium') },
+            { value: Difficulty.HARD, label: i18n.t('pong_ai_difficulty_hard') },
         ],
-        selected: 'medium'
+        selected: Difficulty.MEDIUM,
     })
 
-    const secondPlayerNameInput = createInput('text', i18next.t('pong_local_2p_name'), true)
+    const secondPlayerNameInput = createInput('text', i18n.t('pong_local_2p_name'), true)
 
     const errorMsg = document.createElement('p')
     errorMsg.className = 'text-red-500 text-sm mt-2 text-center hidden'
     errorMsg.id = 'pong-local-2p-error'
-    errorMsg.textContent = i18next.t('pong_local_2p_error_name')
+    errorMsg.textContent = i18n.t('pong_local_2p_error_name')
 
-    const btn = createButton(i18next.t('pong_local_2p'), 'submit', 'blue')
+    const btn = createButton(i18n.t('pong_local_2p'), 'submit', 'blue')
     btn.onclick = () => {
         const secondPlayerName = secondPlayerNameInput.value.trim()
         if (!secondPlayerName) {

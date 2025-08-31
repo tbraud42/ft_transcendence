@@ -3,6 +3,9 @@ import { LocalPlayer } from './players/LocalPlayer'
 import { PlayerBase } from './players/PlayerBase'
 import { BallBase } from './balls/BallBase'
 import {AiPlayer} from "./players/AiPlayer";
+import {getUsername} from "../../../utils/storage";
+import {Difficulty, GameMode, secondPlayerName} from "../pongState";
+import i18n from "../../../utils/lang/i18n";
 
 export class PongGame {
     private canvas: HTMLCanvasElement
@@ -17,8 +20,8 @@ export class PongGame {
 
     constructor(
         canvas: HTMLCanvasElement,
-        mode: 'ai' | 'pvp' | 'public' | 'private' = 'ai',
-        difficulty: 'easy' | 'medium' | 'hard' = 'medium',
+        mode: GameMode,
+        difficulty: Difficulty,
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement
     ) {
@@ -27,16 +30,25 @@ export class PongGame {
 
         this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty)
 
-        if (mode === 'ai') {
-            this.player1 = new LocalPlayer(true, canvas)
-            this.player2 = new AiPlayer(false, canvas, difficulty)
-        } else if (mode === 'pvp') {
-            this.player1 = new LocalPlayer(true, canvas)
-            this.player2 = new LocalPlayer(false, canvas)
-        } else if (mode === 'public' || mode === 'private') {
-            // TODO: Implement Online Player logic
-            this.player1 = new LocalPlayer(true, canvas)
-            this.player2 = new LocalPlayer(false, canvas)
+        switch (mode) {
+            case GameMode.AI:
+                this.player1 = new LocalPlayer(true, canvas, getUsername());
+                this.player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), difficulty);
+                break;
+
+            case GameMode.LOCAL:
+                this.player1 = new LocalPlayer(true, canvas, getUsername());
+                this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
+                break;
+
+            case GameMode.ONLINE:
+                // TODO: Implement Online Player logic
+                this.player1 = new LocalPlayer(true, canvas, getUsername());
+                this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
+                break;
+
+            default:
+                throw new Error(`Unknown game mode: ${mode}`);
         }
 
         // Create win text overlay
@@ -79,7 +91,7 @@ export class PongGame {
             const score2 = this.player2.getScore()
 
             if (score1 >= 5 || score2 >= 5) {
-                this.handleGameOver(score1 > score2 ? 'Left Player' : 'Right Player')
+                this.handleGameOver(score1 > score2 ? this.player1.getName() : this.player2.getName())
             }
         } else {
             this.player1.update()
@@ -108,7 +120,7 @@ export class PongGame {
     private handleGameOver(winner: string) {
         this.stop()
 
-        this.winTextEl.textContent = `${winner} wins!`
+        this.winTextEl.textContent = i18n.t('pong_winner_announce', { winner })
         this.winTextEl.style.opacity = '1'
 
         setTimeout(() => {

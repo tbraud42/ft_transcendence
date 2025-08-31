@@ -1,5 +1,5 @@
 import { env } from '../utils/env'
-import {getToken, getLastTokenRefresh, setToken} from "../utils/auth/auth";
+import {getToken, getLastTokenRefresh, setToken, logout} from "../utils/storage";
 
 const API_URL = env.API_URL
 
@@ -62,12 +62,9 @@ export async function updatePassword(current: string, newPass: string) {
  * @returns The new token or null if the refresh failed
  */
 export async function refreshToken(tolerance: number = 1800000): Promise<string | null> {
-    console.log('refreshToken', tolerance)
-    console.log('last refresh', getLastTokenRefresh(), 'now', Date.now(), 'diff', Date.now() - getLastTokenRefresh())
     if (Date.now() - getLastTokenRefresh() < tolerance) {
         return getToken();
     }
-    console.log('difference to high', tolerance)
 
     const url = `https://${API_URL}/auth/refreshAuth`;
 
@@ -80,6 +77,7 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
     });
 
     if (!res.ok) {
+        logout()
         return null;
     }
 

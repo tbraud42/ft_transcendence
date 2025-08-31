@@ -37,7 +37,7 @@ export class WSClient {
     private heartbeatId?: number;
     private joinedRoomId?: string;
 
-    constructor(url: string, token: TokenProvider) {
+    constructor(url: string, token: string) {
         this.url = url;
         this.token = token;
     }
@@ -111,6 +111,7 @@ export class WSClient {
     }
 
     on<K extends EventKey>(type: K, handler: EventMap[K]): void {
+        // @ts-ignore
         (this.handlers[type] ??= []).push(handler);
     }
     off<K extends EventKey>(type: K, handler: EventMap[K]): void {
@@ -155,7 +156,7 @@ export class WSClient {
 
     private startHeartbeat(): void {
         this.stopHeartbeat();
-        this.heartbeatId = window.setInterval(() => this.ping(), 25_000);
+        this.heartbeatId = window.setInterval(() => this.ping(), 25000);
     }
     private stopHeartbeat(): void {
         if (this.heartbeatId) {

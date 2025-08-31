@@ -1,9 +1,10 @@
 import { BallBase } from './BallBase'
 import { PlayerBase } from '../players/PlayerBase'
+import {Difficulty} from "../../pongState";
 
 export class BasicBall extends BallBase {
-    constructor(startX: number, startY: number, difficulty: string = 'medium') {
-        const speed = difficulty === 'easy' ? 4.5 : difficulty === 'hard' ? 6.5 : 5.5
+    constructor(startX: number, startY: number, difficulty: Difficulty) {
+        const speed = difficulty === Difficulty.EASY ? 4.5 : difficulty === Difficulty.HARD ? 6.5 : 5.5
         super(startX, startY, speed)
     }
 

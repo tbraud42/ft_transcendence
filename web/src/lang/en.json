@@ -7,10 +7,6 @@
   "home_game_play": "Play",
   "home_game_pong_title": "Pong",
   "home_game_pong_desc": "Challenge your reflexes in online or offline matches.",
-  "home_game_2_title": "Coming Soon",
-  "home_game_2_desc": "New games are on the way!",
-  "home_game_2_locked": "Locked",
-  "home_game_2_locked_msg": "This game is not yet available.",
   "home_logout": "Logout",
 
   "login_pseudo": "Username",
@@ -65,7 +61,7 @@
   "pong_online_title": "Online Games",
   "pong_online_loading": "Loading available rooms...",
   "pong_online_no_lobbies": "No rooms found.",
-  "pong_online_players": "slots",
+  "pong_online_players": "{{count}} players",
   "pong_online_create_public": "Create Room",
   "pong_online_name": "Room name",
   "pong_online_error_create": "Failed to create room. Please try again.",
@@ -81,10 +77,10 @@
   "pong_ai_play": "Play against AI",
   "pong_ai_vs_ai": "AI vs AI",
   "pong_difficulty_label": "Difficulty",
-  "pong_ai_difficulty_label": "Difficulty",
   "pong_ai_difficulty_easy": "Easy",
   "pong_ai_difficulty_medium": "Medium",
   "pong_ai_difficulty_hard": "Hard",
+  "pong_ai_opponent": "AI",
 
   "pong_configuration": "Configuration",
   "pong_start": "Start",
@@ -96,8 +92,22 @@
   "pong_no_rooms": "No rooms found.",
 
   "room_title": "Game",
-  "room_players": "slots",
+  "room_players": "Max players",
   "room_mode": "Mode",
   "room_difficulty": "Difficulty",
-  "room_player_ready": "Ready"
+  "room_player_ready": "Ready",
+
+  "pong_lobby_connecting": "Connecting…",
+  "pong_lobby_authed": "Authenticated. Join/Create the room…",
+  "pong_lobby_joined_waiting": "Joined. Waiting for another player…",
+  "pong_lobby_starting": "Room is full. Starting…",
+  "pong_lobby_stopped": "Match stopped.",
+  "pong_lobby_disconnected": "Disconnected. Refresh the page to retry.",
+  "pong_lobby_network_error": "Network error.",
+  "pong_lobby_opponent_left": "Your opponent left the match.",
+  "pong_lobby_players_count": "{{current}}/{{max}} players",
+  "pong_lobby_you_are_slot": "You are Player {{n}}",
+  "pong_lobby_controls_hint": "Use ↑ and ↓ to move.",
+
+  "pong_winner_announce": "{{player}} wins!"
 }

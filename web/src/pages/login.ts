@@ -1,10 +1,10 @@
-import i18next from '../utils/lang/i18n'
+import i18n from '../utils/lang/i18n'
 import ftIcon from '../img/42.webp'
 import { createInput } from '../components/input'
 import { createButton } from '../components/button'
 import { createAuthContainer } from '../components/authContainer'
 import { createDivider } from '../components/divider'
-import {handleFtLogin, handleLogin, handleSignup} from '../utils/auth/authHandlers'
+import {handleFtLogin, handleLogin, handleSignup} from '../utils/auth'
 
 export function renderLogin(): HTMLElement {
     const isSignup = window.location.hash === '#/signup'
@@ -13,15 +13,15 @@ export function renderLogin(): HTMLElement {
     const title = document.createElement('h2')
     title.className = 'text-2xl font-bold text-center'
     title.textContent = isSignup
-        ? i18next.t('login_signup')
-        : i18next.t('login_login')
+        ? i18n.t('login_signup')
+        : i18n.t('login_login')
 
     const form = document.createElement('form')
     form.className = 'space-y-4'
 
-    const pseudoInput = createInput('text', i18next.t('login_pseudo'))
-    const passwordInput = createInput('password', i18next.t('login_password'))
-    const passwordConfirm = createInput('password', i18next.t('signup_password_confirm'))
+    const pseudoInput = createInput('text', i18n.t('login_pseudo'))
+    const passwordInput = createInput('password', i18n.t('login_password'))
+    const passwordConfirm = createInput('password', i18n.t('signup_password_confirm'))
 
     if (!isSignup) {
         passwordConfirm.classList.add('hidden')
@@ -32,7 +32,7 @@ export function renderLogin(): HTMLElement {
     errorMsg.className = 'text-red-500 text-sm h-5'
 
     const submitBtn = createButton(
-        isSignup ? i18next.t('login_signup') : i18next.t('login_login'),
+        isSignup ? i18n.t('login_signup') : i18n.t('login_login'),
         'submit',
         'black'
     )
@@ -41,8 +41,8 @@ export function renderLogin(): HTMLElement {
     switchLink.type = 'button'
     switchLink.className = 'text-sm text-gray-500 dark:text-gray-300 hover:underline'
     switchLink.textContent = isSignup
-        ? i18next.t('signup_switch_to_login')
-        : i18next.t('login_switch_to_signup')
+        ? i18n.t('signup_switch_to_login')
+        : i18n.t('login_switch_to_signup')
     switchLink.onclick = () => {
         window.location.hash = isSignup ? '#/' : '#/signup'
     }
@@ -69,7 +69,7 @@ export function renderLogin(): HTMLElement {
         title,
         form,
         switchLink,
-        createDivider(i18next.t('login_or')),
+        createDivider(i18n.t('login_or')),
         ftBtn
     )
 
