@@ -4,6 +4,7 @@ WORKDIR /app
 COPY package*.json tsconfig.json vite.config.ts tailwind.config.js postcss.config.js ./
 COPY src ./src
 
+
 RUN npm install
 RUN npm run build
 
@@ -11,4 +12,5 @@ FROM nginx:stable-alpine
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-RUN ["./scripts/vault-run.sh", "/secrets/web/app.env"]
+ENTRYPOINT ["./scripts/vault-run.sh", "/secrets/web/app.env"]
+CMD [ "nginx", "-g", "daemon off;" ]

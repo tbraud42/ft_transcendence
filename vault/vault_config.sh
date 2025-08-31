@@ -47,6 +47,15 @@ vault kv put -mount=secret -cas=0 myapp/config @"$TMP_JSON" || true
 rm -f "$TMP_JSON"
 echo "KV written at secret/data/myapp/config"
 
+# Creation of minimal policy
+cat > /vault/file/myapp-policy.hcl <<'HCL'
+path "secret/data/myapp/config" {
+  capabilities = ["read"]
+}
+HCL
+vault policy write myapp-policy /vault/file/myapp-policy.hcl
+
+
 # Approle enable
 if ! vault auth list -format=json | grep -q '"approle/"'; then
   echo "Enabling AppRole..."

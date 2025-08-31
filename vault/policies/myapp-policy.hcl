@@ -1,19 +1,17 @@
 # policies/myapp-policy.hcl
 
-path "secret/data/myapp/config" {
+path "secret/data/myapp/*" {
   capabilities = ["read"]
 }
 
-path "secret/data/myapp/sqlite_api" {
-  capabilities = ["read"]
+path "secret/metadata/myapp/*" {
+  capabilities = ["read", "list"]
 }
-path "secret/data/myapp/ws_server" {
+
+path "sys/internal/ui/mounts/secret" {
   capabilities = ["read"]
 }
 
-path "secret/data/myapp/web" {
-  capabilities = ["read"]
-}
-path "secret/data/myapp/nginx" {
+path "sys/internal/ui/mounts/secret/*" {
   capabilities = ["read"]
 }
