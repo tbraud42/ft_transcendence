@@ -1,5 +1,5 @@
 import i18n from './lang/i18n'
-import { login } from './storage'
+import {login, setTmpToken, setUsername} from './storage'
 import { apiSignup, apiLogin } from "../api/auth";
 import {env} from "./env";
 
@@ -10,23 +10,32 @@ export async function handleLogin(
     pseudoInput: HTMLInputElement,
     passwordInput: HTMLInputElement,
     errorMsg: HTMLElement
-): Promise<void> {
+): Promise<boolean> {
     e.preventDefault()
     const user = pseudoInput.value.trim()
     const pass = passwordInput.value
 
     if (!user || !pass) {
         errorMsg.textContent = i18n.t('login_error_empty')
-        return
+        return false
     }
 
-    const token = await apiLogin(user, pass)
-
-    if (token) {
-        login(token, user)
-    } else {
-        errorMsg.textContent = i18n.t('login_error_failed')
+    try {
+        const res = await apiLogin(user, pass)
+        if (res) {
+            if (res.twofa_required) {
+                setUsername(user)
+                setTmpToken(res.token)
+                return true
+            } else {
+                login(res.token, user)
+                return false
+            }
+        }
+    } catch (err) {
+        errorMsg.textContent = (err as Error).message
     }
+    return false
 }
 
 export async function handleSignup(
@@ -52,14 +61,12 @@ export async function handleSignup(
     }
 
     try {
-        const token = await apiSignup(user, pass)
-        if (!token) {
-            errorMsg.textContent = i18n.t('signup_error_failed')
-            return
+        const res = await apiSignup(user, pass)
+        if (res) {
+            login(res.token, user)
         }
-        login(token, user)
-    } catch {
-        errorMsg.textContent = i18n.t('signup_error_failed')
+    } catch (err) {
+        errorMsg.textContent = (err as Error).message
     }
 }
 

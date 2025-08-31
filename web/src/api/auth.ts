@@ -1,5 +1,15 @@
 import { env } from '../utils/env'
-import {getToken, getLastTokenRefresh, setToken, logout} from "../utils/storage";
+import {
+    getToken,
+    getLastTokenRefresh,
+    setToken,
+    logout,
+    login,
+    getUsername,
+    setUsername,
+    isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
+} from "../utils/storage";
+import i18n from "../utils/lang/i18n";
 
 const API_URL = env.API_URL
 
@@ -7,7 +17,7 @@ async function requestAuth(
     endpoint: 'signup' | 'login',
     username: string,
     password: string
-): Promise<string | null> {
+): Promise<{ token: string, twofa_required: boolean } | null> {
     if (!username || !password) {
         return null
     }
@@ -19,16 +29,23 @@ async function requestAuth(
         body: JSON.stringify({ username, password }),
     })
 
-    if (res.status === 401 || res.status === 404) {
-        return null
+    const data = await res.json()
+
+    if (res.status === 401) {
+        throw new Error(i18n.t('signup_error_username_taken'))
+    } else if (res.status === 404) {
+        throw new Error(i18n.t('login_error_user_not_found'))
     }
 
     if (!res.ok) {
-        return null
+        throw new Error(i18n.t('login_error_failed'))
     }
 
-    const data = await res.json()
-    return data.token || null
+    if (data.twofa_required) {
+        return { token: data.tmp_token, twofa_required: true }
+    }
+
+    return { token: data.token, twofa_required: false }
 }
 
 export async function updatePassword(current: string, newPass: string) {
@@ -91,3 +108,61 @@ export const apiSignup = (name: string, password: string) =>
 
 export const apiLogin = (name: string, password: string) =>
     requestAuth('login', name, password)
+
+
+export async function api2faSetup(): Promise<{ qrCode: string, secret: string, otpauthUrl: string } | null> {
+    const url = `https://${API_URL}/auth/2fa/setup`
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({}),
+    })
+
+    if (!res.ok) {
+        return null
+    }
+    return await res.json()
+}
+
+export async function twofaVerify(code: string): Promise<boolean> {
+    if (!code) {
+        return false
+    }
+
+    let isTmpToken
+    let token
+    if (!isLoggedIn()) {
+        isTmpToken = true
+        token = getTmpToken()
+    } else {
+        isTmpToken = false
+        token = getToken()
+    }
+
+    const url = `https://${API_URL}/auth/2fa/verify`
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ code: code }),
+    })
+
+    if (!res.ok) {
+        return false
+    }
+
+    const data = await res.json()
+    if (data?.token) {
+        if (isTmpToken) {
+            removeItem(TMP_TOKEN_KEY)
+        }
+        setToken(data.token)
+        return true
+    }
+    return false
+}

@@ -1,16 +1,17 @@
-const USERNAME_KEY = 'username'
-const TOKEN_KEY = 'token'
-const LAST_REFRESH_KEY = 'lastTokenRefresh'
-const LANGUAGE_KEY = 'lang'
-const THEME_KEY = 'theme'
+export const USERNAME_KEY = 'username'
+export const TMP_TOKEN_KEY = 'tmpToken'
+export const TOKEN_KEY = 'token'
+export const LAST_REFRESH_KEY = 'lastTokenRefresh'
+export const LANGUAGE_KEY = 'lang'
+export const THEME_KEY = 'theme'
 
 export function isLoggedIn(): boolean {
-    return !!localStorage.getItem(TOKEN_KEY)
+    return !!getToken()
 }
 
 export function login(token: string, username: string): void {
     setToken(token)
-    localStorage.setItem(USERNAME_KEY, username)
+    setUsername(username)
     window.location.hash = '#/home'
 }
 
@@ -20,8 +21,20 @@ export function logout(): void {
     window.location.hash = '#/'
 }
 
+export function setUsername(username: string): void {
+    localStorage.setItem(USERNAME_KEY, username)
+}
+
 export function getUsername(): string {
     return localStorage.getItem(USERNAME_KEY) || ''
+}
+
+export function setTmpToken(token: string): void {
+    localStorage.setItem(TMP_TOKEN_KEY, token)
+}
+
+export function getTmpToken(): string {
+    return localStorage.getItem(TMP_TOKEN_KEY) || ''
 }
 
 export function setToken(token: string): void {
@@ -51,6 +64,10 @@ export function setTheme(theme: string): void {
 
 export function getTheme(): string {
     return localStorage.getItem(THEME_KEY) || ''
+}
+
+export function removeItem(key: string): void {
+    localStorage.removeItem(key)
 }
 
 export function clearStorage(): void {
