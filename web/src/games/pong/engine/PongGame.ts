@@ -31,24 +31,24 @@ export class PongGame {
         this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty)
 
         switch (mode) {
-            case GameMode.AI:
-                this.player1 = new LocalPlayer(true, canvas, getUsername());
-                this.player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), difficulty);
-                break;
+        case GameMode.AI:
+            this.player1 = new LocalPlayer(true, canvas, getUsername());
+            this.player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), difficulty);
+            break;
 
-            case GameMode.LOCAL:
-                this.player1 = new LocalPlayer(true, canvas, getUsername());
-                this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
-                break;
+        case GameMode.LOCAL:
+            this.player1 = new LocalPlayer(true, canvas, getUsername());
+            this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
+            break;
 
-            case GameMode.ONLINE:
-                // TODO: Implement Online Player logic
-                this.player1 = new LocalPlayer(true, canvas, getUsername());
-                this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
-                break;
+        case GameMode.ONLINE:
+            // TODO: Implement Online Player logic
+            this.player1 = new LocalPlayer(true, canvas, getUsername());
+            this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
+            break;
 
-            default:
-                throw new Error(`Unknown game mode: ${mode}`);
+        default:
+            throw new Error(`Unknown game mode: ${mode}`);
         }
 
         // Create win text overlay

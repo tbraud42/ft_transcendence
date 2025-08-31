@@ -22,20 +22,20 @@ export function renderProfile(activeTabId: string): HTMLElement {
 
     let content: HTMLElement
     switch (activeTabId) {
-        case 'settings':
-            content = renderSettingsView()
-            break
-        case '2fa':
-            content = render2faView()
-            break
-        case 'profile':
-        case '':
-            content = renderProfileView()
-            break
-        default:
-            content = document.createElement('div')
-            content.textContent = i18n.t('profile_not_found')
-            break
+    case 'settings':
+        content = renderSettingsView()
+        break
+    case '2fa':
+        content = render2faView()
+        break
+    case 'profile':
+    case '':
+        content = renderProfileView()
+        break
+    default:
+        content = document.createElement('div')
+        content.textContent = i18n.t('profile_not_found')
+        break
     }
     contentWrap.appendChild(content)
 

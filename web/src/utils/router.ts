@@ -43,20 +43,20 @@ export function router(): void {
         case 'signup':
             main.appendChild(renderLogin())
             break
-            case 'pong':
-                if (subPage === 'play') {
-                    main.appendChild(renderPongPlay());
-                } else if (subPage === 'lobby' && param) {
-                    main.appendChild(renderPongLobby(param, "wss://" + PONG_WS_URL));
-                } else {
-                    const activeTab = subPage || 'online';
-                    main.appendChild(renderPong(activeTab));
-                }
-                break;
-            case 'profile': {
-                main.appendChild(renderProfile(subPage))
-                break
+        case 'pong':
+            if (subPage === 'play') {
+                main.appendChild(renderPongPlay());
+            } else if (subPage === 'lobby' && param) {
+                main.appendChild(renderPongLobby(param, "wss://" + PONG_WS_URL));
+            } else {
+                const activeTab = subPage || 'online';
+                main.appendChild(renderPong(activeTab));
             }
+            break;
+        case 'profile': {
+            main.appendChild(renderProfile(subPage))
+            break
+        }
         case '':
             main.appendChild(renderHome())
             break

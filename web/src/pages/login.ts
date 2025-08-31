@@ -1,4 +1,5 @@
 import i18n from '../utils/lang/i18n'
+// @ts-ignore
 import ftIcon from '../img/42.webp'
 import { createInput } from '../components/input'
 import { createButton } from '../components/button'
