@@ -24,6 +24,9 @@ cat > "$WEBROOT/config.js" <<EOF
 window.__APP_CONFIG__ = {
   API_URL: "$(printf %s "$API_URL")",
   DOMAIN: "$(printf %s "$DOMAIN")",
-  PONG_WS_URL: "$(printf %s "$PONG_WS_URL")"
+  PONG_WS_URL: "$(printf %s "$PONG_WS_URL")",
+  VITE_API_URL: "$(printf %s "$API_URL")",
+  VITE_DOMAIN: "$(printf %s "$DOMAIN")",
+  VITE_PONG_WS_URL: "$(printf %s "$PONG_WS_URL")"
 };
 EOF

@@ -11,7 +11,7 @@ async function requestAuth(
         throw new Error('Name and password are required')
     }
 
-    const url = `https://${API_URL}/auth/${endpoint}`
+    const url = `${API_URL}/auth/${endpoint}`
 
     const res = await fetch(url, {
         method: 'POST',

@@ -137,6 +137,8 @@ const start = async () => {
           cb(null, true) // autorise tout en dev
         } else {
           const allowedOrigins = [
+            'https://localhost',
+            'https://dev.local',
             `https://${process.env.VITE_DOMAIN}`,
             `https://www.${process.env.VITE_DOMAIN}`
           ]

@@ -32,7 +32,7 @@ services:
       vault_agent:
         condition: service_healthy
     volumes:
-      - vault-secrets:/secrets:ro
+      - vault-secrets:/secrets
       - ./shared:/scripts:ro
     expose:
       - "80"
