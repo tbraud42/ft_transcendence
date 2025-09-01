@@ -1,4 +1,3 @@
-import i18next from '../../utils/lang/i18n'
 import { PlayerBase } from '../../games/pong/engine/players/PlayerBase'
 
 export function renderPlayerList(players: PlayerBase[]): HTMLElement {

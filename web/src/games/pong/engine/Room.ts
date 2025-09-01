@@ -1,134 +1,127 @@
-import { OnlinePlayer } from "./players/OnlinePlayer";
-import { PlayerBase } from "./players/PlayerBase";
-import {Difficulty, GameMode, roomId} from "../pongState";
-import { getTournament } from "../../../api/game";
-import { env } from "../../../utils/env";
-import { getToken } from "../../../utils/auth/auth";
-import { joinRoomPacket } from "./handler/packets";
-import {handlePacket} from "./handler/PacketHandler";
-import {WSClient} from "../../../socket/WSClient";
+import { WSClient, ServerState } from "../../../socket/WSClient";
 
-export interface RoomState {
-    id: number;
-    difficulty: Difficulty;
-    gameMode: GameMode;
-    maxPlayers: number;
-    isPrivate: boolean;
-    ownerId: string;
-    players: PlayerBase[];
-    gameStarted: boolean;
-    createdAt: Date;
-}
+type Keys = { up: boolean; down: boolean };
 
 export class Room {
-    protected state: RoomState | undefined;
-    protected client?: WSClient;
+    private ws: WSClient;
+    private canvas: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D;
+    private keys: Keys = { up: false, down: false };
+    private slot?: 0 | 1;
+    private inGame = false;
 
-    constructor(
-        private id: number,
-        private difficulty: Difficulty,
-        private gameMode: GameMode,
-        private maxPlayers: number,
-        private isPrivate: boolean,
-        private ownerId: string | null = null
-    ) {}
+    private onPageHide = () => this.ws.disconnect();
 
-    init(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            const commonState = {
-                id: this.id,
-                difficulty: this.difficulty,
-                gameMode: this.gameMode,
-                maxPlayers: this.maxPlayers,
-                isPrivate: this.isPrivate,
-                ownerId: this.ownerId || this.gameMode.toLowerCase(),
-                players: [],
-                gameStarted: false,
-                createdAt: new Date(),
-            };
-            if (this.gameMode === GameMode.ONLINE && this.id !== roomId) {
-                getTournament(this.id).then((tournament) => {
-                    if (!tournament) {
-                        return reject(new Error(`Tournament with ID ${this.id} not found`));
-                    }
+    constructor(ws: WSClient, canvas: HTMLCanvasElement) {
+        this.ws = ws;
+        this.canvas = canvas;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+            throw new Error("2D context not available");
+        }
+        this.ctx = ctx;
 
-                    this.state = {
-                        ...commonState,
-                        id: tournament.id,
-                        difficulty: tournament.difficulty,
-                        maxPlayers: tournament.maxPlayers,
-                        isPrivate: tournament.isPrivate,
-                        ownerId: tournament.ownerId || this.ownerId,
-                        createdAt: new Date(tournament.createdAt),
-                    };
+        this.attachWS();
+        this.attachKeyboard();
+        this.attachLifecycle();
+    }
 
-                    this.initOnlineMode()
-                        .then(() => resolve())
-                        .catch(err => reject(err));
-                }).catch(reject);
-            } else {
-                this.state = commonState;
-                resolve();
-            }
+    connectAndJoin(roomId: string): void {
+        if (!this.ws.isOpen()) {
+            this.ws.connect();
+        }
+        this.ws.join(roomId);
+    }
+
+    /** À appeler quand tu quittes la page/route du jeu dans ta SPA */
+    destroy(): void {
+        this.detachLifecycle();
+        this.detachKeyboard();
+        this.ws.disconnect();
+    }
+
+    private attachLifecycle() {
+        window.addEventListener("pagehide", this.onPageHide, { passive: true });
+    }
+
+    private detachLifecycle() {
+        window.removeEventListener("pagehide", this.onPageHide);
+    }
+
+    private attachWS() {
+        this.ws.on("joined", () => {
+            this.inGame = false; 
+        });
+        this.ws.on("starting", () => {
+            this.inGame = true; 
+        });
+        this.ws.on("state", (s) => {
+            if (this.inGame) {
+                this.render(s);
+            } 
+        });
+        this.ws.on("close", () => {
+            this.inGame = false; 
         });
     }
 
-    async initOnlineMode(): Promise<void> {
-        this.client = new WSClient(`wss://${env.PONG_WS_URL}`, this.id, getToken());
+    private keyDown = (e: KeyboardEvent) => {
+        if (e.code === "ArrowUp")  {
+            if (!this.keys.up)   {
+                this.keys.up = true;  this.sendInput(); 
+            } 
+        }
+        if (e.code === "ArrowDown"){
+            if (!this.keys.down) {
+                this.keys.down = true; this.sendInput(); 
+            } 
+        }
+    };
+    private keyUp = (e: KeyboardEvent) => {
+        if (e.code === "ArrowUp")  {
+            if (this.keys.up)   {
+                this.keys.up = false;  this.sendInput(); 
+            } 
+        }
+        if (e.code === "ArrowDown"){
+            if (this.keys.down) {
+                this.keys.down = false; this.sendInput(); 
+            } 
+        }
+    };
 
-        await this.client.ready();
-
-        this.client.send("say", { text: "hello from client" });
-
-        this.client.on("broadcast", (p) => {
-            console.log(p.from?.name, ":", p.text);
-        });
+    private attachKeyboard() {
+        window.addEventListener("keydown", this.keyDown);
+        window.addEventListener("keyup", this.keyUp);
+    }
+    private detachKeyboard() {
+        window.removeEventListener("keydown", this.keyDown);
+        window.removeEventListener("keyup", this.keyUp);
     }
 
-    join(player: OnlinePlayer): void {
-        if (!this.state) throw new Error("Room not initialized");
-
-        if (this.state.players.length < this.state.maxPlayers) {
-            this.state.players.push(player);
-            if (this.state.gameMode === GameMode.ONLINE && this.socket?.readyState === WebSocket.OPEN) {
-                const packet = JSON.stringify(joinRoomPacket(this.state.id))
-                this.socket.send(packet);
-            }
-        }
+    private sendInput() {
+        this.ws.input(this.keys.up, this.keys.down);
     }
 
-    leave(playerId: string): void {
-        if (!this.state) {
-            return;
+    private render(s: ServerState) {
+        if (this.canvas.width !== s.width || this.canvas.height !== s.height) {
+            this.canvas.width = s.width;
+            this.canvas.height = s.height;
         }
-        this.state.players = this.state.players.filter((p) => p.getId() !== playerId);
-        this.sendUpdate();
-    }
+        const ctx = this.ctx, W = this.canvas.width, H = this.canvas.height;
 
-    startGame(): void {
-        if (!this.state) return;
-        if (this.state.players.length > 1 && !this.state.gameStarted) {
-            this.state.gameStarted = true;
-            this.sendUpdate();
+        ctx.fillStyle = "#000"; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = "#fff";
+        for (let y=0; y<H; y+=20) {
+            ctx.fillRect(W/2-1, y, 2, 10);
         }
-    }
 
-    close(): void {
-        this.state = undefined;
-        if (this.socket) {
-            this.socket.close();
-            this.socket = undefined;
-        }
-    }
+        ctx.font = "24px monospace"; ctx.textAlign = "center";
+        ctx.fillText(String(s.s1 ?? 0), W*0.25, 30);
+        ctx.fillText(String(s.s2 ?? 0), W*0.75, 30);
 
-    sendUpdate(): void {
-        if (this.socket && this.state) {
-            this.socket.send(
-                JSON.stringify({
-                    type: "room_update",
-                    state: this.state,
-                })
-            );
-        }
+        ctx.fillRect(10, s.p1y, 10, s.paddleH);
+        ctx.fillRect(W-20, s.p2y, 10, s.paddleH);
+        ctx.fillRect(s.bX, s.bY, s.ballSize, s.ballSize);
     }
 }

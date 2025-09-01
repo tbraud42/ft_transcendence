@@ -1,7 +1,9 @@
-import i18next from '../utils/lang/i18n.ts'
-import { router } from '../utils/router.ts'
+import i18n from '../utils/lang/i18n'
+import { router } from '../utils/router'
+// @ts-ignore
 import profileIcon from '../img/profile-icon.svg'
 import { createButton } from './button'
+import {setLanguage, setTheme} from "../utils/storage";
 
 export function createHeader(): HTMLElement {
     const header = document.createElement('header')
@@ -18,7 +20,7 @@ export function createHeader(): HTMLElement {
 function createTitle(): HTMLButtonElement {
     const btn = document.createElement('button')
     btn.className = 'text-xl font-bold hover:underline transition'
-    btn.textContent = i18next.t('app_title')
+    btn.textContent = i18n.t('app_title')
     btn.onclick = () => {
         window.location.hash = '#/home'
     }
@@ -51,16 +53,17 @@ function createLangSelect(): HTMLSelectElement {
         const opt = document.createElement('option')
         opt.value = code
         opt.textContent = emoji
-        if (i18next.language === code) opt.selected = true
+        if (i18n.language === code) {
+            opt.selected = true
+        }
         select.appendChild(opt)
     })
 
     select.onchange = () => {
         const lang = select.value
-        i18next.changeLanguage(lang).then(() => {
-            localStorage.setItem('lang', lang)
+        i18n.changeLanguage(lang).then(() => {
+            setLanguage(lang)
             router()
-            updateThemeLabel()
         })
     }
 
@@ -84,7 +87,7 @@ function createThemeToggle(): HTMLButtonElement {
 
     btn.onclick = () => {
         document.documentElement.classList.toggle('dark')
-        localStorage.setItem('theme', isDark() ? 'dark' : 'light')
+        setTheme(isDark() ? 'dark' : 'light')
         updateThemeLabel()
     }
 
@@ -101,7 +104,7 @@ function createProfileButton(): HTMLButtonElement {
     icon.className = 'w-5 h-5'
 
     btn.appendChild(icon)
-    btn.title = i18next.t('header_profile')
+    btn.title = i18n.t('header_profile')
 
     btn.onclick = () => {
         const hash = window.location.hash

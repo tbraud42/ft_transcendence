@@ -9,99 +9,30 @@ import cors from '@fastify/cors'
 
 // import crontab module
 import cron from 'node-cron';
+import { crontab } from './database/manage.js';
 
-// import database function
-import db from './database/db.js'
-import {
-  createUser,
-  showUserByUsername,
-  showUserById,
-  updateUser,
-  deleteUser,
-  isAdmin,
-  isAdminOrCreator,
-  showAllData,
-  crontab
-} from './database/manage.js';
-
-import {
-  getAllTournaments,
-  getTournamentById,
-  getTournamentByName,
-  createTournament,
-  changeTournamentStatus,
-  getTournamentsByStatus,
-  updateTournament,
-  deleteTournament,
-  getParticipantsByTournamentId,
-  addParticipant,
-  updateParticipant,
-  deleteParticipant
-} from './database/tournaments.js';
+// import decorate loader
+import { loadDecorate } from './loadDecorate.js';
 
 // import routes
 import twoFaRoute from './routes/auth/2fa.js';
 import ftRoutes from './routes/auth/42auth.js';
-import loginRoute from './routes/auth/login.js';
-import signupRoutes from './routes/auth/signup.js';
 import isLoginRoute from './routes/auth/isAuth.js';
+import loginRoute from './routes/auth/login.js';
+import refreshRoute from './routes/auth/refreshAuth.js';
+import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
 import tournamentRoute from './routes/matchs/tournaments.js';
 import tournamentClientRoute from './routes/matchs/tournaments_client.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
 
-// importe all security function
-import {
-  generateToken,
-  requireRole,
-  authenticate,
-  verifyPassword,
-  allowSelfOrAdmin,
-  validatePassword,
-  passwordFeedback,
-  usernameEndsWith42
-} from './plugins/security.js'
-
 import bcrypt from 'bcrypt'; // tmp pour clean database
 
 const start = async () => {
   const fastify = Fastify({ logger: true });
 
-  fastify.decorate('db', db);
-  fastify.decorate('createUser', createUser);
-  fastify.decorate('showUserByUsername', showUserByUsername);
-  fastify.decorate('showUserById', showUserById);
-  fastify.decorate('updateUser', updateUser);
-  fastify.decorate('deleteUser', deleteUser);
-  fastify.decorate('isAdmin', isAdmin);
-  fastify.decorate('isAdminOrCreator', isAdminOrCreator);
-  fastify.decorate('showAllData', showAllData);
-  fastify.decorate('getAllTournaments', getAllTournaments);
-  fastify.decorate('getTournamentById', getTournamentById);
-  fastify.decorate('getTournamentByName', getTournamentByName);
-  fastify.decorate('createTournament', createTournament);
-  fastify.decorate('changeTournamentStatus', changeTournamentStatus);
-  fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
-  fastify.decorate('updateTournament', updateTournament);
-  fastify.decorate('deleteTournament', deleteTournament);
-  fastify.decorate('getParticipantsByTournamentId', getParticipantsByTournamentId);
-  fastify.decorate('addParticipant', addParticipant);
-  fastify.decorate('updateParticipant', updateParticipant);
-  fastify.decorate('deleteParticipant', deleteParticipant);
-  fastify.decorate('generateToken', generateToken);
-  fastify.decorate('requireRole', requireRole);
-  fastify.decorate('authenticate', authenticate);
-  fastify.decorate('verifyPassword', verifyPassword);
-  fastify.decorate('allowSelfOrAdmin', allowSelfOrAdmin);
-  fastify.decorate('validatePassword', validatePassword);
-  fastify.decorate('passwordFeedback', passwordFeedback);
-  fastify.decorate('usernameEndsWith42', usernameEndsWith42);
-  fastify.decorate('stat', {
-    request: 0,
-    login: 0,
-    signup: 0
-  });
+  loadDecorate(fastify);
 
   fastify.addHook('onRequest', async (req, reply) => {
     fastify.stat.request++;
@@ -114,9 +45,10 @@ const start = async () => {
 
   await fastify.register(twoFaRoute, { prefix: '/auth/2fa' });
   await fastify.register(ftRoutes, { prefix: '/auth/42' });
+  await fastify.register(isLoginRoute, { prefix: '/auth/isAuth' });
+  await fastify.register(refreshRoute, { prefix: '/auth/refreshAuth' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
-  await fastify.register(isLoginRoute, { prefix: '/auth/isAuth' });
   await fastify.register(userRoutes, { prefix: '/users' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
   await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
@@ -127,6 +59,7 @@ const start = async () => {
 
   const ADDRESS = '0.0.0.0';
   const PORT = process.env.DATABASE_PORT || 3000;
+  const DOMAIN = process.env.DOMAIN || 'trans.clesucre.fr';
 
   try {
     await fastify.register(cors, {
@@ -137,8 +70,7 @@ const start = async () => {
           cb(null, true) // autorise tout en dev
         } else {
           const allowedOrigins = [
-            `https://${process.env.VITE_DOMAIN}`,
-            `https://www.${process.env.VITE_DOMAIN}`
+            `https://${DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {
@@ -161,13 +93,12 @@ const start = async () => {
 
     // const password_hash = await bcrypt.hash(password, 10);
 
-    // const insertUser = db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
+    // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
     // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
     // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE id = ?`).run(2); // tmp pour test crontab
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);
-    console.log(`Server running on http://localhost:3000`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
@@ -175,3 +106,6 @@ const start = async () => {
 };
 
 start();
+
+// revoir tout les tester sur les arguments de toutes les routes, illico
+// mettre toute les variables vault dans un decorate fastify
