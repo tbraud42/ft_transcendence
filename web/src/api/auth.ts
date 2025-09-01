@@ -19,6 +19,16 @@ async function requestAuth(
         body: JSON.stringify({ username, password }),
     })
 
+    if (res.status === 429) {
+    let msg = 'Too many attempts. Please try again later.';
+    try {
+      const j = await res.json();
+      if (j?.message) msg = j.message;
+    } catch {}
+    alert(msg);
+    throw new Error(msg);
+  }
+
     if (!res.ok) {
         const errText = await res.text().catch(() => '')
         console.error(`${endpoint} error:`, res.status, errText)

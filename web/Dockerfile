@@ -3,7 +3,7 @@ WORKDIR /app
 
 COPY package*.json tsconfig.json vite.config.ts tailwind.config.js postcss.config.js ./
 COPY src ./src
-COPY public ./public
+COPY config.js ./public/config.js
 
 RUN npm install
 RUN npm run build
