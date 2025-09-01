@@ -1,5 +1,6 @@
-import i18n from '../utils/lang/i18n.ts'
-import { router } from '../utils/router.ts'
+import i18n from '../utils/lang/i18n'
+import { router } from '../utils/router'
+// @ts-ignore
 import profileIcon from '../img/profile-icon.svg'
 import { createButton } from './button'
 import {setLanguage, setTheme} from "../utils/storage";

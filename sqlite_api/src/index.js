@@ -59,6 +59,7 @@ const start = async () => {
 
   const ADDRESS = '0.0.0.0';
   const PORT = process.env.DATABASE_PORT || 3000;
+  const DOMAIN = process.env.DOMAIN || 'trans.clesucre.fr';
 
   try {
     await fastify.register(cors, {
@@ -69,8 +70,7 @@ const start = async () => {
           cb(null, true) // autorise tout en dev
         } else {
           const allowedOrigins = [
-            `https://${process.env.VITE_DOMAIN}`,
-            `https://www.${process.env.VITE_DOMAIN}`
+            `https://${DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {
