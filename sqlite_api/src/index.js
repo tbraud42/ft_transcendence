@@ -34,10 +34,6 @@ const start = async () => {
 
   loadDecorate(fastify);
 
-  fastify.addHook('onRequest', async (req, reply) => {
-    fastify.stat.request++;
-  });
-
   fastify.register(rateLimit, {
     max: 100,
     timeWindow: '1 minute'
@@ -106,6 +102,3 @@ const start = async () => {
 };
 
 start();
-
-// revoir tout les tester sur les arguments de toutes les routes, illico
-// mettre toute les variables vault dans un decorate fastify

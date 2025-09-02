@@ -8,11 +8,11 @@
 // | `GET`    | `/users/:id/tournaments` | View tournaments a user has participated in | Admin + self  |
 
 export default async function (fastify, options) {
-  fastify.get('/me', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => {
+  fastify.get('/me', { preHandler: [fastify.auth] }, async (req, reply) => {
     reply.send(req.user.id);
   });
 
-  fastify.get('/:id(\\d+)', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => {
+  fastify.get('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const targetId = Number(req.params.id);
 
     if (targetId === req.user.id || req.user.role === 'admin') {
@@ -36,12 +36,12 @@ export default async function (fastify, options) {
     return reply.code(403).send({ error: 'Access denied' });
   });
 
-  fastify.patch('/', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.patch('/', {preHandler: [fastify.auth]}, async (req, reply) => {
     const body = req.body ?? {};
     const oldPassword = typeof body.oldPassword === 'string' ? body.oldPassword.trim() : '';
     const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
 
-    if (!username || !password) {
+    if (!oldPassword || !newPassword) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
@@ -64,7 +64,7 @@ export default async function (fastify, options) {
     return reply.send('User update successfully');
   });
 
-  fastify.delete('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
 
     if (targetId === req.user.id || req.user.role === 'admin') {
@@ -79,7 +79,7 @@ export default async function (fastify, options) {
     return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
   });
 
-  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.authenticate(fastify), fastify.allowSelfOrAdmin]}, async (req, reply) => { // faire et tester quand les tournaments sont implementer
+  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth, fastify.allowSelfOrAdmin]}, async (req, reply) => { // faire et tester quand les tournaments sont implementer
     const targetId = Number(req.params.id);
     const tournaments = await fastify.db.prepare(`SELECT * FROM tournaments WHERE user_id = ?`).all(targetId); // facoriser dans manage.js ?
 

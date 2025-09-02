@@ -8,7 +8,7 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 
 export default async function (fastify, options) {
-  fastify.post('/setup', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.post('/setup', {preHandler: [fastify.auth]}, async (req, reply) => {
     const ftUser = await fastify.usernameEndsWith42(req.user.username);
     if (ftUser) {
       return reply.code(400).send({ error: '2FA not allowed for 42 users' });
@@ -34,7 +34,7 @@ export default async function (fastify, options) {
     return reply.send({ qrCode: qrDataUrl });
   });
 
-  fastify.post('/verify', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.post('/verify', {preHandler: [fastify.auth2faPending]}, async (req, reply) => {
     if (req.user.twofa !== false) {
       return reply.code(400).send({ error: '2FA already verified' });
     }

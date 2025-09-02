@@ -7,7 +7,7 @@
 // | `DELETE` | `/tournaments/:id/participants/:userId` | Remove a participant         | Admin, creator, or self     |
 
 export default async function (fastify, options) {
-  fastify.get('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.get('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
     const user_id = Number(req.params.user_id);
 
@@ -20,7 +20,7 @@ export default async function (fastify, options) {
     reply.send(participant);
   });
 
-  fastify.post('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.post('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
     const user_id = Number(req.params.user_id);
 
@@ -37,7 +37,7 @@ export default async function (fastify, options) {
     }
   });
 
-  fastify.patch('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.patch('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
     const user_id = Number(req.params.user_id);
     const { score, rank } = req.body;
@@ -50,7 +50,7 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 
-  fastify.delete('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.delete('/:id(\\d+)/participants/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
     const user_id = Number(req.params.user_id);
 

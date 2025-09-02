@@ -36,7 +36,6 @@ export default async function ft42Routes(fastify) {
     const code  = typeof q.code  === 'string' ? q.code.trim()  : '';
     const state = typeof q.state === 'string' ? q.state.trim() : '';
 
-    // formes simples et limites (évite payloads absurdes)
     if (!code || code.length > 2048 ) {
       return reply.code(400).send({ error: 'Invalid code' });
     }

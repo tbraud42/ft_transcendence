@@ -28,17 +28,14 @@ export async function createTournament(db, data) {
 }
 
 export function changeTournamentStatus(db, tournamentId) {
-  const result = db.prepare(`UPDATE tournaments SET status = CASE WHEN status < ? THEN status + 1 ELSE status END WHERE id = ? RETURNING id, status`).get(T_STATUS.FINISHED, tournamentId);
+  const row = db.prepare(`UPDATE tournaments SET status = CASE WHEN status < ? THEN status + 1 ELSE status END WHERE id = ? RETURNING id, status`).get(T_STATUS.FINISHED, tournamentId);
 
-  if (!result) throw new Error('Tournament not found');
-  return result;
+  return row ?? null;
 }
-
 
 export async function getTournamentsByStatus(db, status) {
   return db.prepare(`SELECT * FROM tournaments WHERE status = ? ORDER BY created_at DESC, id DESC`).all(status);
 }
-
 
 export async function updateTournament(db, id, data) {
   const fields = [];
@@ -58,13 +55,12 @@ export async function updateTournament(db, id, data) {
 
   values.push(id);
 
-  const query = `UPDATE tournaments SET ${fields.join(', ')} WHERE id = ?`;
-  return db.run(query, values);
+  const result = db.prepare(`UPDATE tournaments SET ${fields.join(', ')} WHERE id = ?`).run(values);
+  return result;
 }
 
-export async function deleteTournament(db, id) {
-  const result = db.prepare('DELETE FROM tournaments WHERE id = ?').run(id);
-  return result;
+export function deleteTournament(db, id) {
+  return db.prepare('DELETE FROM tournaments WHERE id = ?').run(id);
 }
 
 export async function getParticipantsByTournamentId(db, tournamentId) {
