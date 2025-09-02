@@ -2,7 +2,10 @@ import { createPongCanvas } from '../games/pong/pongCanvas'
 import { PongGame } from '../games/pong/engine/PongGame'
 import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
-import { selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
+import {GameMode, secondPlayerName, selectedDifficulty, selectedGameMode} from '../games/pong/pongState'
+import {LocalPlayer} from "../games/pong/engine/players/LocalPlayer";
+import {getUsername} from "../utils/storage";
+import {AiPlayer} from "../games/pong/engine/players/AiPlayer";
 
 let currentGame: PongGame | null = null
 
@@ -44,7 +47,29 @@ export function renderPongPlay(): HTMLElement {
     timerDisplay.textContent = '00:00'
     container.appendChild(timerDisplay)
 
-    const game = new PongGame(canvas, selectedGameMode, selectedDifficulty, scoreLeft, scoreRight)
+    let player1, player2
+
+    switch (selectedGameMode) {
+
+        case GameMode.AI:
+            player1 = new LocalPlayer(true, canvas, getUsername());
+            player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty);
+            break;
+
+        default:
+            player1 = new LocalPlayer(true, canvas, getUsername());
+            player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
+            break;
+    }
+
+    const game = new PongGame(
+        canvas,
+        player1,
+        player2,
+        selectedDifficulty,
+        scoreLeft,
+        scoreRight
+    )
     currentGame = game
     game.start()
 

@@ -16,6 +16,15 @@ export abstract class BallBase {
 
     abstract update(canvas: HTMLCanvasElement, player1: PlayerBase, player2: PlayerBase): void
 
+    /**
+     * Returns true if a point was scored and the ball was reset to center.
+     */
+    public abstract checkScore(
+        player1: PlayerBase,
+        player2: PlayerBase,
+        canvas: HTMLCanvasElement
+    ): boolean;
+
     resetPosition(canvasWidth: number, canvasHeight: number): void {
         this.x = canvasWidth / 2
         this.y = canvasHeight / 2
