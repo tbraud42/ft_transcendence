@@ -42,7 +42,7 @@ export default async function (fastify, options) {
     const isValid = speakeasy.totp.verify({
       secret: req.user.twofa_secret,
       encoding: 'base32',
-      token: req.body.token
+      token: req.body.token // token must be a string
     });
 
     if (isValid) {

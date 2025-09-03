@@ -45,7 +45,7 @@ const start = async () => {
   await fastify.register(refreshRoute, { prefix: '/auth/refreshAuth' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
-  await fastify.register(userRoutes, { prefix: '/users' });
+  await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
   await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
   await fastify.register(pingRoutes, { prefix: '/ping' });

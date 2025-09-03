@@ -24,7 +24,7 @@ export async function getTournamentByName(db, name) {
 export async function createTournament(db, data) {
   const { name, description, creator_id, difficulty, maxPlayers } = data;
   const result = db.prepare('INSERT INTO tournaments (name, description, creator_id, difficulty, maxPlayers) VALUES (?, ?, ?, ?, ?)').run(name, description, creator_id, difficulty, maxPlayers);
-  return result;
+  return {id: Number(result.lastInsertRowid)};
 }
 
 export function changeTournamentStatus(db, tournamentId) {
@@ -64,22 +64,22 @@ export function deleteTournament(db, id) {
 }
 
 export async function getParticipantsByTournamentId(db, tournamentId) {
-  const result = db.prepare('SELECT * FROM participants WHERE tournament_id = ?').all(tournamentId);
+  const result = db.prepare('SELECT * FROM tournament_participants WHERE tournament_id = ?').all(tournamentId);
   return result;
 }
 
 export async function addParticipant(db, tournamentId, userId) {
-  const result = db.prepare('INSERT INTO participants (tournament_id, user_id) VALUES (?, ?)').run(tournamentId, userId);
+  const result = db.prepare('INSERT INTO tournament_participants (tournament_id, user_id) VALUES (?, ?)').run(tournamentId, userId);
   return result;
 }
 
 export async function updateParticipant(db, tournamentId, userId, data) {
-  const result = db.prepare('UPDATE participants SET score = ? WHERE tournament_id = ? AND user_id = ?').run(data.score, tournamentId, userId);
+  const result = db.prepare('UPDATE tournament_participants SET score = ? WHERE tournament_id = ? AND user_id = ?').run(data.score, tournamentId, userId);
   return result;
 }
 
 export async function deleteParticipant(db, tournamentId, userId) {
-  const result = db.prepare('DELETE FROM participants WHERE tournament_id = ? AND user_id = ?').run(tournamentId, userId);
+  const result = db.prepare('DELETE FROM tournament_participants WHERE tournament_id = ? AND user_id = ?').run(tournamentId, userId);
   return result;
 }
 

@@ -82,7 +82,11 @@ export default async function (fastify, options) {
       isPrivate: isPrivate ?? false,
     };
 
-    const tournaments = await fastify.createTournament(fastify.db, data); // rajouter l'ajout du createur sauf si il est amin
+    const tournaments = await fastify.createTournament(fastify.db, data);
+    if (req.user?.role !== 'admin') {
+      await fastify.addParticipant(fastify.db, tournaments.id, creator_id);
+    }
+
     reply.send(tournaments);
   });
 

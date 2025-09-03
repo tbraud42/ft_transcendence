@@ -1,11 +1,11 @@
 // routes/client/user.js
 // | Method   | Route                    | Description                                 | Access        |
 // | -------- | ------------------------ | ------------------------------------------- | ------------- |
-// | `GET`    | `/users/me`              | View a user's id                            | Authenticated |
-// | `GET`    | `/users/:id`             | View a user's profile                       | Admin + self  |
-// | `PATCH`  | `/users/`                | Update user info password                   | Self          |
-// | `DELETE` | `/users/:id`             | Delete an account                           | Admin + self  |
-// | `GET`    | `/users/:id/tournaments` | View tournaments a user has participated in | Admin + self  |
+// | `GET`    | `/user/me`              | View a user's id                            | Authenticated |
+// | `GET`    | `/user/:id`             | View a user's profile                       | Admin + self  |
+// | `PATCH`  | `/user/`                | Update user info password                   | Self          |
+// | `DELETE` | `/user/:id`             | Delete an account                           | Admin + self  |
+// | `GET`    | `/user/:id/tournaments` | View tournaments a user has participated in | Admin + self  |
 
 export default async function (fastify, options) {
   fastify.get('/me', { preHandler: [fastify.auth] }, async (req, reply) => {
@@ -79,9 +79,9 @@ export default async function (fastify, options) {
     return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
   });
 
-  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth, fastify.allowSelfOrAdmin]}, async (req, reply) => { // faire et tester quand les tournaments sont implementer
+  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth, fastify.allowSelfOrAdmin()]}, async (req, reply) => {
     const targetId = Number(req.params.id);
-    const tournaments = await fastify.db.prepare(`SELECT * FROM tournaments WHERE user_id = ?`).all(targetId); // facoriser dans manage.js ?
+    const tournaments = await fastify.db.prepare(`SELECT * FROM tournament_participants WHERE user_id = ?`).all(targetId); // facoriser dans manage.js ?
 
     reply.send(tournaments);
   });

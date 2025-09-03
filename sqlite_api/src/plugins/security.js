@@ -59,20 +59,22 @@ export async function verifyPassword(password, hashedPassword) {
 }
 
 export function allowSelfOrAdmin(paramKey = 'id') {
-  return async function (request, reply) {
-    const { user } = request;
-    const targetId = Number(request.params[paramKey]);
+  return async function allowSelfOrAdminHook(request, reply) {
+    const user = request.user;
+    if (!user) return reply.code(401).send({ error: 'Unauthorized' });
 
-    if (!user) {
-      return reply.code(401).send({ error: 'Not authenticated' });
+    const targetId = Number(request.params?.[paramKey]);
+    if (!Number.isFinite(targetId)) {
+      return reply.code(400).send({ error: 'Bad Request' });
     }
 
-    if (user.role === 'admin') return;
-    if (user.userId !== targetId) {
-      return reply.code(403).send({ error: 'Access denied: not your data' });
-    }
+    if (user.role?.toLowerCase?.() === 'admin') return;
+    if (Number(user.id) === targetId) return;
+
+    return reply.code(403).send({ error: 'Access denied' });
   };
 }
+
 
 export async function validatePassword(password) {
   const minLength = 8;
