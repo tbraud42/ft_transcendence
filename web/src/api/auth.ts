@@ -4,9 +4,6 @@ import {
     getLastTokenRefresh,
     setToken,
     logout,
-    login,
-    getUsername,
-    setUsername,
     isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
 } from "../utils/storage";
 import i18n from "../utils/lang/i18n";
@@ -31,7 +28,7 @@ async function requestAuth(
 
     const data = await res.json()
 
-    if (res.status === 401) {
+    if (res.status === 401 && endpoint === 'signup') {
         throw new Error(i18n.t('signup_error_username_taken'))
     } else if (res.status === 404) {
         throw new Error(i18n.t('login_error_user_not_found'))

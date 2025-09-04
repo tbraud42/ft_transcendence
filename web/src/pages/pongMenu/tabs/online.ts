@@ -1,17 +1,17 @@
-import i18n from '../../utils/lang/i18n'
-import {createButton} from '../../components/button'
-import {createInput} from '../../components/input'
-import {createOverlayCard} from '../../components/overlayCard'
-import {createOptionSelector} from '../../components/optionSelector'
+import i18n from '../../../utils/lang/i18n'
+import {createButton} from '../../../components/button'
+import {createInput} from '../../../components/input'
+import {createOverlayCard} from '../../../components/overlayCard'
+import {createOptionSelector} from '../../../components/optionSelector'
 import {
     Difficulty,
     GameMode, setIsPrivate,
     setMaxPlayers, setRoomId,
     setSelectedDifficulty,
     setSelectedGameMode
-} from '../../games/pong/pongState'
-import {createTournament, fetchTournaments} from '../../api/game'
-import {createList} from "../../components/list";
+} from '../../../games/pong/pongState'
+import {createTournament, fetchTournaments} from '../../../api/game'
+import {createList} from "../../../components/list";
 
 export function renderOnlineTab(): HTMLElement {
     const container = document.createElement('div')

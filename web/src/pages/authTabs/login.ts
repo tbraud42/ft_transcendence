@@ -6,7 +6,6 @@ import { createButton } from '../../components/button'
 import { createAuthContainer } from '../../components/authContainer'
 import { createDivider } from '../../components/divider'
 import { handleFtLogin, handleLogin } from '../../utils/auth'
-import {setToken, setUsername} from "../../utils/storage";
 
 export function renderLoginTab(): HTMLElement {
     const container = createAuthContainer()
@@ -67,7 +66,6 @@ function createFtButton(): HTMLButtonElement {
     icon.className = 'w-6 h-6'
 
     const text = document.createElement('span')
-    text.textContent = i18n.t('login_with_42') || 'Continue with 42'
 
     btn.append(icon, text)
     return btn

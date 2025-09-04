@@ -29,7 +29,7 @@ export function renderPongPlay(): HTMLElement {
 
     const exitBtn = createExitButton(() => {
         document.body.classList.remove('pong-mode')
-        window.location.hash = '#/pong'
+        window.location.hash = '#/home'
         stopTimer()
         if (currentGame) {
             currentGame.stop()
@@ -49,17 +49,12 @@ export function renderPongPlay(): HTMLElement {
 
     let player1, player2
 
-    switch (selectedGameMode) {
-
-        case GameMode.AI:
-            player1 = new LocalPlayer(true, canvas, getUsername());
-            player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty);
-            break;
-
-        default:
-            player1 = new LocalPlayer(true, canvas, getUsername());
-            player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
-            break;
+    if (selectedGameMode == GameMode.AI) {
+        player1 = new LocalPlayer(true, canvas, getUsername());
+        player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty);
+    } else {
+        player1 = new LocalPlayer(true, canvas, getUsername());
+        player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
     }
 
     const game = new PongGame(

@@ -5,7 +5,7 @@ import { AiPlayer } from './players/AiPlayer'
 import { LocalPlayer } from './players/LocalPlayer'
 import { OnlinePlayer } from './players/OnlinePlayer'
 import { getUsername } from '../../../utils/storage'
-import { Difficulty, GameMode, secondPlayerName } from '../pongState'
+import { Difficulty, secondPlayerName } from '../pongState'
 import i18n from '../../../utils/lang/i18n'
 import { WSClient, ServerState } from '../../../socket/WSClient'
 
@@ -45,7 +45,9 @@ export class PongGame {
         if (ws) {
             this.ws = ws
             this.online = true
-            if (typeof mySlot !== 'undefined') this.mySlot = mySlot
+            if (typeof mySlot !== 'undefined') {
+                this.mySlot = mySlot
+            }
             this.hookWebSocket(ws)
         }
 
@@ -147,8 +149,12 @@ export class PongGame {
     }
 
     private updateScore(left: number, right: number) {
-        if (this.scoreLeftEl) this.scoreLeftEl.textContent = String(left)
-        if (this.scoreRightEl) this.scoreRightEl.textContent = String(right)
+        if (this.scoreLeftEl) {
+            this.scoreLeftEl.textContent = String(left)
+        }
+        if (this.scoreRightEl) {
+            this.scoreRightEl.textContent = String(right)
+        }
     }
 
     private handleGameEndIfAny() {
@@ -173,7 +179,7 @@ export class PongGame {
             this.winTextEl.style.opacity = '0'
             setTimeout(() => {
                 document.body.classList.remove('pong-mode')
-                window.location.hash = '#/pong'
+                window.location.hash = '#/home'
             }, 1000)
         }, 3000)
     }

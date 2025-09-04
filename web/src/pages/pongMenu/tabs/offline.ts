@@ -1,14 +1,14 @@
-import i18n from '../../utils/lang/i18n'
-import {createButton} from '../../components/button'
-import {createInput} from '../../components/input'
-import {createOptionSelector} from '../../components/optionSelector'
+import i18n from '../../../utils/lang/i18n'
+import {createButton} from '../../../components/button'
+import {createInput} from '../../../components/input'
+import {createOptionSelector} from '../../../components/optionSelector'
 import {
     Difficulty,
     GameMode,
     setSecondPlayerName,
     setSelectedDifficulty,
     setSelectedGameMode
-} from '../../games/pong/pongState'
+} from '../../../games/pong/pongState'
 
 export function renderOfflineTab(): HTMLElement {
     const container = document.createElement('div')

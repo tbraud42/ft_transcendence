@@ -44,21 +44,37 @@ export class OnlinePlayer extends PlayerBase {
     private setupControls(): void {
         const onKeyDown = (e: KeyboardEvent) => {
             if (this.isLeft) {
-                if (e.key === 's' || e.key === 'S') this.moveUp = true;
-                if (e.key === 'w' || e.key === 'W') this.moveDown = true;
+                if (e.key === 's' || e.key === 'S') {
+                    this.moveUp = true;
+                }
+                if (e.key === 'w' || e.key === 'W') {
+                    this.moveDown = true;
+                }
             } else {
-                if (e.key === 'ArrowDown') this.moveUp = true;
-                if (e.key === 'ArrowUp') this.moveDown = true;
+                if (e.key === 'ArrowDown') {
+                    this.moveUp = true;
+                }
+                if (e.key === 'ArrowUp') {
+                    this.moveDown = true;
+                }
             }
             this.sendIfChanged();
         };
         const onKeyUp = (e: KeyboardEvent) => {
             if (this.isLeft) {
-                if (e.key === 's' || e.key === 'S') this.moveUp = false;
-                if (e.key === 'w' || e.key === 'W') this.moveDown = false;
+                if (e.key === 's' || e.key === 'S') {
+                    this.moveUp = false;
+                }
+                if (e.key === 'w' || e.key === 'W') {
+                    this.moveDown = false;
+                }
             } else {
-                if (e.key === 'ArrowDown') this.moveUp = false;
-                if (e.key === 'ArrowUp') this.moveDown = false;
+                if (e.key === 'ArrowDown') {
+                    this.moveUp = false;
+                }
+                if (e.key === 'ArrowUp') {
+                    this.moveDown = false;
+                }
             }
             this.sendIfChanged();
         };

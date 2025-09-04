@@ -1,6 +1,5 @@
 import { isLoggedIn } from './storage'
 import { renderHome } from '../pages/home'
-import { renderPong } from '../pages/pongMenu'
 import { renderProfile } from '../pages/profile'
 import { renderPongPlay } from '../pages/pongPlay'
 import { renderPongLobby } from '../pages/pongLobby'
@@ -39,9 +38,6 @@ export function router(): void {
                 main.appendChild(renderPongPlay());
             } else if (subPage === 'lobby' && param) {
                 main.appendChild(renderPongLobby(param, "wss://" + PONG_WS_URL));
-            } else {
-                const activeTab = subPage || 'online';
-                main.appendChild(renderPong(activeTab));
             }
             break;
         case 'profile': {
