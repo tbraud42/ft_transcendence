@@ -1,6 +1,6 @@
 // routes/client/user.js
-// | Method   | Route                    | Description                                 | Access        |
-// | -------- | ------------------------ | ------------------------------------------- | ------------- |
+// | Method   | Route                   | Description                                 | Access        |
+// | -------- | ----------------------- | ------------------------------------------- | ------------- |
 // | `GET`    | `/user/me`              | View a user's id                            | Authenticated |
 // | `GET`    | `/user/:id`             | View a user's profile                       | Admin + self  |
 // | `PATCH`  | `/user/`                | Update user info password                   | Self          |
@@ -36,7 +36,7 @@ export default async function (fastify, options) {
     return reply.code(403).send({ error: 'Access denied' });
   });
 
-  fastify.patch('/', {preHandler: [fastify.auth]}, async (req, reply) => {
+  fastify.patch('/', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42
     const body = req.body ?? {};
     const oldPassword = typeof body.oldPassword === 'string' ? body.oldPassword.trim() : '';
     const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';

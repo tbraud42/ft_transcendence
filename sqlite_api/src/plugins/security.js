@@ -75,7 +75,6 @@ export function allowSelfOrAdmin(paramKey = 'id') {
   };
 }
 
-
 export async function validatePassword(password) {
   const minLength = 8;
 

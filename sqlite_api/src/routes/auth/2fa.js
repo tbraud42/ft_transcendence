@@ -52,10 +52,8 @@ export default async function (fastify, options) {
           id: req.user.id,
           username: req.user.username,
           role: req.user.role
-        },
-        true,
-        '12h'
-      );
+        }, true, '12h');
+
       return reply.send({ token: fullToken });
     } else {
       return reply.code(401).send({ error: 'Invalid 2FA code' });

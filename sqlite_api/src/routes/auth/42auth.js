@@ -91,7 +91,7 @@ export default async function ft42Routes(fastify) {
       id: user.id,
       username: user.username,
       role: user.role
-    });
+    }, true, '12h');
 
     return reply.send({ token, user: { id: user.id, username: user.username } });
   });

@@ -1,10 +1,10 @@
 // routes/matchs/tournaments_client.js
-// | Method   | Route                           | Description                  | Access                      |
-// | -------- | ------------------------------- | ---------------------------- | --------------------------- |
-// | `GET`    | `/tournaments/:id/user/:userId` | View tournament participants | Authenticated               |
-// | `POST`   | `/tournaments/:id/user/:userId` | Join a tournament (register) | Authenticated               |
-// | `PATCH`  | `/tournaments/:id/user/:userId` | Update score or rank         | Admin, creator              |
-// | `DELETE` | `/tournaments/:id/user/:userId` | Remove a participant         | Admin, creator, or self     |
+// | Method   | Route                           | Description                  | Access                  |
+// | -------- | ------------------------------- | ---------------------------- | ----------------------- |
+// | `GET`    | `/tournaments/:id/user/:userId` | View tournament participants | Authenticated           |
+// | `POST`   | `/tournaments/:id/user/:userId` | Join a tournament (register) | Authenticated           |
+// | `PATCH`  | `/tournaments/:id/user/:userId` | Update score or rank         | Admin, creator          |
+// | `DELETE` | `/tournaments/:id/user/:userId` | Remove a participant         | Admin, creator, or self |
 
 export default async function (fastify, options) {
   fastify.get('/:id(\\d+)/user/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
