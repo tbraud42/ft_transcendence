@@ -1,3 +1,5 @@
+import {navigateTo} from "./router";
+
 export const USERNAME_KEY = 'username'
 export const TMP_TOKEN_KEY = 'tmpToken'
 export const TOKEN_KEY = 'token'
@@ -12,13 +14,13 @@ export function isLoggedIn(): boolean {
 export function login(token: string, username: string): void {
     setToken(token)
     setUsername(username)
-    window.location.hash = '#/home'
+    navigateTo('/home')
 }
 
 export function logout(): void {
     localStorage.removeItem(USERNAME_KEY)
     localStorage.removeItem(TOKEN_KEY)
-    window.location.hash = '#/'
+    navigateTo('/')
 }
 
 export function setUsername(username: string): void {

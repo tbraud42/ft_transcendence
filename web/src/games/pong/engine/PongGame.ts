@@ -8,6 +8,7 @@ import { getUsername } from '../../../utils/storage'
 import { Difficulty, secondPlayerName } from '../pongState'
 import i18n from '../../../utils/lang/i18n'
 import { WSClient, ServerState } from '../../../socket/WSClient'
+import {navigateTo} from "../../../utils/router";
 
 export class PongGame {
     private canvas: HTMLCanvasElement
@@ -179,7 +180,7 @@ export class PongGame {
             this.winTextEl.style.opacity = '0'
             setTimeout(() => {
                 document.body.classList.remove('pong-mode')
-                window.location.hash = '#/home'
+                navigateTo('/home')
             }, 1000)
         }, 3000)
     }

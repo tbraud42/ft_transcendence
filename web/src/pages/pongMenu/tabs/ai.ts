@@ -2,6 +2,7 @@ import i18n from '../../../utils/lang/i18n'
 import {createButton} from '../../../components/button'
 import {createOptionSelector} from '../../../components/optionSelector'
 import {Difficulty, GameMode, setSelectedDifficulty, setSelectedGameMode} from '../../../games/pong/pongState'
+import {navigateTo} from "../../../utils/router";
 
 export function renderAITab(): HTMLElement {
     const container = document.createElement('div')
@@ -21,7 +22,7 @@ export function renderAITab(): HTMLElement {
     btn.onclick = () => {
         setSelectedGameMode(GameMode.AI)
         setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
-        window.location.hash = '#/pong/play'
+        navigateTo('/pong/play')
     }
 
     container.append(

@@ -9,6 +9,7 @@ import {
     setSelectedDifficulty,
     setSelectedGameMode
 } from '../../../games/pong/pongState'
+import {navigateTo} from "../../../utils/router";
 
 export function renderOfflineTab(): HTMLElement {
     const container = document.createElement('div')
@@ -42,7 +43,7 @@ export function renderOfflineTab(): HTMLElement {
         setSecondPlayerName(secondPlayerName)
         setSelectedGameMode(GameMode.LOCAL)
         setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
-        window.location.hash = '#/pong/play'
+        navigateTo('/pong/play')
     }
 
     container.append(

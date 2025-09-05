@@ -1,10 +1,13 @@
-import { env } from '../utils/env'
+import {env} from '../utils/env'
 import {
-    getToken,
     getLastTokenRefresh,
-    setToken,
+    getTmpToken,
+    getToken,
+    isLoggedIn,
     logout,
-    isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
+    removeItem,
+    setToken,
+    TMP_TOKEN_KEY
 } from "../utils/storage";
 import i18n from "../utils/lang/i18n";
 
@@ -43,6 +46,24 @@ async function requestAuth(
     }
 
     return { token: data.token, twofa_required: false }
+}
+
+export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: string, username: string } } | null> {
+    if (!code || !state) {
+        return null
+    }
+    const url = `https://${API_URL}/auth/42/callback?code=${code}&state=${state}`
+
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!res.ok) {
+        return null;
+    }
+
+    return await res.json()
 }
 
 export async function updatePassword(current: string, newPass: string) {

@@ -3,6 +3,7 @@ import { createInput } from '../../components/input'
 import { createButton } from '../../components/button'
 import { createAuthContainer } from '../../components/authContainer'
 import { handleSignup } from '../../utils/auth'
+import {navigateTo} from "../../utils/router";
 
 export function renderSignupTab(): HTMLElement {
     const container = createAuthContainer()
@@ -34,7 +35,7 @@ export function renderSignupTab(): HTMLElement {
     switchBtn.className = 'text-sm text-gray-500 dark:text-gray-300 hover:underline'
     switchBtn.textContent = i18n.t('signup_switch_to_login')
     switchBtn.onclick = () => {
-        window.location.hash = '#/login' 
+        navigateTo('/login')
     }
 
     form.onsubmit = (e) => handleSignup(e, pseudoInput, passwordInput, passwordConfirm, errorMsg)

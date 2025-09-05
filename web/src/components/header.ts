@@ -1,5 +1,5 @@
 import i18n from '../utils/lang/i18n'
-import { router } from '../utils/router'
+import {navigateTo, router} from '../utils/router'
 // @ts-ignore
 import profileIcon from '../img/profile-icon.svg'
 import { createButton } from './button'
@@ -22,7 +22,7 @@ function createTitle(): HTMLButtonElement {
     btn.className = 'text-xl font-bold hover:underline transition'
     btn.textContent = i18n.t('app_title')
     btn.onclick = () => {
-        window.location.hash = '#/home'
+        navigateTo('/home')
     }
     return btn
 }
@@ -107,8 +107,9 @@ function createProfileButton(): HTMLButtonElement {
     btn.title = i18n.t('header_profile')
 
     btn.onclick = () => {
-        const hash = window.location.hash
-        window.location.hash = hash === '#/profile' ? '#/home' : '#/profile'
+        const currentPath = window.location.pathname
+        navigateTo(currentPath === '/profile' ? '/home' : '/profile')
+        router()
     }
 
     return btn
