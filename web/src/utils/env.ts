@@ -1,4 +1,6 @@
 export const env = {
-    API_URL: import.meta.env.VITE_API_URL,
-    PONG_WS_URL: import.meta.env.VITE_PONG_WS_URL,
+    // @ts-ignore
+    API_URL: import.meta.env.VITE_API_URL || 'api.trans.clesucre.fr',
+    // @ts-ignore
+    PONG_WS_URL: import.meta.env.VITE_PONG_WS_URL || 'pong.ws.trans.clesucre.fr',
 }

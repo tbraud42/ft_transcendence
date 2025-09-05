@@ -1,11 +1,17 @@
-import JoinRoomHandler from "./JoinRoomHandler.js";
-import LeaveRoomHandler from "./LeaveRoomHandler.js";
-import SetRoomPrivacyHandler from "./SetRoomPrivacyHandler.js";
-import MoveHandler from "./MoveHandler.js";
+const auth = require('./auth');
+const ping = require('./ping');
+const join = require('./joinRoom');
+const input = require('./input');
 
-export const handlers = new Map([
-    ["join_room", JoinRoomHandler],
-    ["leave_room", LeaveRoomHandler],
-    ["set_room_privacy", SetRoomPrivacyHandler],
-    ["move", MoveHandler]
-]);
+const registry = {
+    [auth.type]: auth,
+    [ping.type]: ping,
+    [join.type]: join,
+    [input.type]: input,
+};
+
+function getHandler(type) {
+    return registry[type];
+}
+
+module.exports = { getHandler };

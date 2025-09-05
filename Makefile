@@ -12,7 +12,6 @@ DEV_OVERRIDE = docker-compose.override.yml
 up:
 	docker-compose -f $(COMPOSE_FILE) up --build -d
 
-
 build:
 	docker-compose -f $(COMPOSE_FILE) build --no-cache
 

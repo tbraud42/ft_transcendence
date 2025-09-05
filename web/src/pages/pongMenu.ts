@@ -1,10 +1,11 @@
-import i18next from '../utils/lang/i18n'
+import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { renderOnlineTab } from './pongTabs/online'
 import { renderOfflineTab } from './pongTabs/offline'
 import { renderAITab } from './pongTabs/ai'
+import {GameMode} from "../games/pong/pongState";
 
-export function renderPong(): HTMLElement {
+export function renderPong(activeTabId: string): HTMLElement {
     document.body.classList.add('pong-mode')
 
     const wrapper = document.createElement('div')
@@ -13,7 +14,7 @@ export function renderPong(): HTMLElement {
         text-white px-4 py-12 pb-24 overflow-y-auto
     `
 
-    const returnBtn = createButton(i18next.t('pong_back_home'), 'button', 'black')
+    const returnBtn = createButton(i18n.t('pong_back_home'), 'button', 'black')
     returnBtn.className = `
         fixed bottom-4 left-4 z-50 
         px-4 py-2 rounded-xl 
@@ -36,12 +37,10 @@ export function renderPong(): HTMLElement {
     tabContent.className = 'w-full flex justify-center px-2'
 
     const tabs = [
-        { id: 'online', label: i18next.t('pong_tab_online'), content: renderOnlineTab },
-        { id: 'offline', label: i18next.t('pong_tab_offline'), content: renderOfflineTab },
-        { id: 'ai', label: i18next.t('pong_tab_ai'), content: renderAITab }
+        { id: GameMode.ONLINE, label: i18n.t('pong_tab_online'), content: renderOnlineTab },
+        { id: GameMode.LOCAL, label: i18n.t('pong_tab_offline'), content: renderOfflineTab },
+        { id: GameMode.AI, label: i18n.t('pong_tab_ai'), content: renderAITab }
     ]
-
-    let activeTabId = localStorage.getItem('pong_active_tab') || 'online'
 
     const updateTabs = () => {
         tabContent.innerHTML = ''
@@ -73,7 +72,7 @@ export function renderPong(): HTMLElement {
         )
         btn.onclick = () => {
             activeTabId = tab.id
-            localStorage.setItem('pong_active_tab', tab.id)
+            window.location.hash = `/pong/${tab.id}`;
             updateTabs()
         }
         tabHeaders.appendChild(btn)

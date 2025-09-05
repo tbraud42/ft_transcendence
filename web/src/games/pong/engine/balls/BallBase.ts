@@ -14,7 +14,6 @@ export abstract class BallBase {
         this.speed = speed
     }
 
-    // Must be implemented by subclasses
     abstract update(canvas: HTMLCanvasElement, player1: PlayerBase, player2: PlayerBase): void
 
     resetPosition(canvasWidth: number, canvasHeight: number): void {

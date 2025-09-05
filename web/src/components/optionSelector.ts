@@ -43,7 +43,9 @@ export function createOptionSelector(options: {
             bg-blue-600 text-white border-blue-700
         `
 
-        if (options.onChange) options.onChange(newValue)
+        if (options.onChange) {
+            options.onChange(newValue)
+        }
     }
 
     for (const { value, label } of options.values) {
@@ -62,7 +64,9 @@ export function createOptionSelector(options: {
         element: wrapper,
         getValue: () => currentValue,
         setValue: (value: string) => {
-            if (value in buttons) updateSelection(value)
+            if (value in buttons) {
+                updateSelection(value)
+            }
         }
     }
 }
