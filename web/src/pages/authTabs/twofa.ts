@@ -3,6 +3,7 @@ import { createInput } from '../../components/input'
 import { createButton } from '../../components/button'
 import { createAuthContainer } from '../../components/authContainer'
 import {twofaVerify} from "../../api/auth";
+import {navigateTo} from "../../utils/router";
 
 export function renderTwofaTab(): HTMLElement {
     const container = createAuthContainer()
@@ -36,7 +37,7 @@ export function renderTwofaTab(): HTMLElement {
         errorMsg.textContent = ''
         twofaVerify(code).then((success) => {
             if (success) {
-                window.location.hash = '#/home'
+                navigateTo('/home')
             } else {
                 errorMsg.textContent = i18n.t('2fa_code_invalid')
             }

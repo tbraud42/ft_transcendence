@@ -1,17 +1,18 @@
-import i18n from '../../utils/lang/i18n'
-import {createButton} from '../../components/button'
-import {createInput} from '../../components/input'
-import {createOverlayCard} from '../../components/overlayCard'
-import {createOptionSelector} from '../../components/optionSelector'
+import i18n from '../../../utils/lang/i18n'
+import {createButton} from '../../../components/button'
+import {createInput} from '../../../components/input'
+import {createOverlayCard} from '../../../components/overlayCard'
+import {createOptionSelector} from '../../../components/optionSelector'
 import {
     Difficulty,
     GameMode, setIsPrivate,
     setMaxPlayers, setRoomId,
     setSelectedDifficulty,
     setSelectedGameMode
-} from '../../games/pong/pongState'
-import {createTournament, fetchTournaments} from '../../api/game'
-import {createList} from "../../components/list";
+} from '../../../games/pong/pongState'
+import {createTournament, fetchTournaments} from '../../../api/game'
+import {createList} from "../../../components/list";
+import {navigateTo} from "../../../utils/router";
 
 export function renderOnlineTab(): HTMLElement {
     const container = document.createElement('div')
@@ -55,7 +56,7 @@ export function renderOnlineTab(): HTMLElement {
             joinBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded'
             joinBtn.onclick = () => {
                 setSelectedGameMode(GameMode.ONLINE)
-                window.location.hash = `#/pong/lobby/${tournament.id}`
+                navigateTo(`/pong/play/${tournament.id}`)
             }
 
             card.append(info, joinBtn)
@@ -97,7 +98,7 @@ export function renderOnlineTab(): HTMLElement {
                     .then(room => {
                         // lastInsertRowid is the id of the newly created room
                         setRoomId(room.lastInsertRowid)
-                        window.location.hash = `#/pong/lobby/${room.lastInsertRowid}`
+                        navigateTo(`/pong/play/${room.lastInsertRowid}`)
                     })
                     .catch(() => alert(i18n.t('pong_online_error_create')))
             }

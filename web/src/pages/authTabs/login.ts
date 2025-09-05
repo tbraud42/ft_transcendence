@@ -6,7 +6,7 @@ import { createButton } from '../../components/button'
 import { createAuthContainer } from '../../components/authContainer'
 import { createDivider } from '../../components/divider'
 import { handleFtLogin, handleLogin } from '../../utils/auth'
-import {setToken, setUsername} from "../../utils/storage";
+import {navigateTo} from "../../utils/router";
 
 export function renderLoginTab(): HTMLElement {
     const container = createAuthContainer()
@@ -34,13 +34,13 @@ export function renderLoginTab(): HTMLElement {
     switchBtn.className = 'text-sm text-gray-500 dark:text-gray-300 hover:underline'
     switchBtn.textContent = i18n.t('login_switch_to_signup')
     switchBtn.onclick = () => {
-        window.location.hash = '#/signup' 
+        navigateTo('/signup')
     }
 
     form.onsubmit = (e) => {
         handleLogin(e, pseudoInput, passwordInput, errorMsg).then((need_two_fa) => {
             if (need_two_fa) {
-                window.location.hash = '#/2fa'
+                navigateTo('/2fa')
             }
         })
     }
@@ -67,7 +67,6 @@ function createFtButton(): HTMLButtonElement {
     icon.className = 'w-6 h-6'
 
     const text = document.createElement('span')
-    text.textContent = i18n.t('login_with_42') || 'Continue with 42'
 
     btn.append(icon, text)
     return btn

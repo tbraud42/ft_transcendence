@@ -1,11 +1,14 @@
 import { BasicBall } from './balls/BasicBall'
-import { LocalPlayer } from './players/LocalPlayer'
 import { PlayerBase } from './players/PlayerBase'
 import { BallBase } from './balls/BallBase'
-import {AiPlayer} from "./players/AiPlayer";
-import {getUsername} from "../../../utils/storage";
-import {Difficulty, GameMode, secondPlayerName} from "../pongState";
-import i18n from "../../../utils/lang/i18n";
+import { AiPlayer } from './players/AiPlayer'
+import { LocalPlayer } from './players/LocalPlayer'
+import { OnlinePlayer } from './players/OnlinePlayer'
+import { getUsername } from '../../../utils/storage'
+import { Difficulty, secondPlayerName } from '../pongState'
+import i18n from '../../../utils/lang/i18n'
+import { WSClient, ServerState } from '../../../socket/WSClient'
+import {navigateTo} from "../../../utils/router";
 
 export class PongGame {
     private canvas: HTMLCanvasElement
@@ -18,44 +21,54 @@ export class PongGame {
     private gameEnded = false
     private winTextEl: HTMLDivElement
 
+    // Online-only state
+    private ws?: WSClient
+    private online = false
+    private mySlot: 0 | 1 = 0
+    private lastState?: ServerState
+
     constructor(
         canvas: HTMLCanvasElement,
-        mode: GameMode,
+        player1: PlayerBase,
+        player2: PlayerBase,
         difficulty: Difficulty,
         private scoreLeftEl?: HTMLElement,
-        private scoreRightEl?: HTMLElement
+        private scoreRightEl?: HTMLElement,
+        ws?: WSClient,
+        mySlot?: 0 | 1
     ) {
         this.canvas = canvas
         this.ctx = canvas.getContext('2d')!
-
         this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty)
+        this.player1 = player1
+        this.player2 = player2
 
-        switch (mode) {
-        case GameMode.AI:
-            this.player1 = new LocalPlayer(true, canvas, getUsername());
-            this.player2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), difficulty);
-            break;
-
-        case GameMode.LOCAL:
-            this.player1 = new LocalPlayer(true, canvas, getUsername());
-            this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
-            break;
-
-        case GameMode.ONLINE:
-            // TODO: Implement Online Player logic
-            this.player1 = new LocalPlayer(true, canvas, getUsername());
-            this.player2 = new LocalPlayer(false, canvas, secondPlayerName || 'Player 2');
-            break;
-
-        default:
-            throw new Error(`Unknown game mode: ${mode}`);
+        if (ws) {
+            this.ws = ws
+            this.online = true
+            if (typeof mySlot !== 'undefined') {
+                this.mySlot = mySlot
+            }
+            this.hookWebSocket(ws)
         }
 
-        // Create win text overlay
         this.winTextEl = document.createElement('div')
-        this.winTextEl.className = 'absolute inset-0 flex items-center justify-center text-white text-6xl font-extrabold opacity-0 transition-opacity duration-500 z-20'
+        this.winTextEl.className =
+            'absolute inset-0 flex items-center justify-center text-white text-4xl font-extrabold opacity-0 transition-opacity duration-500 z-20'
         this.winTextEl.textContent = ''
         canvas.parentElement?.appendChild(this.winTextEl)
+    }
+
+    private hookWebSocket(ws: WSClient) {
+        ws.on('state', (s) => {
+            this.lastState = s
+            if (this.player1 instanceof OnlinePlayer) {
+                this.player1.setRemoteY(s.p1y)
+            }
+            if (this.player2 instanceof OnlinePlayer) {
+                this.player2.setRemoteY(s.p2y)
+            }
+        })
     }
 
     start() {
@@ -78,42 +91,82 @@ export class PongGame {
             cancelAnimationFrame(this.animationFrameId)
         }
         this.ballActive = false
-        this.gameEnded = true
     }
 
-    update() {
-        if (this.ballActive) {
-            this.player1.update(this.ball)
-            this.player2.update(this.ball)
-            this.ball.update(this.canvas, this.player1, this.player2)
+    private update() {
 
-            const score1 = this.player1.getScore()
-            const score2 = this.player2.getScore()
+        this.player1.update(this.ball)
+        this.player2.update(this.ball)
 
-            if (score1 >= 5 || score2 >= 5) {
-                this.handleGameOver(score1 > score2 ? this.player1.getName() : this.player2.getName())
+        if (this.online) {
+            if (this.lastState) {
+                this.updateScore(this.lastState.s1, this.lastState.s2)
             }
-        } else {
-            this.player1.update()
-            this.player2.update()
+            return
+        }
+
+        this.updateScore(this.player1.score, this.player2.score)
+        if (this.ballActive) {
+            this.ball.update(this.canvas, this.player1, this.player2)
+            const winner = this.ball.checkScore(this.player1, this.player2, this.canvas)
+            if (winner) {
+                this.handleGameEndIfAny()
+            }
         }
     }
 
-    draw() {
-        const ctx = this.ctx
-        ctx.fillStyle = 'black'
-        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+    private drawNet() {
+        this.ctx.strokeStyle = 'rgba(255,255,255,0.5)'
+        this.ctx.lineWidth = 2
+        this.ctx.setLineDash([8, 8])
+        this.ctx.beginPath()
+        this.ctx.moveTo(this.canvas.width / 2, 0)
+        this.ctx.lineTo(this.canvas.width / 2, this.canvas.height)
+        this.ctx.stroke()
+        this.ctx.setLineDash([])
+    }
 
-        if (this.scoreLeftEl && this.scoreRightEl) {
-            this.scoreLeftEl.textContent = String(this.player1.getScore())
-            this.scoreRightEl.textContent = String(this.player2.getScore())
-        }
+    private draw() {
+        this.ctx.fillStyle = 'black'
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+        this.drawNet()
 
         this.player1.draw()
         this.player2.draw()
 
-        if (this.ballActive) {
-            this.ball.draw(ctx)
+        if (this.online) {
+            const s = this.lastState
+            if (s) {
+                const r = s.ballSize / 2
+                this.ctx.fillStyle = 'white'
+                this.ctx.beginPath()
+                this.ctx.arc(s.bX, s.bY, r, 0, Math.PI * 2)
+                this.ctx.fill()
+            }
+        } else {
+            this.ball.draw(this.ctx)
+        }
+    }
+
+    private updateScore(left: number, right: number) {
+        if (this.scoreLeftEl) {
+            this.scoreLeftEl.textContent = String(left)
+        }
+        if (this.scoreRightEl) {
+            this.scoreRightEl.textContent = String(right)
+        }
+    }
+
+    private handleGameEndIfAny() {
+        const target = 11
+        const left = (this.player1 as PlayerBase).score || 0
+        const right = (this.player2 as PlayerBase).score || 0
+        if (left >= target || right >= target) {
+            const username = getUsername() || i18n.t('pong_you')
+            const opponent = secondPlayerName || i18n.t('pong_opponent')
+            const winner = left > right ? (this.player1.isLeft ? username : opponent) : (this.player2.isLeft ? username : opponent)
+            this.handleGameOver(winner)
         }
     }
 
@@ -127,8 +180,53 @@ export class PongGame {
             this.winTextEl.style.opacity = '0'
             setTimeout(() => {
                 document.body.classList.remove('pong-mode')
-                window.location.hash = '#/pong'
+                navigateTo('/home')
             }, 1000)
         }, 3000)
+    }
+
+    // Helpers pour simplifier l’instanciation selon le mode
+    static createLocalVsLocal(
+        canvas: HTMLCanvasElement,
+        difficulty: Difficulty,
+        names: { left: string; right: string },
+        scoreLeftEl?: HTMLElement,
+        scoreRightEl?: HTMLElement
+    ) {
+        const p1 = new LocalPlayer(true, canvas, names.left)
+        const p2 = new LocalPlayer(false, canvas, names.right)
+        return new PongGame(canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
+    }
+
+    static createLocalVsAi(
+        canvas: HTMLCanvasElement,
+        difficulty: Difficulty,
+        nameLeft: string,
+        scoreLeftEl?: HTMLElement,
+        scoreRightEl?: HTMLElement
+    ) {
+        const p1 = new LocalPlayer(true, canvas, nameLeft)
+        const p2 = new AiPlayer(false, canvas, 'AI', difficulty)
+        return new PongGame(canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
+    }
+
+    static createOnline(
+        canvas: HTMLCanvasElement,
+        ws: WSClient,
+        mySlot: 0 | 1,
+        names: { me: string; opponent: string },
+        difficulty: Difficulty,
+        scoreLeftEl?: HTMLElement,
+        scoreRightEl?: HTMLElement
+    ) {
+        const leftIsMe = mySlot === 0
+        const pLeft = leftIsMe
+            ? new OnlinePlayer(true, canvas, names.me, ws, 0)
+            : new OnlinePlayer(true, canvas, names.opponent, ws, 0)
+        const pRight = !leftIsMe
+            ? new OnlinePlayer(false, canvas, names.me, ws, 1)
+            : new OnlinePlayer(false, canvas, names.opponent, ws, 1)
+
+        return new PongGame(canvas, pLeft, pRight, difficulty, scoreLeftEl, scoreRightEl, ws, mySlot)
     }
 }

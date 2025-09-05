@@ -1,13 +1,13 @@
-import { env } from '../utils/env'
+import {env} from '../utils/env'
 import {
-    getToken,
     getLastTokenRefresh,
-    setToken,
+    getTmpToken,
+    getToken,
+    isLoggedIn,
     logout,
-    login,
-    getUsername,
-    setUsername,
-    isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
+    removeItem,
+    setToken,
+    TMP_TOKEN_KEY
 } from "../utils/storage";
 import i18n from "../utils/lang/i18n";
 
@@ -31,7 +31,7 @@ async function requestAuth(
 
     const data = await res.json()
 
-    if (res.status === 401) {
+    if (res.status === 401 && endpoint === 'signup') {
         throw new Error(i18n.t('signup_error_username_taken'))
     } else if (res.status === 404) {
         throw new Error(i18n.t('login_error_user_not_found'))
@@ -46,6 +46,24 @@ async function requestAuth(
     }
 
     return { token: data.token, twofa_required: false }
+}
+
+export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: string, username: string } } | null> {
+    if (!code || !state) {
+        return null
+    }
+    const url = `https://${API_URL}/auth/42/callback?code=${code}&state=${state}`
+
+    const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+    })
+
+    if (!res.ok) {
+        return null;
+    }
+
+    return await res.json()
 }
 
 export async function updatePassword(current: string, newPass: string) {

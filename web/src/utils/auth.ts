@@ -75,24 +75,3 @@ export function handleFtLogin(): void {
     const authUrl = `${apiBaseUrl.replace(/\/+$/, '')}/auth/42/login`;
     window.location.assign(authUrl);
 }
-
-export function ftCallback(): void {
-
-    if (!window.location.hash.startsWith('#/auth/42/callback')) {
-        return;
-    }
-
-    const query = window.location.hash.split('?')[1] || '';
-    const params = new URLSearchParams(query);
-
-    const token = params.get('token');
-    const username = params.get('username');
-
-    if (token && username) {
-        login(token, username);
-        window.location.hash = '#/home';
-    } else {
-        console.error('42 login failed: missing token or username in callback');
-        window.location.hash = '#/login';
-    }
-}

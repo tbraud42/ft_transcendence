@@ -1,3 +1,5 @@
+import {navigateTo} from "../utils/router";
+
 export function createSidebarButton(
     label: string,
     targetHash: string,
@@ -22,7 +24,7 @@ export function createSidebarButton(
     btn.className = baseClass + colorClass
     btn.textContent = label
     btn.onclick = () => {
-        window.location.hash = targetHash
+        navigateTo(targetHash)
     }
 
     return btn

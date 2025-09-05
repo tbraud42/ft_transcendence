@@ -20,6 +20,8 @@ function getOrCreateRoom(id) {
             players: [null, null],
             state: makeInitialState(),
             running: false,
+            starting: false,
+            startTimeout: null,
             intervalId: null,
             inputs: { up1: false, down1: false, up2: false, down2: false },
         });
@@ -142,30 +144,45 @@ function step(state, inputs) {
 }
 
 function startGame(room) {
-    if (room.running) {
+    if (room.running || room.starting) {
         return;
     }
-    room.running = true;
+
+    room.starting = true;
+    broadcast(room, { type: "starting", tMinusMs: 3000 });
 
     room.inputs = { up1: false, down1: false, up2: false, down2: false };
 
-    // Ticks 60fps, broadcast 30fps
-    let frame = 0;
-    room.intervalId = setInterval(() => {
-        step(room.state, room.inputs);
-        frame++;
-        if (frame % 2 === 0) {
+    room.startTimeout = setTimeout(() => {
+        room.startTimeout = null;
+        room.starting = false;
+        if (room.running) return;
+
+        room.running = true;
+
+        let frame = 0;
+        room.intervalId = setInterval(() => {
+            step(room.state, room.inputs);
+            frame++;
             broadcast(room, { type: "state", state: room.state });
-        }
-    }, 1000 / 60);
+        }, 1000 / 60);
+
+        broadcast(room, { type: "start" });
+    }, 5000);
 }
 
 function stopGame(room) {
     room.running = false;
+    room.starting = false;
     if (room.intervalId) {
         clearInterval(room.intervalId);
     }
     room.intervalId = null;
+
+    if (room.startTimeout) {
+        clearTimeout(room.startTimeout);
+        room.startTimeout = null;
+    }
 }
 
 // Heartbeat (anti-timeout)
