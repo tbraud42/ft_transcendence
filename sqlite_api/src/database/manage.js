@@ -1,4 +1,4 @@
-// database/.js
+// database/manage.js
 import bcrypt from 'bcrypt';
 
 export async function createUser(db, { username, password }) {
@@ -42,11 +42,7 @@ export async function updateUser(db, id, password) {
 
   const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
 
-  const info = db
-    .prepare(`UPDATE users
-              SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP
-              WHERE id = ?`)
-    .run(hashedPassword, userId);
+  const info = db.prepare(`UPDATE users SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(hashedPassword, userId);
 
   if (info.changes === 0) {
     throw new Error('User not found');
@@ -61,10 +57,10 @@ export async function deleteUser(db, id) {
   return { success: true, id };
 }
 
-export function isAdmin(db, userId) { // pas bon encore
-  const result = db.prepare('SELECT LOWER(role) AS role FROM users WHERE id = ?').get(userId);
+export function isAdmin(db, userId) {
+  const row = db.prepare('SELECT role FROM users WHERE id = ?').get(userId);
 
-  return result?.role === ROLE.ADMIN;
+  return row?.role?.toLowerCase?.() === 'admin';
 }
 
 export async function isAdminOrCreator(fastify, tournamentId, userId) {

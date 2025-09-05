@@ -1,4 +1,4 @@
-// plugins/decorate.js
+// plugins/security.js
 import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 // const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import key JWT depuis vault
@@ -23,29 +23,34 @@ export function requireRole(role) {
   };
 }
 
-export function authenticate(fastify) {
+export function authenticate(fastify, { allow2FAPending = false } = {}) {
   return async function Authenticate(request, reply) {
-    try {
-      const authHeader = request.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return reply.code(401).send({ error: 'Unauthorized' });// : No token provided
-      }
-
-      const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, JWT_SECRET);
-
-      const user = await fastify.showUserById(fastify.db, parseInt(decoded.id));
-      if (!user || !decoded.twofa) {
-        return reply.code(401).send({ error: 'Unauthorized' }); // : user no longer exists
-      }
-
-      request.user = {
-        ...decoded,
-        ...user
-      };
-    } catch (err) {
-      return reply.code(401).send({ error: 'Unauthorized', message: err.message }); // Invalid token
+    const auth = request.headers.authorization;
+    if (!auth || !auth.startsWith('Bearer ')) {
+      return reply.code(401).send({ error: 'Unauthorized' }); // No token provided
     }
+
+    const token = auth.slice(7);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch {
+      return reply.code(401).send({ error: 'Unauthorized' }); // Invalid token
+    }
+
+    const user = await fastify.showUserById(fastify.db, Number(decoded.id));
+    if (!user) {
+      return reply.code(401).send({ error: 'Unauthorized' }); // user no longer exists
+    }
+
+    const is2FAEnabled = !!(user.is_twofa_enabled === true || user.is_twofa_enabled === 1);
+    const tokenHas2FA = !!decoded.twofa;
+
+    if (is2FAEnabled && !tokenHas2FA && !allow2FAPending) {
+      return reply.code(401).send({ error: 'Unauthorized' }); // Invalid token
+    }
+
+    request.user = { ...user, twofa: tokenHas2FA };
   };
 }
 
@@ -54,18 +59,19 @@ export async function verifyPassword(password, hashedPassword) {
 }
 
 export function allowSelfOrAdmin(paramKey = 'id') {
-  return async function (request, reply) {
-    const { user } = request;
-    const targetId = Number(request.params[paramKey]);
+  return async function allowSelfOrAdminHook(request, reply) {
+    const user = request.user;
+    if (!user) return reply.code(401).send({ error: 'Unauthorized' });
 
-    if (!user) {
-      return reply.code(401).send({ error: 'Not authenticated' });
+    const targetId = Number(request.params?.[paramKey]);
+    if (!Number.isFinite(targetId)) {
+      return reply.code(400).send({ error: 'Bad Request' });
     }
 
-    if (user.role === 'admin') return;
-    if (user.userId !== targetId) {
-      return reply.code(403).send({ error: 'Access denied: not your data' });
-    }
+    if (user.role?.toLowerCase?.() === 'admin') return;
+    if (Number(user.id) === targetId) return;
+
+    return reply.code(403).send({ error: 'Access denied' });
   };
 }
 

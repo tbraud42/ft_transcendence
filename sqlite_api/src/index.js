@@ -34,10 +34,6 @@ const start = async () => {
 
   loadDecorate(fastify);
 
-  fastify.addHook('onRequest', async (req, reply) => {
-    fastify.stat.request++;
-  });
-
   fastify.register(rateLimit, {
     max: 100,
     timeWindow: '1 minute'
@@ -49,7 +45,7 @@ const start = async () => {
   await fastify.register(refreshRoute, { prefix: '/auth/refreshAuth' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
-  await fastify.register(userRoutes, { prefix: '/users' });
+  await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
   await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
@@ -106,6 +102,3 @@ const start = async () => {
 };
 
 start();
-
-// revoir tout les tester sur les arguments de toutes les routes, illico
-// mettre toute les variables vault dans un decorate fastify
