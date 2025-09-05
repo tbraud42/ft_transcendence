@@ -12,14 +12,14 @@
 // | `DELETE` | `/tournaments/:id`       | Delete a tournament                    | Admin, creator   |
 
 export default async function (fastify, options) {
-  fastify.get('/', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.get('/', {preHandler: [fastify.auth]}, async (req, reply) => {
     const tournaments = await fastify.getAllTournaments(fastify.db);
     if(!tournaments) return reply.code(404).send({ error: 'no tournaments yet' });
 
     reply.send(tournaments);
   });
 
-  fastify.get('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.get('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
 
     const tournaments = await fastify.getTournamentById(fastify.db, id);
@@ -28,28 +28,28 @@ export default async function (fastify, options) {
     reply.send(tournaments);
   });
 
-  fastify.get('/watting', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.get('/watting', {preHandler: [fastify.auth]}, async (req, reply) => {
     const tournaments = await fastify.getTournamentsByStatus(fastify.db, 0);
     if (!tournaments) return reply.code(404).send({ error: 'no tournament availible' });
 
     reply.send(tournaments);
   });
 
-  fastify.get('/playing', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.get('/playing', {preHandler: [fastify.auth]}, async (req, reply) => {
     const tournaments = await fastify.getTournamentsByStatus(fastify.db, 1);
     if (!tournaments) return reply.code(404).send({ error: 'no tournament availible' });
 
     reply.send(tournaments);
   });
 
-  fastify.get('/finished', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.get('/finished', {preHandler: [fastify.auth]}, async (req, reply) => {
     const tournaments = await fastify.getTournamentsByStatus(fastify.db, 2);
     if (!tournaments) return reply.code(404).send({ error: 'no tournament availible' });
 
     reply.send(tournaments);
   });
 
-  fastify.post('/', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a tester
+  fastify.post('/', {preHandler: [fastify.auth]}, async (req, reply) => {
     const body = req.body ?? {};
 
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
@@ -83,15 +83,18 @@ export default async function (fastify, options) {
     };
 
     const tournaments = await fastify.createTournament(fastify.db, data);
+    if (req.user?.role !== 'admin') {
+      await fastify.addParticipant(fastify.db, tournaments.id, creator_id);
+    }
+
     reply.send(tournaments);
   });
 
-  fastify.patch('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
+  fastify.patch('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
 
-    if (!fastify.isAdminOrCreator(fastify, id, req.user.id)) {
-      return reply.code(403).send({ error: 'Access denied' });
-    }
+    const allowed = await fastify.isAdminOrCreator(fastify, id, req.user.id);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
     const body = req.body ?? {};
 
@@ -121,35 +124,29 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 
-  fastify.patch('/state/:id(\\d+)', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => { // tester le retour
+  fastify.patch('/state/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
 
     const allowed = await fastify.isAdminOrCreator(fastify, id, req.user.id);
     if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
-    try {
-      const result = await fastify.changeTournamentStatus(fastify.db, id);
-      return reply.send({ id: result.id, status: result.status});
-    } catch (e) {
-      if (String(e?.message || '').includes('Tournament not found')) {
-        return reply.code(404).send({ error: 'Not found' });
-      }
-      req.log?.error(e);
-      return reply.code(500).send({ error: 'Internal Server Error' });
-    }
+    const result = await fastify.changeTournamentStatus(fastify.db, id);
+    if (!result) return reply.code(404).send({ error: 'Not found' });
+
+    return reply.send({ id: result.id, status: result.status });
   });
 
-
-  fastify.delete('/:id(\\d+)', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => { // a corriger si on appel deux fois
+  fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const id = Number(req.params.id);
 
-    if (!fastify.isAdminOrCreator(fastify, id, req.user.id)) {
-      return reply.code(403).send({ error: 'Access denied' });
+    const allowed = await fastify.isAdminOrCreator(fastify, id, req.user.id);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
+
+    const info = fastify.deleteTournament(fastify.db, id);
+    if (!info || info.changes === 0) {
+      return reply.code(404).send({ error: 'Not found' });
     }
 
-    const tournaments = await fastify.deleteTournament(fastify.db, id);
-    if (!tournaments) return reply.code(404).send({ error: 'tournaments not found' });
-
-    reply.send({ success: true });
+    return reply.send({ success: true });
   });
 }

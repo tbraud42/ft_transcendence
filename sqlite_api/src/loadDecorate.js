@@ -53,7 +53,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
-  // --- Tournois ---
+  // --- Tournament ---
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
   fastify.decorate('getTournamentByName', getTournamentByName);
@@ -69,14 +69,15 @@ export function loadDecorate(fastify) {
   // --- Security ---
   fastify.decorate('generateToken', generateToken);
   fastify.decorate('requireRole', requireRole);
-  fastify.decorate('authenticate', authenticate);
+  fastify.decorate('auth', authenticate(fastify));
+  fastify.decorate('auth2faPending', authenticate(fastify, { allow2FAPending: true }));
   fastify.decorate('verifyPassword', verifyPassword);
   fastify.decorate('allowSelfOrAdmin', allowSelfOrAdmin);
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
 
-  // --- Stats simple ---
+  // --- Stats ---
   fastify.decorate('stat', { request: 0, login: 0, signup: 0 });
   fastify.addHook('onRequest', (req, reply, done) => { fastify.stat.request++; done(); });
 }
