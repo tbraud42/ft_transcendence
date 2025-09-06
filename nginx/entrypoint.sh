@@ -1,5 +1,7 @@
 #!/bin/bash
 
+./scripts/vault-run.sh /secrets/nginx/app.env
+
 CERT_DIR="/etc/nginx/certs"
 DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
 WEB_PORT="${WEB_PORT:-80}"
@@ -8,6 +10,7 @@ LE_LIVE_DIR="/etc/letsencrypt/live/$DOMAIN_NAME"
 CERT_FILE="$CERT_DIR/fullchain.pem_$DOMAIN_NAME"
 KEY_FILE="$CERT_DIR/privkey.pem_$DOMAIN_NAME"
 
+# Generate self-signed certificates 
 function selfsigned_cert() {
     NAME=$1
     openssl req -x509 -nodes -days 365 \
@@ -42,6 +45,7 @@ else
     elif [[ -f "$LE_LIVE_DIR/fullchain.pem" && -f "$LE_LIVE_DIR/privkey.pem" ]]; then
         cp "$LE_LIVE_DIR/fullchain.pem" "$CERT_FILE"
         cp "$LE_LIVE_DIR/privkey.pem" "$KEY_FILE"
+
         echo "[SUCCESS] Let's Encrypt certificates copied to $CERT_DIR"
     else
         echo "[ERROR] Let's Encrypt certificates not found after generation."

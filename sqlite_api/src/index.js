@@ -66,7 +66,10 @@ const start = async () => {
           cb(null, true) // autorise tout en dev
         } else {
           const allowedOrigins = [
-            `https://${DOMAIN}`
+            'https://localhost', //TODO: check if authorized 
+            'https://dev.local',
+            `https://${process.env.VITE_DOMAIN}`,
+            `https://www.${process.env.VITE_DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {
