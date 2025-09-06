@@ -67,6 +67,7 @@ const start = async () => {
         } else {
           const allowedOrigins = [
             `https://${DOMAIN}`
+            `https://pong.ws.${DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {

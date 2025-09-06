@@ -1,8 +1,8 @@
-import {isLoggedIn, login} from './storage'
+import {getToken, isLoggedIn, login} from './storage'
 import { renderHome } from '../pages/home'
 import { renderProfile } from '../pages/profile'
 import { renderPongPlay } from '../pages/pongPlay'
-import { renderPongLobby } from '../pages/pongLobby'
+import {renderLobby} from '../pages/pongLobby'
 import { createHeader } from '../components/header'
 import { createFooter } from '../components/footer'
 import {env} from "./env"
@@ -64,7 +64,7 @@ export function router(): void {
             if (subPage === 'play') {
                 main.appendChild(renderPongPlay(param));
             } else if (subPage === 'lobby' && param) {
-                main.appendChild(renderPongLobby(param, "wss://" + PONG_WS_URL));
+                main.appendChild(renderLobby(param, "wss://" + PONG_WS_URL, getToken()));
             }
             break;
         case 'profile': {

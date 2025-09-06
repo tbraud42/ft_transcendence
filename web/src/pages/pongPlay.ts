@@ -1,11 +1,11 @@
-import { createPongCanvas } from '../games/pong/pongCanvas'
-import { PongGame } from '../games/pong/engine/PongGame'
+import { createPongCanvas } from '../game/pong/pongCanvas'
+import { PongGame } from '../game/pong/engine/PongGame'
 import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
-import { GameMode, secondPlayerName, selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
-import { LocalPlayer } from '../games/pong/engine/players/LocalPlayer'
+import { GameMode, secondPlayerName, selectedDifficulty, selectedGameMode } from '../game/pong/pongState'
+import { LocalPlayer } from '../game/pong/engine/players/LocalPlayer'
 import { getToken, getUsername } from '../utils/storage'
-import { AiPlayer } from '../games/pong/engine/players/AiPlayer'
+import { AiPlayer } from '../game/pong/engine/players/AiPlayer'
 import { WSClient } from '../socket/WSClient'
 import { env } from '../utils/env'
 import {navigateTo} from "../utils/router";
@@ -84,24 +84,20 @@ export function renderPongPlay(roomId: string): HTMLElement {
         return container
     }
 
-    // --- En ligne ---
     const status = document.createElement('div')
     status.className =
         'absolute -top-10 left-1/2 -translate-x-1/2 text-sm opacity-90 bg-black/60 px-4 py-2 rounded-lg shadow-lg z-20 pointer-events-none'
     status.textContent = i18n.t('pong_lobby_connecting')
 
-// Le status est maintenant placé dans le wrapper du canvas
     canvasWrapper.appendChild(status)
 
     const ws = new WSClient(`wss://${PONG_WS_URL}`, getToken())
-    let mySlot: 0 | 1 | null = null
 
     ws.on('authed', () => {
         status.textContent = i18n.t('pong_lobby_authed')
         ws.join(roomId)
     })
 
-// joli compte à rebours juste avant le début (sans startBall)
     ws.on('starting', () => {
         status.textContent = i18n.t('pong_lobby_starting')
         launchCountdown(countdown, () => {
@@ -111,18 +107,14 @@ export function renderPongPlay(roomId: string): HTMLElement {
     })
 
     ws.on('joined', (_roomId: string, slot: 0 | 1) => {
-        mySlot = slot
-
         const me = getUsername()
         const opp = i18n.t('pong_opponent')
 
         console.log('DEBUG')
-        // Dès qu'un autre joueur rejoint, on fait disparaître le status
         status.style.transition = 'opacity 0.8s ease'
         status.style.opacity = '0'
         setTimeout(() => status.remove(), 800)
 
-        // On démarre le jeu
         game = PongGame.createOnline(canvas, ws, slot, { me, opponent: opp }, selectedDifficulty, scoreLeft, scoreRight)
         currentGame = game
         game.start()

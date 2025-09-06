@@ -8,7 +8,7 @@ import {
     setSecondPlayerName,
     setSelectedDifficulty,
     setSelectedGameMode
-} from '../../../games/pong/pongState'
+} from '../../../game/pong/pongState'
 import {navigateTo} from "../../../utils/router";
 
 export function renderOfflineTab(): HTMLElement {

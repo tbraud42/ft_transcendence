@@ -1,4 +1,4 @@
-import { PlayerBase } from '../../games/pong/engine/players/PlayerBase'
+import { PlayerBase } from '../../game/pong/engine/players/PlayerBase'
 
 export function renderPlayerList(players: PlayerBase[]): HTMLElement {
     const wrapper = document.createElement('div')

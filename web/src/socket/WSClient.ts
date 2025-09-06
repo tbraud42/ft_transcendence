@@ -136,7 +136,7 @@ export class WSClient {
     join(roomId: string): void {
         this.joinedRoomId = roomId;
         if (this.isOpen()) {
-            this.send("join", { roomId });
+            this.send("join", { tournamentId: roomId });
         }
     }
 

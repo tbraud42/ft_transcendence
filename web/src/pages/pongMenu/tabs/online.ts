@@ -9,7 +9,7 @@ import {
     setMaxPlayers, setRoomId,
     setSelectedDifficulty,
     setSelectedGameMode
-} from '../../../games/pong/pongState'
+} from '../../../game/pong/pongState'
 import {createTournament, fetchTournaments} from '../../../api/game'
 import {createList} from "../../../components/list";
 import {navigateTo} from "../../../utils/router";
@@ -56,7 +56,7 @@ export function renderOnlineTab(): HTMLElement {
             joinBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded'
             joinBtn.onclick = () => {
                 setSelectedGameMode(GameMode.ONLINE)
-                navigateTo(`/pong/play/${tournament.id}`)
+                navigateTo(`/pong/lobby/${tournament.id}`)
             }
 
             card.append(info, joinBtn)
@@ -98,7 +98,7 @@ export function renderOnlineTab(): HTMLElement {
                     .then(room => {
                         // lastInsertRowid is the id of the newly created room
                         setRoomId(room.lastInsertRowid)
-                        navigateTo(`/pong/play/${room.lastInsertRowid}`)
+                        navigateTo(`/pong/lobby/${room.lastInsertRowid}`)
                     })
                     .catch(() => alert(i18n.t('pong_online_error_create')))
             }

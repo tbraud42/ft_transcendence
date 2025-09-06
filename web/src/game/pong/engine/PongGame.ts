@@ -21,7 +21,6 @@ export class PongGame {
     private gameEnded = false
     private winTextEl: HTMLDivElement
 
-    // Online-only state
     private ws?: WSClient
     private online = false
     private mySlot: 0 | 1 = 0
