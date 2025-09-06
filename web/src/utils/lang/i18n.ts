@@ -1,13 +1,17 @@
-import i18next from 'i18next'
+// @ts-ignore
+import i18n from 'i18next'
+// @ts-ignore
 import en from '../../lang/en.json'
+// @ts-ignore
 import fr from '../../lang/fr.json'
+import {getLanguage} from "../storage";
 
-const savedLang = localStorage.getItem('lang')
+const savedLang = getLanguage()
 const browserLang = navigator.language.slice(0, 2)
 const supportedLangs = ['en', 'fr']
-const initialLang = savedLang || (supportedLangs.includes(browserLang) ? browserLang : 'en')
+const initialLang = savedLang || (supportedLangs.includes(browserLang) ? browserLang : 'fr')
 
-i18next.init({
+i18n.init({
     lng: initialLang,
     fallbackLng: 'en',
     resources: {
@@ -16,4 +20,4 @@ i18next.init({
     }
 })
 
-export default i18next
+export default i18n

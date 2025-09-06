@@ -13,8 +13,8 @@ declare global {
 const rt = (window.__APP_CONFIG__ ?? {}) as AppConfig;
 
 export const env = {
-  API_URL: rt.API_URL ?? import.meta.env.VITE_API_URL ?? "/api",
-  DOMAIN: rt.DOMAIN ?? import.meta.env.VITE_DOMAIN ?? "localhost",
-  PONG_WS_URL: rt.PONG_WS_URL ?? import.meta.env.VITE_PONG_WS_URL ?? "ws://localhost:3000",
+  API_URL: rt.API_URL ?? import.meta.env.VITE_API_URL ?? "api.trans.clesucre.fr",
+  DOMAIN: rt.DOMAIN ?? import.meta.env.VITE_DOMAIN ?? "trans.clesucre.fr",
+  PONG_WS_URL: rt.PONG_WS_URL ?? import.meta.env.VITE_PONG_WS_URL ?? "ws://pong.ws.trans.clesucre.fr",
 } as const;
 

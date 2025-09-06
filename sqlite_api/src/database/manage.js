@@ -1,4 +1,4 @@
-// database/.js
+// database/manage.js
 import bcrypt from 'bcrypt';
 
 export async function createUser(db, { username, password }) {
@@ -30,21 +30,25 @@ export function showUserById(db, id) {
   return user || null;
 }
 
-export async function updateUser(db, id, { username, password }) {
-  if (!password || typeof password !== 'string') {
-    throw new Error("Password is required and must be a string");
+export async function updateUser(db, id, password) {
+  const userId = Number(id);
+  if (!Number.isFinite(userId)) {
+    throw new Error('Invalid user id');
+  }
+
+  if (typeof password !== 'string' || password.length === 0) {
+    throw new Error('Password is required and must be a string');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
 
-  const result = db.prepare('UPDATE users SET username = ?, password_hash = ? WHERE id = ?').run(username, hashedPassword, id);
+  const info = db.prepare(`UPDATE users SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(hashedPassword, userId);
 
-  return {
-    success: true,
-    userId: result.lastInsertRowid,
-    username,
-    role: 'user'
-  };
+  if (info.changes === 0) {
+    throw new Error('User not found');
+  }
+
+  return { success: true, id: userId };
 }
 
 export async function deleteUser(db, id) {
@@ -53,10 +57,10 @@ export async function deleteUser(db, id) {
   return { success: true, id };
 }
 
-export function isAdmin(db, userId) { // pas bon encore
-  const result = db.prepare('SELECT LOWER(role) AS role FROM users WHERE id = ?').get(userId);
+export function isAdmin(db, userId) {
+  const row = db.prepare('SELECT role FROM users WHERE id = ?').get(userId);
 
-  return result?.role === ROLE.ADMIN;
+  return row?.role?.toLowerCase?.() === 'admin';
 }
 
 export async function isAdminOrCreator(fastify, tournamentId, userId) {
@@ -74,7 +78,6 @@ export async function isAdminOrCreator(fastify, tournamentId, userId) {
 
   return false;
 }
-
 
 export async function crontab(fastify) {
   fastify.db.exec('BEGIN');
@@ -103,12 +106,12 @@ export async function showAllData(db) {
   for (const { name } of tables) {
     console.log(`\nTable: ${name}`);
 
-    const rows = db.prepare(`SELECT * FROM ${name}`).all();
+    const result = db.prepare(`SELECT * FROM ${name}`).all();
 
-    if (rows.length === 0) {
+    if (result.length === 0) {
       console.log('empty db');
     } else {
-      for (const row of rows) {
+      for (const row of result) {
         console.log(row);
       }
     }

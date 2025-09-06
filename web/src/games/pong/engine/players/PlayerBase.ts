@@ -15,6 +15,7 @@ export abstract class PlayerBase {
     public readonly width: number = 10
     public readonly height: number = 100
     public speed: number = 5
+    protected readonly name: string
     public moveUp: boolean = false
     public moveDown: boolean = false
     public score: number = 0
@@ -22,8 +23,9 @@ export abstract class PlayerBase {
     protected readonly canvas: HTMLCanvasElement
     protected readonly ctx: CanvasRenderingContext2D
 
-    constructor(public readonly isLeft: boolean, canvas: HTMLCanvasElement, speed?: number) {
+    constructor(public readonly isLeft: boolean, canvas: HTMLCanvasElement, name: string, speed?: number) {
         this.canvas = canvas
+        this.name = name
         if (speed) {
             this.speed = speed
         }
@@ -58,5 +60,9 @@ export abstract class PlayerBase {
 
     getScore() {
         return this.score
+    }
+
+    getName() {
+        return this.name
     }
 }

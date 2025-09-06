@@ -1,12 +1,15 @@
-import { isLoggedIn } from './auth/auth'
-import { renderLogin } from '../pages/login'
+import {isLoggedIn, login} from './storage'
 import { renderHome } from '../pages/home'
-import { renderPong } from '../pages/pongMenu'
 import { renderProfile } from '../pages/profile'
 import { renderPongPlay } from '../pages/pongPlay'
 import { renderPongLobby } from '../pages/pongLobby'
 import { createHeader } from '../components/header'
 import { createFooter } from '../components/footer'
+import {env} from "./env"
+import {renderAuth} from "../pages/auth";
+import {request42Auth} from "../api/auth";
+
+const PONG_WS_URL = env.PONG_WS_URL
 
 export function router(): void {
     const app = document.getElementById('app')
@@ -14,18 +17,12 @@ export function router(): void {
         return
     }
 
-    const hash = window.location.hash || '#/'
-    const routeParts = hash.slice(2).split('/')
+    const path = window.location.pathname || '/'
+    const routeParts = path.slice(1).split('/')
 
     const mainPage = routeParts[0] || ''
     const subPage = routeParts[1] || ''
     const param = routeParts[2] || ''
-
-    // Redirection vers login si non connecté
-    if (!isLoggedIn() && mainPage !== 'login' && mainPage !== 'signup') {
-        window.location.hash = '#/login'
-        return
-    }
 
     app.innerHTML = ''
     app.appendChild(createHeader())
@@ -34,34 +31,63 @@ export function router(): void {
     main.className = 'flex-grow p-4'
 
     if (!isLoggedIn()) {
-        main.appendChild(renderLogin(mainPage === 'signup'))
+        if (mainPage === 'auth' && subPage === '42') {
+
+            const query = window.location.search;
+            console.log(query)
+            const params = new URLSearchParams(query);
+
+            const code = params.get('code');
+            const state = params.get('state');
+
+            if (code && state) {
+                request42Auth(code, state).then((res) => {
+                    if (!res || !res.token || !res.user || !res.user.username) {
+                        navigateTo('/login')
+                        return
+                    }
+                    login(res.token, res.user.username);
+                    navigateTo('/home')
+                }).catch(() => {
+                    navigateTo('/login')
+                })
+            } else {
+                console.error('42 login failed: missing token or username in callback');
+                navigateTo('/login')
+            }
+        } else {
+            main.appendChild(renderAuth(mainPage as 'login' | 'signup' | '2fa'))
+        }
     } else {
         switch (mainPage) {
-            case 'login':
-            case 'signup':
-                main.appendChild(renderLogin(mainPage === 'signup'))
-                break
-            case 'pong':
-                if (subPage === 'play') {
-                    main.appendChild(renderPongPlay())
-                } else if (subPage === 'lobby' && param) {
-                    main.appendChild(renderPongLobby(param as unknown as number))
-                } else {
-                    main.appendChild(renderPong())
-                }
-                break
-            case 'profile':
-                main.appendChild(renderProfile())
-                break
-            case '':
-                main.appendChild(renderHome())
-                break
-            default:
-                main.appendChild(renderHome())
-                break
+        case 'pong':
+            if (subPage === 'play') {
+                main.appendChild(renderPongPlay(param));
+            } else if (subPage === 'lobby' && param) {
+                main.appendChild(renderPongLobby(param, "wss://" + PONG_WS_URL));
+            }
+            break;
+        case 'profile': {
+            main.appendChild(renderProfile(subPage))
+            break
+        }
+        case '':
+            main.appendChild(renderHome())
+            break
+        default:
+            main.appendChild(renderHome())
+            navigateTo('/', false)
+            break
         }
     }
 
     app.appendChild(main)
     app.appendChild(createFooter())
+}
+
+export function navigateTo(pathname: string, execRouter: boolean = true): void {
+    window.history.pushState({}, '', pathname)
+    if (execRouter) {
+        router()
+    }
 }

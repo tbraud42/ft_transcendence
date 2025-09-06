@@ -16,10 +16,7 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 const stateStore = new Map();
 
 export default async function ft42Routes(fastify) {
-
   fastify.get('/login', async (req, reply) => {
-    console.log(`id = ${CLIENT_ID}, secret = ${CLIENT_SECRET}, URI = ${REDIRECT_URI}`);
-
     const state = crypto.randomBytes(16).toString('hex');
     stateStore.set(state, true);
 
@@ -35,9 +32,14 @@ export default async function ft42Routes(fastify) {
   });
 
   fastify.get('/callback', async (req, reply) => {
-    const { code, state } = req.query;
+    const q = req.query ?? {};
+    const code  = typeof q.code  === 'string' ? q.code.trim()  : '';
+    const state = typeof q.state === 'string' ? q.state.trim() : '';
 
-    if (!state || !stateStore.has(state)) {
+    if (!code || code.length > 2048 ) {
+      return reply.code(400).send({ error: 'Invalid code' });
+    }
+    if (!state || state.length > 256 || !stateStore.has(state)) {
       return reply.code(400).send({ error: 'Invalid state' });
     }
     stateStore.delete(state);
@@ -89,7 +91,7 @@ export default async function ft42Routes(fastify) {
       id: user.id,
       username: user.username,
       role: user.role
-    });
+    }, true, '12h');
 
     return reply.send({ token, user: { id: user.id, username: user.username } });
   });

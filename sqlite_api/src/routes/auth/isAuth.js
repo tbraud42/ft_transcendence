@@ -4,7 +4,7 @@
 // | `GET`    | `/auth/isAuth`     | verif JWT token                        | Public           |
 
 export default async function (fastify, options) {
-  fastify.get('/', { preHandler: fastify.authenticate(fastify) }, async (req, reply) => {
+  fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     return reply.send({
       status: 'authenticated',
       user: {

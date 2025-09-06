@@ -5,11 +5,17 @@
 
 export default async function (fastify, options) {
   fastify.post('/', async (req, reply) => {
-    const { username, password } = req.body;
+    const body = req.body ?? {};
+    const username = typeof body.username === 'string' ? body.username.trim() : '';
+    const password = typeof body.password === 'string' ? body.password : '';
+
+    if (!username || !password) {
+      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
+    }
 
     const user = await fastify.showUserByUsername(fastify.db, username);
     if (!user) {
-      return reply.code(401).send({ error: 'User not found' });
+      return reply.code(404).send({ error: 'User not found' });
     }
 
     if (!(await fastify.verifyPassword(password, user.password_hash))) {

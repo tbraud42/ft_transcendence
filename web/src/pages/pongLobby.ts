@@ -1,48 +1,62 @@
-import {createButton} from '../components/button'
-import {Room} from "../games/pong/engine/Room";
-import {OnlinePlayer} from "../games/pong/engine/players/OnlinePlayer";
-import {
-    isPrivate,
-    maxPlayers,
-    selectedDifficulty,
-    selectedGameMode
-} from "../games/pong/pongState";
-import {renderRoomInfo} from "../components/room/roomInfo";
-import {renderPlayerList} from "../components/room/playerList";
+import i18n from "../utils/lang/i18n";
+import {WSClient} from "../socket/WSClient";
+import {getToken, getUsername} from "../utils/storage";
+import {PongGame} from "../games/pong/engine/PongGame";
+import {selectedDifficulty} from "../games/pong/pongState";
 
-let room: Room
+export function renderPongLobby(roomId: string, wsUrl: string): HTMLElement {
+    const container = document.createElement("div");
+    container.style.display = "grid";
+    container.style.gap = "12px";
 
-export function renderPongLobby(roomId: number): HTMLElement {
-    const container = document.createElement('div')
-    container.className = 'min-h-screen flex flex-col items-center justify-center text-white px-4 py-8 text-center'
+    const status = document.createElement("div");
+    status.textContent = i18n.t('pong_lobby_connecting');
 
-    const status = document.createElement('p')
-    status.className = 'text-gray-400 mb-4'
-    status.textContent = `Connecting to room #${roomId}...`
+    const canvas = document.createElement("canvas");
+    canvas.width = 800; canvas.height = 450;
 
-    const playersList = document.createElement('ul')
-    playersList.className = 'mb-6 flex flex-col gap-2'
+    container.append(status, canvas);
 
-    room = new Room(roomId, selectedDifficulty, selectedGameMode, maxPlayers, isPrivate)
+    const scoreLeftEl = document.createElement('div');
+    const scoreRightEl = document.createElement('div');
+    scoreLeftEl.className = 'absolute top-4 left-1/2 transform -translate-x-20 text-white text-3xl font-mono';
+    scoreRightEl.className = 'absolute top-4 left-1/2 transform translate-x-20 text-white text-3xl font-mono';
+    container.append(scoreLeftEl, scoreRightEl);
 
-    const leaveBtn = createButton('Retour au menu', 'button', 'red')
-    leaveBtn.onclick = () => {
-        room.close()
-        window.location.hash = '#/pong'
-    }
+    const ws = new WSClient(wsUrl, getToken());
 
-    container.append(status, playersList, leaveBtn)
+    ws.on('authed', () => {
+        status.textContent = i18n.t('pong_lobby_authed');
+        ws.join(roomId);
+    });
 
-    room.init().then(() => {
-        room.join(new OnlinePlayer('Player1', 'randomId1', 5))
+    ws.on('starting', () => {
+        status.textContent = i18n.t('pong_lobby_starting');
+    });
 
-        status.replaceWith(renderRoomInfo(room.state))
-        playersList.replaceWith(renderPlayerList(room.state.players))
+    ws.on('close', () => {
+        status.textContent = i18n.t('pong_lobby_disconnected');
+    });
 
-    }).catch((err) => {
-        console.error('Room init error:', err)
-        status.textContent = 'Error connecting to room.'
-    })
+    ws.on('error', () => {
+        status.textContent = i18n.t('pong_lobby_network_error');
+    });
 
-    return container
+    ws.connect();
+
+    ws.on('joined', (_roomId, slot) => {
+        status.textContent = i18n.t('pong_lobby_joined_waiting');
+        const game = PongGame.createOnline(
+            canvas,
+            ws,
+            slot,
+            { me: getUsername(), opponent: 'Adversaire' },
+            selectedDifficulty,
+            scoreLeftEl,
+            scoreRightEl
+        );
+        game.start();
+    });
+
+    return container;
 }

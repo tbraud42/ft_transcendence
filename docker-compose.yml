@@ -49,6 +49,7 @@ services:
     build:
       context: ./sqlite_api
       dockerfile: Dockerfile
+    image: ft_transcendence-sqlite_api:prod
     container_name: sqlite_api
     expose:
       - "3000"
@@ -120,6 +121,7 @@ services:
     build:
       context: ./ws_server
       dockerfile: Dockerfile
+    image: ft_transcendence-ws_server:prod
     container_name: ws_server
     expose:
       - "3000"

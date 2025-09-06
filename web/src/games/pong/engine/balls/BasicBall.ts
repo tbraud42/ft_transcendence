@@ -1,9 +1,10 @@
 import { BallBase } from './BallBase'
 import { PlayerBase } from '../players/PlayerBase'
+import { Difficulty } from "../../pongState";
 
 export class BasicBall extends BallBase {
-    constructor(startX: number, startY: number, difficulty: string = 'medium') {
-        const speed = difficulty === 'easy' ? 4.5 : difficulty === 'hard' ? 6.5 : 5.5
+    constructor(startX: number, startY: number, difficulty: Difficulty) {
+        const speed = difficulty === Difficulty.EASY ? 4.5 : difficulty === Difficulty.HARD ? 6.5 : 5.5
         super(startX, startY, speed)
     }
 
@@ -26,7 +27,6 @@ export class BasicBall extends BallBase {
             this.y > leftPaddleY &&
             this.y < leftPaddleY + player1.height
         ) {
-            // push ball outside if in paddle area
             this.x = leftPaddleX + player1.width + this.radius
             this.vx *= -1
 
@@ -46,7 +46,6 @@ export class BasicBall extends BallBase {
             this.y > rightPaddleY &&
             this.y < rightPaddleY + player2.height
         ) {
-            // push ball outside if in paddle area
             this.x = rightPaddleX - this.radius
             this.vx *= -1
 
@@ -55,15 +54,6 @@ export class BasicBall extends BallBase {
 
             this.vy += offset * 0.08 + paddleVelocity * 0.3
             this.vx *= 1.02
-        }
-
-        // Reset if out of bounds, count score
-        if (this.x + this.radius < 0) {
-            player2.addScore()
-            this.resetPosition(canvas.width, canvas.height)
-        } else if (this.x - this.radius > canvas.width) {
-            player1.addScore()
-            this.resetPosition(canvas.width, canvas.height)
         }
 
         // Friction and minimum speed
@@ -79,5 +69,40 @@ export class BasicBall extends BallBase {
         if (Math.abs(this.vy) < minSpeed) {
             this.vy = minSpeed * Math.sign(this.vy)
         }
+    }
+
+    /**
+     * Check if the ball crossed the left/right boundaries.
+     * If so, increment the opponent score, reset the ball to center, and serve towards the scorer.
+     * Returns true if a point was scored.
+     */
+    checkScore(player1: PlayerBase, player2: PlayerBase, canvas: HTMLCanvasElement): boolean {
+        // Right player scores if ball exits left
+        if (this.x + this.radius < 0) {
+            player2.score = (player2.score ?? 0) + 1
+            this.x = canvas.width / 2
+            this.y = canvas.height / 2
+            const minAngleDeg = 15
+            const maxAngleDeg = 45
+            const angleDeg = minAngleDeg + Math.random() * (maxAngleDeg - minAngleDeg)
+            const angleRad = angleDeg * (Math.PI / 180)
+            this.vx = Math.abs(this.speed * Math.cos(angleRad))
+            this.vy = (Math.random() < 0.5 ? -1 : 1) * this.speed * Math.sin(angleRad)
+            return true
+        }
+        // Left player scores if ball exits right
+        if (this.x - this.radius > canvas.width) {
+            player1.score = (player1.score ?? 0) + 1
+            this.x = canvas.width / 2
+            this.y = canvas.height / 2
+            const minAngleDeg = 15
+            const maxAngleDeg = 45
+            const angleDeg = minAngleDeg + Math.random() * (maxAngleDeg - minAngleDeg)
+            const angleRad = angleDeg * (Math.PI / 180)
+            this.vx = -Math.abs(this.speed * Math.cos(angleRad))
+            this.vy = (Math.random() < 0.5 ? -1 : 1) * this.speed * Math.sin(angleRad)
+            return true
+        }
+        return false
     }
 }

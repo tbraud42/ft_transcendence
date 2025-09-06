@@ -1,10 +1,12 @@
 import { env } from '../utils/env'
-import {getToken} from "../utils/auth/auth";
+import { getToken } from "../utils/storage";
+import {refreshToken} from "./auth";
 
-const API_URL = env.API_URL || 'game-api.example.com'
-const PONG_WS_URL = env.PONG_WS_URL || 'pong.ws.example.com'
+const API_URL = env.API_URL
 
 export async function fetchTournaments(): Promise<any[]> {
+    await refreshToken();
+
     const url = `https://${API_URL}/tournaments`
 
     const res = await fetch(url, {
@@ -21,10 +23,12 @@ export async function fetchTournaments(): Promise<any[]> {
     return res.json()
 }
 
-export function createTournament(
+export async function createTournament(
     name: string,
     difficulty: string
 ): Promise<any> {
+    await refreshToken();
+
     const url = `https://${API_URL}/tournaments`
 
     const body = {
@@ -51,7 +55,9 @@ export function createTournament(
     })
 }
 
-export function getTournament(id: number): Promise<any> {
+export async function getTournament(id: number): Promise<any> {
+    await refreshToken();
+
     const url = `https://${API_URL}/tournaments/${id}`
 
     return fetch(url, {

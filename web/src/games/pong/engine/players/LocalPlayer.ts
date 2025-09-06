@@ -2,14 +2,11 @@ import { PlayerBase } from './PlayerBase'
 import {BallBase} from "../balls/BallBase";
 
 export class LocalPlayer extends PlayerBase {
-    protected readonly name: string
     constructor(isLeft: boolean, canvas: HTMLCanvasElement, name: string, speed: number = 5) {
-        super(isLeft, canvas, speed)
-        this.name = name || (isLeft ? 'Player 1' : 'Player 2')
+        super(isLeft, canvas, name, speed)
         this.setupControls()
     }
 
-    // Setup keyboard controls
     private setupControls(): void {
         document.addEventListener('keydown', (e) => {
             if (this.isLeft) {
@@ -48,7 +45,6 @@ export class LocalPlayer extends PlayerBase {
         })
     }
 
-    // Move the paddle each frame
     update(ball?: BallBase): void {
         if (this.moveUp) {
             this.y -= this.speed

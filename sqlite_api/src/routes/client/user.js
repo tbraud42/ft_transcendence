@@ -1,19 +1,19 @@
 // routes/client/user.js
-// | Method   | Route                    | Description                                 | Access        |
-// | -------- | ------------------------ | ------------------------------------------- | ------------- |
-// | `GET`    | `/users/me`              | View a user's id                            | Authenticated |
-// | `GET`    | `/users/:id`             | View a user's profile                       | Admin + self  |
-// | `PATCH`  | `/users/:id`             | Update user info (password, username, etc.) | Self          | // + admin ??
-// | `DELETE` | `/users/:id`             | Delete an account                           | Admin + self  |
-// | `GET`    | `/users/:id/tournaments` | View tournaments a user has participated in | Admin + self  |
+// | Method   | Route                   | Description                                 | Access        |
+// | -------- | ----------------------- | ------------------------------------------- | ------------- |
+// | `GET`    | `/user/me`              | View a user's id                            | Authenticated |
+// | `GET`    | `/user/:id`             | View a user's profile                       | Admin + self  |
+// | `PATCH`  | `/user/`                | Update user info password                   | Self          |
+// | `DELETE` | `/user/:id`             | Delete an account                           | Admin + self  |
+// | `GET`    | `/user/:id/tournaments` | View tournaments a user has participated in | Admin + self  |
 
 export default async function (fastify, options) {
-  fastify.get('/me', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => {
+  fastify.get('/me', { preHandler: [fastify.auth] }, async (req, reply) => {
     reply.send(req.user.id);
   });
 
-  fastify.get('/:id', { preHandler: [fastify.authenticate(fastify)] }, async (req, reply) => {
-    const targetId = parseInt(req.params.id);
+  fastify.get('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
+    const targetId = Number(req.params.id);
 
     if (targetId === req.user.id || req.user.role === 'admin') {
       const user = await fastify.showUserById(fastify.db, targetId);
@@ -36,38 +36,36 @@ export default async function (fastify, options) {
     return reply.code(403).send({ error: 'Access denied' });
   });
 
-  fastify.patch('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const { username, password } = req.body;
-    const targetId = parseInt(req.params.id);
+  fastify.patch('/', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42
+    const body = req.body ?? {};
+    const oldPassword = typeof body.oldPassword === 'string' ? body.oldPassword.trim() : '';
+    const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
 
-    if (targetId === req.user.id  || req.user.role === 'admin') {
-      const user = await fastify.showUserById(fastify.db, targetId);
-      if (!user) {
-        return reply.code(404).send({ error: 'User not found' });
-      }
-
-      const double = await fastify.showUserByUsername(fastify.db, username);
-      if (double) {
-        return reply.code(401).send({ error: 'username already use' });
-      }
-
-      if (!await fastify.verifyPassword(password, user.password_hash)) {
-        const validation = await fastify.validatePassword(password);
-        if (!validation.valid) {
-          const message = await fastify.passwordFeedback(validation.errors);
-
-          return reply.code(400).send({error: "Bad Request", code: "INVALID_PASSWORD_POLICY", message });
-        }
-      }
-
-      const result = await fastify.updateUser(fastify.db, targetId, { username, password });
-      return reply.send('User update successfully');
+    if (!oldPassword || !newPassword) {
+      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
-    return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+
+    if (!await fastify.verifyPassword(oldPassword, req.user.password_hash)) {
+      return reply.code(403).send({ error: 'Access denied' });
+    }
+
+    if (await fastify.verifyPassword(newPassword, req.user.password_hash)) {
+        return reply.code(400).send({error: "need too change the password" });
+    }
+
+    const validation = await fastify.validatePassword(newPassword);
+    if (!validation.valid) {
+      const message = await fastify.passwordFeedback(validation.errors);
+
+      return reply.code(400).send({error: "Bad Request", code: "INVALID_PASSWORD_POLICY", message });
+    }
+
+    await fastify.updateUser(fastify.db, req.user.id, newPassword);
+    return reply.send('User update successfully');
   });
 
-  fastify.delete('/:id', {preHandler: [fastify.authenticate(fastify)]}, async (req, reply) => {
-    const targetId = parseInt(req.params.id);
+  fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
+    const targetId = Number(req.params.id);
 
     if (targetId === req.user.id || req.user.role === 'admin') {
       const user = await fastify.showUserById(fastify.db, targetId);
@@ -81,8 +79,9 @@ export default async function (fastify, options) {
     return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
   });
 
-  fastify.get('/:id/tournaments', {preHandler: [fastify.authenticate(fastify), fastify.allowSelfOrAdmin]}, async (req, reply) => { // faire et tester quand les tournaments sont implementer
-    const tournaments = await fastify.db.prepare(`SELECT * FROM tournaments WHERE user_id = ?`).all(req.params.id); // facoriser dans manage.js ?
+  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth, fastify.allowSelfOrAdmin()]}, async (req, reply) => {
+    const targetId = Number(req.params.id);
+    const tournaments = await fastify.db.prepare(`SELECT * FROM tournament_participants WHERE user_id = ?`).all(targetId); // facoriser dans manage.js ?
 
     reply.send(tournaments);
   });
