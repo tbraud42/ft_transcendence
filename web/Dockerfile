@@ -7,8 +7,6 @@ COPY config.js ./public/config.js
 
 RUN npm install
 
-COPY src ./src
-
 RUN npm run build
 
 FROM nginx:stable-alpine

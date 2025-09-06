@@ -19,10 +19,11 @@ API_URL="${API_URL:-${VITE_API_URL:-/api}}"
 DOMAIN="${DOMAIN:-${VITE_DOMAIN:-localhost}}"
 PONG_WS_URL="${PONG_WS_URL:-${VITE_PONG_WS_URL:-ws://localhost:3000}}"
 
+
 # Create config.js
 cat > "$WEBROOT/config.js" <<EOF
 window.__APP_CONFIG__ = {
-  API_URL: "$(printf %s "$API_URL")",
+  API_URL: "$(printf %s "$API_URL")", 
   DOMAIN: "$(printf %s "$DOMAIN")",
   PONG_WS_URL: "$(printf %s "$PONG_WS_URL")",
   VITE_API_URL: "$(printf %s "$API_URL")",
