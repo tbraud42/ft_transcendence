@@ -19,4 +19,6 @@ const db = new Database(dbPath, {
   verbose: console.log // print toute les action dans la console
 });
 
+db.pragma('foreign_keys = ON');
+
 export default db;

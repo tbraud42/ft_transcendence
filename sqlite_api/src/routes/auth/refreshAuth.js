@@ -1,7 +1,7 @@
 // routes/auth/refreshAuth.js
 // | Method   | Route               | Description                      | Access           |
 // | -------- | ------------------- | -------------------------------- | ---------------- |
-// | `GET`    | `/auth/refreshAuth` | refresh JWT token                | Public           |
+// | `GET`    | `/auth/refreshAuth` | refresh JWT token                | Authenticated    |
 
 export default async function (fastify, options) { // a tester
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {

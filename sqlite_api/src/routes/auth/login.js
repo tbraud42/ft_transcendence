@@ -3,7 +3,7 @@
 // | -------- | ------------------ | -------------------------------------- | ---------------- |
 // | `POST`   | `/auth/login`      | login, reply by JWT token              | Public           |
 
-export default async function (fastify, options) {
+export default async function (fastify, options) { // a tester user 42
   fastify.post('/', async (req, reply) => {
     const body = req.body ?? {};
     const username = typeof body.username === 'string' ? body.username.trim() : '';
@@ -11,6 +11,10 @@ export default async function (fastify, options) {
 
     if (!username || !password) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
+    }
+
+    if (fastify.usernameEndsWith42(req.user.username)) {
+      return reply.code(400).send({ error: 'cannot change 42 auth password' });
     }
 
     const user = await fastify.showUserByUsername(fastify.db, username);
@@ -23,7 +27,7 @@ export default async function (fastify, options) {
     }
 
     await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
-    fastify.stat.login++;
+    fastify.apiStat.login++;
 
     if (user.is_twofa_enabled) {
       const token = fastify.generateToken({id: user.id, username: user.username, role: user.role,}, false, '5m');

@@ -27,7 +27,6 @@ import {
 
 import {
   generateToken,
-  requireRole,
   authenticate,
   verifyPassword,
   allowSelfOrAdmin,
@@ -68,7 +67,6 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteParticipant', deleteParticipant);
   // --- Security ---
   fastify.decorate('generateToken', generateToken);
-  fastify.decorate('requireRole', requireRole);
   fastify.decorate('auth', authenticate(fastify));
   fastify.decorate('auth2faPending', authenticate(fastify, { allow2FAPending: true }));
   fastify.decorate('verifyPassword', verifyPassword);
@@ -76,8 +74,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
-
-  // --- Stats ---
-  fastify.decorate('stat', { request: 0, login: 0, signup: 0 });
-  fastify.addHook('onRequest', (req, reply, done) => { fastify.stat.request++; done(); });
+  // --- Stats --- 
+  fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
+  fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });
 }

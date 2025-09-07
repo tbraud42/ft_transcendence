@@ -56,7 +56,7 @@ export default async function (fastify, options) {
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
     const maxPlayers  = body.maxPlayers === undefined ? 16 : body.maxPlayers; // number only
-    const isPrivate   = body.isPrivate === undefined ? false : body.isPrivate; // boolean only
+    const isPrivate   = body.isPrivate === undefined ? false : body.isPrivate; // boolean only a modifier
 
     const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
 
@@ -102,7 +102,7 @@ export default async function (fastify, options) {
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
     const maxPlayers  = body.maxPlayers === undefined ? 16 : body.maxPlayers; // number only
-    const isPrivate   = body.isPrivate === undefined ? false : body.isPrivate; // boolean only
+    const isPrivate   = body.isPrivate === undefined ? false : body.isPrivate; // boolean only a modifier
 
     const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
 

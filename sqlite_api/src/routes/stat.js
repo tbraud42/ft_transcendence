@@ -1,7 +1,8 @@
 // routes/stat.js
-// | Method   | Route              | Description                        | Access           |
-// | -------- | ------------------ | ---------------------------------- | ---------------- |
-// | `GET`    | `/stat`            | show api's stats                   | Admin            |
+// | Method   | Route              | Description                          | Access           |
+// | -------- | ------------------ | ------------------------------------ | ---------------- |
+// | `GET`    | `/stat`            | show api's stats                     | Admin            |
+// | `GET`    | `/stat/dashboard`  | show tounrnament stats for dashboard | Authenticate     |
 
 export default async function (fastify, opts) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
@@ -9,10 +10,13 @@ export default async function (fastify, opts) {
     if (!admin) return reply.code(403).send({ error: 'Access denied' });
 
     return reply.send({
-      request: fastify.stat.request,
-      login: fastify.stat.login,
-      signup: fastify.stat.signup
+      request: fastify.apiStat.request,
+      login: fastify.apiStat.login,
+      signup: fastify.apiStat.signup
     });
   });
-}
 
+  fastify.get('/dashboard', { preHandler: [fastify.auth] }, async (req, reply) => {
+    // do dashboard
+  });
+}

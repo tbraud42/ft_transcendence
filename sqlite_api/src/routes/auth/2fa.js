@@ -1,8 +1,8 @@
 // routes/auth/2fa.js
 // | Method   | Route              | Description                            | Access           |
 // | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/auth/2fa/setup`  | create QR code auth                    | Public           |
-// | `POST`   | `/auth/2fa/verif`  | generate JWT after auth                | Public           |
+// | `POST`   | `/auth/2fa/setup`  | create QR code auth                    | Authenticated    |
+// | `POST`   | `/auth/2fa/verif`  | generate JWT after auth                | Authenticated    |
 
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';

@@ -15,14 +15,6 @@ export function generateToken(payload, twofa = true, expiresIn = '12h') {
   return jwt.sign(fullPayload, JWT_SECRET, { expiresIn });
 }
 
-export function requireRole(role) {
-  return async function (request, reply) {
-    if (!request.user || request.user.role !== role) {
-      return reply.code(403).send({ error: 'Forbidden: insufficient rights' });
-    }
-  };
-}
-
 export function authenticate(fastify, { allow2FAPending = false } = {}) {
   return async function Authenticate(request, reply) {
     const auth = request.headers.authorization;
