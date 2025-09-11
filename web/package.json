@@ -1,14 +1,22 @@
 {
-  "name": "transcendence-web",
+  "name": "web",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "build": "node_modules/.bin/tsc --project tsconfig.json",
-    "watch": "npx tsc --watch",
-    "copy-assets": "chokidar 'src/**/*.{html,css,json}' -c 'npm run sync-assets'",
-    "sync-assets": "rsync -a --exclude='*.ts' src/ dist/"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "i18next": "^23.6.18",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "chokidar-cli": "^3.0.0",
-    "typescript": "^5.8.3"
+    "autoprefixer": "^10.4.17",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.8",
+    "ws": "^8.18.3"
   }
 }

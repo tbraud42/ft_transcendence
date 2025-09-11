@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes scrollBackground {
+    from {
+        background-position: 0 0;
+    }
+    to {
+        background-position: 100px 100px;
+    }
+}
+
+body {
+    overflow-y: hidden;
+    background-color: #f3f4f6;
+    background-image: url('/img/pattern.svg');
+}
+
+.dark body {
+    background-color: #0d1117;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+body.pong-mode {
+    overflow: hidden;
+}

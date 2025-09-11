@@ -21,3 +21,26 @@ make
 
 Everything will be built and started automatically.
 After that, you can access the application at `http://localhost`.
+
+## How to run in development mode
+
+NOTE: load pages to accept https certificate in your browser.
+
+## How to use Javascript/Typescript formatting
+
+1. Install Node.js if you haven't already.
+
+2. Initialize a new Node.js project and install the necessary packages:
+```bash
+npm init -y
+npm i -D eslint prettier \
+       @typescript-eslint/parser @typescript-eslint/eslint-plugin \
+       eslint-config-prettier
+```
+
+3. The configuration file already exists in the repository as [eslint.config.mjs](eslint.config.mjs)
+
+4. execute the following command to format your files:
+```bash
+npx eslint --fix FILE_NAME
+```

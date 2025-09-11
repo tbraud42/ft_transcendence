@@ -11,7 +11,24 @@
 
 nginx/data
 web/dist
+vault_data
 
 # Dev
 
+dev/
 api/node_modules
+ws_server/node_modules
+sqlite_api/node_modules
+sqlite_api/data/*.sqlite
+build_and_push.sh
+
+# MacOS
+.DS_Store
+
+*test.sh
+
+# Vault 
+secrets/ 
+data/
+certs/
+waf_test.sh
