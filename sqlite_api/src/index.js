@@ -63,7 +63,7 @@ const start = async () => {
         const isDev = process.env.NODE_ENV === 'development'
 
         if (isDev) {
-          cb(null, true) // autorise tout en dev
+          cb(null, true)
         } else {
           const allowedOrigins = [
             `https://${DOMAIN}`
@@ -84,14 +84,15 @@ const start = async () => {
     })
 
     fastify.listen({ port: PORT, host: ADDRESS });
+    //------insert admin-------
     // const username = 'admin';
     // const password = 'supersecurepassword';
-
     // const password_hash = await bcrypt.hash(password, 10);
-
     // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
     // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
-    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE id = ?`).run(2); // tmp pour test crontab
+
+    // -----crontab-------------
+    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE username = ?`).run("bob"); // tmp pour test crontab
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);

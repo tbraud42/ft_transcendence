@@ -1,7 +1,7 @@
 // routes/auth/login.js
-// | Method   | Route              | Description                            | Access           |
-// | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/auth/login`      | login, reply by JWT token              | Public           |
+// | Method   | Route              | Description                        | Access           |
+// | -------- | ------------------ | ---------------------------------- | ---------------- |
+// | `POST`   | `/auth/login`      | login, reply by JWT token          | Public           |
 
 export default async function (fastify, options) {
   fastify.post('/', async (req, reply) => {
@@ -10,6 +10,10 @@ export default async function (fastify, options) {
     const password = typeof body.password === 'string' ? body.password : '';
 
     if (!username || !password) {
+      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
+    }
+
+    if (fastify.usernameEndsWith42(username)) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
@@ -23,7 +27,7 @@ export default async function (fastify, options) {
     }
 
     await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
-    fastify.stat.login++;
+    fastify.apiStat.login++;
 
     if (user.is_twofa_enabled) {
       const token = fastify.generateToken({id: user.id, username: user.username, role: user.role,}, false, '5m');

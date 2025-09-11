@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 // const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import key JWT depuis vault
 
-// import verif mdp
+// import verif password
 import bcrypt from 'bcrypt';
 
 export function generateToken(payload, twofa = true, expiresIn = '12h') {
@@ -13,14 +13,6 @@ export function generateToken(payload, twofa = true, expiresIn = '12h') {
   };
 
   return jwt.sign(fullPayload, JWT_SECRET, { expiresIn });
-}
-
-export function requireRole(role) {
-  return async function (request, reply) {
-    if (!request.user || request.user.role !== role) {
-      return reply.code(403).send({ error: 'Forbidden: insufficient rights' });
-    }
-  };
 }
 
 export function authenticate(fastify, { allow2FAPending = false } = {}) {
@@ -109,6 +101,6 @@ export async function passwordFeedback(errors) {
 
 const FORBIDDEN_SUFFIX = '_42';
 
-export async function usernameEndsWith42(name) {
+export function usernameEndsWith42(name) {
   return name.toLowerCase().endsWith(FORBIDDEN_SUFFIX);
 }

@@ -1,10 +1,10 @@
 // routes/matchs/tournaments_client.js
-// | Method   | Route                           | Description                  | Access                  |
-// | -------- | ------------------------------- | ---------------------------- | ----------------------- |
-// | `GET`    | `/tournaments/:id/user/:userId` | View tournament participants | Authenticated           |
-// | `POST`   | `/tournaments/:id/user/:userId` | Join a tournament (register) | Authenticated           |
-// | `PATCH`  | `/tournaments/:id/user/:userId` | Update score or rank         | Admin, creator          |
-// | `DELETE` | `/tournaments/:id/user/:userId` | Remove a participant         | Admin, creator, or self |
+// | Method   | Route                           | Description                     | Access                  |
+// | -------- | ------------------------------- | ------------------------------- | ----------------------- |
+// | `GET`    | `/tournaments/:id/user/:userId` | View tournament participants    | Authenticated           |
+// | `POST`   | `/tournaments/:id/user/:userId` | Join a tournament (register)    | Authenticated           |
+// | `PATCH`  | `/tournaments/:id/user/:userId` | Update score or rank            | Admin, creator          |
+// | `DELETE` | `/tournaments/:id/user/:userId` | Remove a participant            | Admin, creator, or self |
 
 export default async function (fastify, options) {
   fastify.get('/:id(\\d+)/user/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
@@ -36,18 +36,31 @@ export default async function (fastify, options) {
   });
 
 
-  fastify.patch('/:id(\\d+)/user/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => { // verifier et rajotuer teste sur argument
+  fastify.patch('/:id(\\d+)/user/:userId(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => { // a checker
     const tournament_id = Number(req.params.id);
-    const user_id = Number(req.params.userId);
-    const { score, rank } = req.body;
+    const user_id       = Number(req.params.userId);
+    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
 
-    const result = fastify.db.prepare(`UPDATE tournament_participants SET score = COALESCE(?, score), rank = COALESCE(?, rank) WHERE tournament_id = ? AND user_id = ?`).run(score, rank, tournament_id, user_id);
-    if (result.changes === 0) {
-      return reply.code(404).send({ error: 'Participant not found or no change' });
+    if (!Number.isFinite(tournament_id) || !Number.isFinite(user_id)) return bad();
+
+    const allowed = await fastify.isAdminOrCreator(fastify, tournament_id, req.user.id);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
+
+    const b = req.body ?? {};
+    const wins   = (typeof b.wins   === 'number' && Number.isInteger(b.wins)   && b.wins   >= 0) ? b.wins   : null;
+    const losses = (typeof b.losses === 'number' && Number.isInteger(b.losses) && b.losses >= 0) ? b.losses : null;
+
+    if (wins === null && losses === null) return bad();
+
+    const row = fastify.db.prepare(`UPDATE tournament_participants SET wins = COALESCE(?, wins), losses = COALESCE(?, losses) WHERE tournament_id = ? AND user_id = ? RETURNING user_id AS userId`).get(wins, losses, tournament_id, user_id);
+
+    if (!row) {
+      return reply.code(404).send({ error: 'Not found' });
     }
 
-    reply.send({ success: true });
+    return reply.send(row);
   });
+
 
   fastify.delete('/:id(\\d+)/user/:userId(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const tournament_id = Number(req.params.id);
