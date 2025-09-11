@@ -22,7 +22,13 @@ import {
   getParticipantsByTournamentId,
   addParticipant,
   updateParticipant,
-  deleteParticipant
+  deleteParticipant,
+  getStat,
+  topWinRate,
+  topLoseRate,
+  topTotalPlayTime,
+  topTournamentsCreated,
+  topTournamentsWon
 } from './database/tournaments.js';
 
 import {
@@ -65,6 +71,13 @@ export function loadDecorate(fastify) {
   fastify.decorate('addParticipant', addParticipant);
   fastify.decorate('updateParticipant', updateParticipant);
   fastify.decorate('deleteParticipant', deleteParticipant);
+
+  fastify.decorate('getStat', getStat);
+  fastify.decorate('topWinRate', topWinRate);
+  fastify.decorate('topLoseRate', topLoseRate);
+  fastify.decorate('topTotalPlayTime', topTotalPlayTime);
+  fastify.decorate('topTournamentsCreated', topTournamentsCreated);
+  fastify.decorate('topTournamentsWon', topTournamentsWon);
   // --- Security ---
   fastify.decorate('generateToken', generateToken);
   fastify.decorate('auth', authenticate(fastify));
@@ -74,7 +87,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
-  // --- Stats --- 
+  // --- Stats ---
   fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
   fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });
 }

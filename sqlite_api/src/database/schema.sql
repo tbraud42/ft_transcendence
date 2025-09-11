@@ -1,4 +1,4 @@
--- Users
+-- User
 CREATE TABLE users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username VARCHAR(30) NOT NULL UNIQUE,
@@ -6,12 +6,12 @@ CREATE TABLE users (
   role VARCHAR(10) NOT NULL DEFAULT 'user'
     CHECK (role IN ('user', 'admin')),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  last_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+  last_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  twofa_secret TEXT,
+  is_twofa_enabled INTEGER NOT NULL DEFAULT 0, -- bool 0/1
+  total_seconds INTEGER NOT NULL DEFAULT 0,
+  total_matches INTEGER NOT NULL DEFAULT 0
 );
-
--- 2FA
-ALTER TABLE users ADD COLUMN twofa_secret TEXT;
-ALTER TABLE users ADD COLUMN is_twofa_enabled BOOLEAN DEFAULT false;
 
 -- Tournaments
 CREATE TABLE tournaments (
@@ -24,7 +24,7 @@ CREATE TABLE tournaments (
     CHECK (difficulty IN ('easy','medium','hard')),
   maxPlayers INTEGER DEFAULT 16,
   isPrivate INTEGER NOT NULL DEFAULT 0, -- 0/1 en SQLite
-  status INTEGER NOT NULL DEFAULT 0      -- 0=waiting, 1=playing, 2=finished
+  status INTEGER NOT NULL DEFAULT 0 -- 0=waiting, 1=playing, 2=finished
     CHECK (status IN (0,1,2)),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (creator_id) REFERENCES users(id),
@@ -36,8 +36,8 @@ CREATE TABLE tournament_participants (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   tournament_id INTEGER NOT NULL,
   user_id INTEGER NOT NULL,
-  wins INTEGER DEFAULT 0,   -- corrige "win"
-  losses INTEGER DEFAULT 0, -- corrige "loose"
+  wins INTEGER DEFAULT 0, -- implement "win"
+  losses INTEGER DEFAULT 0, -- implement "loose"
   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id)       REFERENCES users(id),
@@ -51,8 +51,6 @@ CREATE INDEX IF NOT EXISTS idx_tournaments_status     ON tournaments(status);
 CREATE INDEX IF NOT EXISTS idx_tournaments_creator_id ON tournaments(creator_id);
 CREATE INDEX IF NOT EXISTS idx_tp_tournament_id       ON tournament_participants(tournament_id);
 CREATE INDEX IF NOT EXISTS idx_tp_user_id             ON tournament_participants(user_id);
-
-
 
 
 -- -- Utilisateurs (auth + profil joueur)

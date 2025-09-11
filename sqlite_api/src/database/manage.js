@@ -1,5 +1,6 @@
 // database/manage.js
 import bcrypt from 'bcrypt';
+import crypto from 'node:crypto';
 
 export async function createUser(db, { username, password }) {
   if (!password || typeof password !== 'string') {
@@ -52,10 +53,23 @@ export async function updateUser(db, id, password) {
 }
 
 export async function deleteUser(db, id) {
-  const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  const dummy = await bcrypt.hash(crypto.randomUUID(), 12);
 
-  return { success: true, id };
+  const info = db.prepare(`
+    UPDATE users
+    SET
+      username         = 'deleted_' || id,
+      password_hash    = ?,
+      role             = 'user',
+      twofa_secret     = NULL,
+      is_twofa_enabled = 0,
+      last_timestamp   = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(dummy, id);
+
+  return info.changes > 0 ? { success: true, id: id, anonymized: true } : null;
 }
+
 
 export function isAdmin(db, userId) {
   const row = db.prepare('SELECT role FROM users WHERE id = ?').get(userId);
@@ -80,25 +94,14 @@ export async function isAdminOrCreator(fastify, tournamentId, userId) {
 }
 
 export async function crontab(fastify) {
-  fastify.db.exec('BEGIN');
+  const stale = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
 
-  try {
-    const inactiveUsers = fastify.db.prepare(`SELECT id, username, last_timestamp FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
-
-    const anonymizeStmt = fastify.db.prepare(`UPDATE users SET username = 'deleted_' || id, password_hash = hex(randomblob(32)), role = 'user' WHERE id = ?`);
-
-    for (const user of inactiveUsers) {
-      anonymizeStmt.run(user.id);
-      fastify.log.info(`User ${user.username} (ID: ${user.id}) anonymized due to inactivity (RGPD)`);
-    }
-
-    fastify.db.exec('COMMIT');
-  } catch (err) {
-    fastify.db.exec('ROLLBACK');
-    fastify.log.error({ err }, 'RGPD anonymization failed');
-    throw err;
+  for (const { id } of stale) {
+    await fastify.deleteUser(fastify.db, id);
+    fastify.log.info({ id }, 'User anonymized due to inactivity (RGPD)');
   }
 }
+
 
 export async function showAllData(db) {
   const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();

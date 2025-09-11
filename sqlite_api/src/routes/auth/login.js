@@ -1,9 +1,9 @@
 // routes/auth/login.js
-// | Method   | Route              | Description                            | Access           |
-// | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/auth/login`      | login, reply by JWT token              | Public           |
+// | Method   | Route              | Description                        | Access           |
+// | -------- | ------------------ | ---------------------------------- | ---------------- |
+// | `POST`   | `/auth/login`      | login, reply by JWT token          | Public           |
 
-export default async function (fastify, options) { // a tester user 42
+export default async function (fastify, options) {
   fastify.post('/', async (req, reply) => {
     const body = req.body ?? {};
     const username = typeof body.username === 'string' ? body.username.trim() : '';
@@ -13,8 +13,8 @@ export default async function (fastify, options) { // a tester user 42
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
-    if (fastify.usernameEndsWith42(req.user.username)) {
-      return reply.code(400).send({ error: 'cannot change 42 auth password' });
+    if (fastify.usernameEndsWith42(username)) {
+      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
     const user = await fastify.showUserByUsername(fastify.db, username);

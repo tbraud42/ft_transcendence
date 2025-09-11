@@ -1,7 +1,7 @@
 // routes/ping.js
-// | Method   | Route              | Description                            | Access           |
-// | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `GET`    | `/ping`            | reply ping by pong                     | Public           |
+// | Method   | Route              | Description                 | Access           |
+// | -------- | ------------------ | --------------------------- | ---------------- |
+// | `GET`    | `/ping`            | reply ping by pong          | Public           |
 
 export default async function (fastify, opts) {
   fastify.get('/', { logLevel: 'silent' }, async (req, reply) => {

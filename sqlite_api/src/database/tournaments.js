@@ -83,3 +83,138 @@ export async function deleteParticipant(db, tournamentId, userId) {
   return result;
 }
 
+// ------------- stat ---------------
+// 1) Stat d’un seul user (ou null si introuvable)
+export function getStat(db, id) {
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) return null;
+
+  const row = db.prepare(`
+    SELECT
+      u.id                         AS userId,
+      u.username                   AS username,
+      COALESCE(SUM(tp.wins),   0)  AS wins,
+      COALESCE(SUM(tp.losses), 0)  AS losses,
+      u.total_matches              AS games,
+      CASE WHEN u.total_matches > 0
+           THEN CAST(COALESCE(SUM(tp.wins),0) AS REAL) / u.total_matches
+           ELSE 0 END               AS winRate,
+      u.total_seconds              AS time
+    FROM users u
+    LEFT JOIN tournament_participants tp ON tp.user_id = u.id
+    WHERE u.id = ?
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
+  `).get(uid);
+
+  return row || null;
+}
+
+// 2) Top win rate
+export function topWinRate(db, limit = 10, minGames = 1) {
+  return db.prepare(`
+    SELECT
+      u.id                         AS userId,
+      u.username                   AS username,
+      COALESCE(SUM(tp.wins),   0)  AS wins,
+      COALESCE(SUM(tp.losses), 0)  AS losses,
+      u.total_matches              AS games,
+      CASE WHEN u.total_matches > 0
+           THEN CAST(COALESCE(SUM(tp.wins),0) AS REAL) / u.total_matches
+           ELSE 0 END               AS winRate,
+      u.total_seconds              AS time
+    FROM users u
+    LEFT JOIN tournament_participants tp ON tp.user_id = u.id
+    WHERE u.total_matches >= ?
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
+    ORDER BY winRate DESC, games DESC, wins DESC
+    LIMIT ?
+  `).all(minGames, limit);
+}
+
+// 3) Top lose rate (on retourne winRate pour garder le même schéma)
+export function topLoseRate(db, limit = 10, minGames = 1) {
+  return db.prepare(`
+    SELECT
+      u.id                         AS userId,
+      u.username                   AS username,
+      COALESCE(SUM(tp.wins),   0)  AS wins,
+      COALESCE(SUM(tp.losses), 0)  AS losses,
+      u.total_matches              AS games,
+      CASE WHEN u.total_matches > 0
+           THEN CAST(COALESCE(SUM(tp.wins),0) AS REAL) / u.total_matches
+           ELSE 0 END               AS winRate,
+      u.total_seconds              AS time
+    FROM users u
+    LEFT JOIN tournament_participants tp ON tp.user_id = u.id
+    WHERE u.total_matches >= ?
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
+    ORDER BY winRate ASC, games DESC
+    LIMIT ?
+  `).all(minGames, limit);
+}
+
+// 4) Top temps total joué (time desc)
+export function topTotalPlayTime(db, limit = 10, minGames = 1) {
+  return db.prepare(`
+    SELECT
+      u.id                         AS userId,
+      u.username                   AS username,
+      COALESCE(SUM(tp.wins),   0)  AS wins,
+      COALESCE(SUM(tp.losses), 0)  AS losses,
+      u.total_matches              AS games,
+      CASE WHEN u.total_matches > 0
+           THEN CAST(COALESCE(SUM(tp.wins),0) AS REAL) / u.total_matches
+           ELSE 0 END               AS winRate,
+      u.total_seconds              AS time
+    FROM users u
+    LEFT JOIN tournament_participants tp ON tp.user_id = u.id
+    WHERE u.total_matches >= ?
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
+    ORDER BY time DESC, games DESC
+    LIMIT ?
+  `).all(minGames, limit);
+}
+
+// 5) Top créateurs (ordre par nb créés, même schéma de sortie)
+export function topTournamentsCreated(db, limit = 10) {
+  return db.prepare(`
+    SELECT
+      u.id                         AS userId,
+      u.username                   AS username,
+      COALESCE(SUM(tp.wins),   0)  AS wins,
+      COALESCE(SUM(tp.losses), 0)  AS losses,
+      u.total_matches              AS games,
+      CASE WHEN u.total_matches > 0
+           THEN CAST(COALESCE(SUM(tp.wins),0) AS REAL) / u.total_matches
+           ELSE 0 END               AS winRate,
+      u.total_seconds              AS time
+    FROM users u
+    LEFT JOIN tournament_participants tp ON tp.user_id = u.id
+    WHERE EXISTS (SELECT 1 FROM tournaments t WHERE t.creator_id = u.id)
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
+    ORDER BY (SELECT COUNT(*) FROM tournaments t WHERE t.creator_id = u.id) DESC
+    LIMIT ?
+  `).all(limit);
+}
+
+// 6) Top vainqueurs (ordre par nb gagnés, même schéma de sortie)
+export function topTournamentsWon(db, limit = 10) {
+  return db.prepare(`
+    SELECT
+      u.id                         AS userId,
+      u.username                   AS username,
+      COALESCE(SUM(tp.wins),   0)  AS wins,
+      COALESCE(SUM(tp.losses), 0)  AS losses,
+      u.total_matches              AS games,
+      CASE WHEN u.total_matches > 0
+           THEN CAST(COALESCE(SUM(tp.wins),0) AS REAL) / u.total_matches
+           ELSE 0 END               AS winRate,
+      u.total_seconds              AS time
+    FROM users u
+    LEFT JOIN tournament_participants tp ON tp.user_id = u.id
+    WHERE EXISTS (SELECT 1 FROM tournaments t WHERE t.winner = u.id)
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
+    ORDER BY (SELECT COUNT(*) FROM tournaments t WHERE t.winner = u.id) DESC
+    LIMIT ?
+  `).all(limit);
+}

@@ -1,8 +1,8 @@
 // routes/auth/42auth.js
-// | Method   | Route               | Description                            | Access           |
-// | -------- | ------------------- | -------------------------------------- | ---------------- |
-// | `GET`    | `/auth/42/login`    | login with 42 auth                     | Authenticated    |
-// | `GET`    | `/auth/42/callback` | url redirect by 42 auth                | Authenticated    |
+// | Method   | Route               | Description                | Access           |
+// | -------- | ------------------- | -------------------------- | ---------------- |
+// | `GET`    | `/auth/42/login`    | login with 42 auth         | Authenticated    |
+// | `GET`    | `/auth/42/callback` | url redirect by 42 auth    | Authenticated    |
 
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';

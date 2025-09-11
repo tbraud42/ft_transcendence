@@ -1,7 +1,7 @@
 // routes/auth/signup.js
-// | Method   | Route              | Description                            | Access           |
-// | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/auth/signup`     | signup, reply by JWT token             | Public           |
+// | Method   | Route              | Description                         | Access           |
+// | -------- | ------------------ | ----------------------------------- | ---------------- |
+// | `POST`   | `/auth/signup`     | signup, reply by JWT token          | Public           |
 
 export default async function (fastify, options) {
   fastify.post('/', async (req, reply) => {
@@ -18,7 +18,7 @@ export default async function (fastify, options) {
       return reply.code(401).send({ error: 'username already use' });
     }
 
-    if (await fastify.usernameEndsWith42(username)) {
+    if (fastify.usernameEndsWith42(username)) {
       return reply.code(401).send({ error: 'invalide username' });
     }
 
