@@ -85,6 +85,10 @@ export class Room {
             } else if (s.bX < 0) {
                 s.s2 += 1;
                 this.resetBall(false);
+                if (s.s2 >= (this.tournament?.winScore ?? 5)) {
+                    this.finish();
+                    return;
+                }
             }
         }
 
@@ -98,6 +102,10 @@ export class Room {
             } else if (s.bX + ballSize > width) {
                 s.s1 += 1;
                 this.resetBall(true);
+                if (s.s1 >= (this.tournament?.winScore ?? 5)) {
+                    this.finish();
+                    return;
+                }
             }
         }
     }
@@ -168,6 +176,34 @@ export class Room {
         if (this.running || this.starting) {
             this.stop();
             this.broadcast({ type: 'stopped', roomId: this.id });
+        }
+    }
+
+
+    finish() {
+        if (!this.running) return;
+        const s = this.state;
+        this.stop();
+
+        const [u1, u2] = this.clients;
+        const winner = s.s1 > s.s2 ? u1 : u2;
+        const loser  = s.s1 > s.s2 ? u2 : u1;
+
+        this.broadcast({
+            type: 'stopped',
+            roomId: this.id,
+            reason: 'score_limit',
+            winner,
+            score: { s1: s.s1, s2: s.s2 },
+        });
+
+        if (this.tournament && typeof this.tournament.handleMatchResult === 'function') {
+            this.tournament.handleMatchResult({
+                room: this,
+                winner,
+                loser,
+                score: { s1: s.s1, s2: s.s2 }
+            });
         }
     }
 }

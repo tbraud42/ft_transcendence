@@ -17,6 +17,8 @@ export function createTournament(token, id) {
         return pending.get(id);
     }
 
+    console.log(id)
+
     const p = getTournamentFromApi(token, id)
         .then((raw) => {
             const t = new Tournament(

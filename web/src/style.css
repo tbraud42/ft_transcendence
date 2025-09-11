@@ -36,3 +36,5 @@ html, body {
 body.pong-mode {
     overflow: hidden;
 }
+
+#pong { background:#0b1220; display:block }
