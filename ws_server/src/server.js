@@ -1,32 +1,32 @@
 import { WebSocketServer } from 'ws'
-import { Client } from './core/client/Client.js'
+import { registerHandlers } from './core/handlers/index.js'
+import { getTournamentManager } from './core/game/GamesManager.js'
 
-const JWT_SECRET = process.env.JWT_SECRET
-if (!JWT_SECRET) {
-    console.error('Missing JWT_SECRET env var')
-    process.exit(1)
-}
+const wss = new WebSocketServer({ port: process.env.PORT ? Number(process.env.PORT) : 3000 })
 
-const PORT = process.env.PORT || 3000
-
-function startHeartbeat(wss) {
-    setInterval(() => {
-        for (const ws of wss.clients) {
-            if (ws.isAlive === false) {
-                ws.terminate()
-                continue
-            }
-            ws.isAlive = false
-            ws.ping()
-        }
-    }, 30000)
-}
-
-const wss = new WebSocketServer({ port: PORT })
-
-wss.on('connection', (ws) => {
-    new Client(ws, wss)
+wss.on('connection', (socket) => {
+    socket.isAlive = true
+    socket.on('pong', () => (socket.isAlive = true))
+    registerHandlers(socket)
 })
 
-startHeartbeat(wss)
-console.log(`WS Pong server listening on ws://localhost:${PORT}`)
+setInterval(() => {
+    for (const client of wss.clients) {
+        if (!client.isAlive) {
+            try {
+                client.terminate() 
+            } catch {} ; continue 
+        }
+        client.isAlive = false
+        try {
+            client.ping() 
+        } catch {}
+    }
+}, 15000)
+
+process.on('SIGINT', () => {
+    try {
+        getTournamentManager().shutdown() 
+    } catch {}
+    process.exit(0)
+})

@@ -1,20 +1,36 @@
-import auth from './auth.js'
-import ping from './ping.js'
-import join from './join.js'
-import leave from './leave.js'
-import input from './input.js'
+import handleAuth from './auth.js'
+import handleJoin from './join.js'
+import handleInput from './input.js'
+import handleReady from './ready.js'
+import handlePing from './ping.js'
+import handleAddBot from './add_bot.js'
+import handleSnapshot from './snapshot.js'
 
-const registry = {
-    [auth.type]: auth,
-    [ping.type]: ping,
-    [join.type]: join,
-    [leave.type]: leave,
-    [input.type]: input,
+const HANDLERS = {
+    auth: handleAuth,
+    join: handleJoin,
+    input: handleInput,
+    ready: handleReady,
+    ping: handlePing,
+    add_bot: handleAddBot,
+    snapshot: handleSnapshot,
 }
 
-/**
- * @param {string} type
- */
-export function getHandler(type) {
-    return registry[type]
+export function registerHandlers(socket) {
+    socket.on('message', (raw) => {
+        let msg
+        try {
+            msg = JSON.parse(raw) 
+        } catch {
+            return 
+        }
+        const h = HANDLERS[msg?.type]
+        if (!h) {
+            return
+        }
+        h(msg, socket)
+    })
+    socket.on('close', () => {
+        socket.__client?.onDisconnect()
+    })
 }

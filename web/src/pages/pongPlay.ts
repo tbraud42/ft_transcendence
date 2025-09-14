@@ -1,17 +1,23 @@
-import { createPongCanvas } from '../games/pong/pongCanvas'
 import { PongGame } from '../games/pong/engine/PongGame'
 import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { GameMode, secondPlayerName, selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
 import { LocalPlayer } from '../games/pong/engine/players/LocalPlayer'
-import { getToken, getUsername } from '../utils/storage'
+import { getUsername } from '../utils/storage'
 import { AiPlayer } from '../games/pong/engine/players/AiPlayer'
-import { WSClient } from '../socket/WSClient'
 import { env } from '../utils/env'
 import {navigateTo} from "../utils/router";
 
 let currentGame: PongGame | null = null
 const PONG_WS_URL = env.PONG_WS_URL
+
+export function createPongCanvas(): HTMLCanvasElement { //TODO: use the same canvas as online
+    const canvas = document.createElement('canvas')
+    canvas.width = 640
+    canvas.height = 480
+    canvas.className = 'rounded-xl shadow-lg border border-white'
+    return canvas
+}
 
 export function renderPongPlay(roomId: string): HTMLElement {
     document.body.classList.add('pong-mode')
@@ -84,53 +90,7 @@ export function renderPongPlay(roomId: string): HTMLElement {
         return container
     }
 
-    const status = document.createElement('div')
-    status.className =
-        'absolute -top-10 left-1/2 -translate-x-1/2 text-sm opacity-90 bg-black/60 px-4 py-2 rounded-lg shadow-lg z-20 pointer-events-none'
-    status.textContent = i18n.t('pong_lobby_connecting')
-
-    canvasWrapper.appendChild(status)
-
-    const ws = new WSClient(`wss://${PONG_WS_URL}`, getToken())
-
-    ws.on('authed', () => {
-        status.textContent = i18n.t('pong_lobby_authed')
-        ws.join(roomId)
-    })
-
-    ws.on('starting', () => {
-        status.textContent = i18n.t('pong_lobby_starting')
-        launchCountdown(countdown, () => {
-            countdown.remove()
-            startTimer()
-        })
-    })
-
-    ws.on('joined', (_roomId: string, slot: 0 | 1) => {
-        const me = getUsername()
-        const opp = i18n.t('pong_opponent')
-
-        console.log('DEBUG')
-        status.style.transition = 'opacity 0.8s ease'
-        status.style.opacity = '0'
-        setTimeout(() => status.remove(), 800)
-
-        game = PongGame.createOnline(canvas, ws, slot, { me, opponent: opp }, selectedDifficulty, scoreLeft, scoreRight)
-        currentGame = game
-        game.start()
-    })
-
-    ws.on('close', () => {
-        status.textContent = i18n.t('pong_lobby_disconnected')
-        status.style.opacity = '1'
-    })
-
-    ws.on('error', () => {
-        status.textContent = i18n.t('pong_lobby_network_error')
-        status.style.opacity = '1'
-    })
-
-    ws.connect()
+    //TODO: support local games in tournament.ts?
     return container
 
     let startTime = Date.now()

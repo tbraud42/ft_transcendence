@@ -1,48 +1,47 @@
-import { getTournamentFromApi } from "../../api/game.js";
-import { Tournament } from "./Tournament.js";
+import { Tournament } from './Tournament.js'
+import { getTournamentFromApi } from '../../api/game.js'
 
-const tournaments = new Map();
-const pending = new Map();
+class TournamentManager {
+    constructor() {
+        this.tournaments = new Map()
+    }
 
-export function getTournament(id) {
-    return tournaments.get(id);
+    // token: JWT du client ; params: { id }
+    async getOrCreate(token, { id }) {
+        const key = String(id)
+        if (this.tournaments.has(key)) {
+            return this.tournaments.get(key)
+        }
+
+        let name = 'Tournament'
+        let maxPlayers = 2
+
+        try {
+            const data = await getTournamentFromApi(token, key)
+            if (data?.name) {
+                name = String(data.name)
+            }
+            if (data?.maxPlayers) {
+                maxPlayers = Number(data.maxPlayers)
+            }
+        } catch {
+            // keep defaults
+        }
+
+        const t = new Tournament({ id: key, name, maxPlayers })
+        this.tournaments.set(key, t)
+        return t
+    }
+
+    get(id) {
+        return this.tournaments.get(String(id)) || null
+    }
 }
 
-export function createTournament(token, id) {
-    if (tournaments.has(id)) {
-        return Promise.resolve(tournaments.get(id));
+let _mgr = null
+export function getTournamentManager() {
+    if (!_mgr) {
+        _mgr = new TournamentManager()
     }
-
-    if (pending.has(id)) {
-        return pending.get(id);
-    }
-
-    console.log(id)
-
-    const p = getTournamentFromApi(token, id)
-        .then((raw) => {
-            const t = new Tournament(
-                id,
-                raw.name,
-                raw.description,
-                raw.creator_id,
-                raw.difficulty,
-                raw.maxPlayers,
-                raw.isPrivate,
-                raw.status,
-                raw.created_at,
-                (emptyId) => {
-                    console.log(`Tournament ${emptyId} is empty, deleting...`);
-                    tournaments.delete(emptyId);
-                }
-            );
-            tournaments.set(id, t);
-            return t;
-        })
-        .finally(() => {
-            pending.delete(id);
-        });
-
-    pending.set(id, p);
-    return p;
+    return _mgr
 }

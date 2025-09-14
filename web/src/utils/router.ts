@@ -15,10 +15,14 @@ let currentCleanup: (() => void) | null = null
 
 export function router(): void {
     const app = document.getElementById('app')
-    if (!app) return
+    if (!app) {
+        return
+    }
 
     if (currentCleanup) {
-        try { currentCleanup() } catch {}
+        try {
+            currentCleanup() 
+        } catch {}
         currentCleanup = null
     }
 
@@ -30,7 +34,6 @@ export function router(): void {
     const param = routeParts[2] || ''
 
     app.innerHTML = ''
-    app.appendChild(createHeader())
 
     const main = document.createElement('main')
     main.className = 'flex-grow p-4'
@@ -65,36 +68,39 @@ export function router(): void {
         }
     } else {
         switch (mainPage) {
-            case 'pong': {
-                if (subPage === 'play') {
-                    main.appendChild(renderPongPlay(param))
-                } else if (subPage === 'lobby' && param) {
-                    currentCleanup = renderTournament(app, 'wss://' + PONG_WS_URL, getToken(), param)
-                } else {
-                    main.appendChild(renderHome())
-                    navigateTo('/', false)
-                }
-                break
-            }
-
-            case 'profile': {
-                main.appendChild(renderProfile(subPage))
-                break
-            }
-
-            case '': {
-                main.appendChild(renderHome())
-                break
-            }
-
-            default: {
+        case 'pong': {
+            if (subPage === 'play') {
+                main.appendChild(renderPongPlay(param))
+            } else if (subPage === 'lobby' && param) {
+                const view = renderTournament('wss://' + PONG_WS_URL, getToken(), param)
+                main.appendChild(view)
+                currentCleanup = view.close
+            } else {
                 main.appendChild(renderHome())
                 navigateTo('/', false)
-                break
             }
+            break
+        }
+
+        case 'profile': {
+            main.appendChild(renderProfile(subPage))
+            break
+        }
+
+        case '': {
+            main.appendChild(renderHome())
+            break
+        }
+
+        default: {
+            main.appendChild(renderHome())
+            navigateTo('/', false)
+            break
+        }
         }
     }
 
+    app.appendChild(createHeader())
     app.appendChild(main)
     app.appendChild(createFooter())
 }

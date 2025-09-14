@@ -1,4 +1,4 @@
-export default function handleInput(msg, socket) {
+export default function handleReady(msg, socket) {
     const c = socket.__client
     if (!c?.auth || !c.tournament) {
         return
@@ -7,5 +7,5 @@ export default function handleInput(msg, socket) {
     if (!room) {
         return
     }
-    room.applyInput(c.username, msg.input || {})
+    room.markReady(c.username)
 }

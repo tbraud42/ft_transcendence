@@ -1,24 +1,48 @@
-export default {
-    type: 'auth',
-    requiresAuth: false,
+import jwt from 'jsonwebtoken'
+import { Client } from '../client/Client.js'
 
-    /**
-     * @param {{ token?: string }} msg
-     * @param {import('../client/Client.js')} client
-     */
-    handle(msg, client) {
-        const token = typeof msg?.token === 'string' ? msg.token : null
-        if (!token) {
-            console.error('No token provided')
-            client.send({ type: 'error', error: 'token_required' })
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key'
+
+export default function handleAuth(msg, socket) {
+    const token = msg?.token
+    const username = msg?.username ? String(msg.username) : null
+    if (!token || !username) {
+        try {
+            socket.send(JSON.stringify({ type: 'error', error: 'auth_missing' })) 
+        } catch {}
+        try {
+            socket.close() 
+        } catch {}
+        return
+    }
+
+    try {
+        const payload = jwt.verify(token, JWT_SECRET)
+        // minimal claim check
+        if (payload?.username && payload.username !== username) {
+            try {
+                socket.send(JSON.stringify({ type: 'error', error: 'token_mismatch' })) 
+            } catch {}
+            try {
+                socket.close() 
+            } catch {}
             return
         }
+    } catch {
+        try {
+            socket.send(JSON.stringify({ type: 'error', error: 'auth_invalid' })) 
+        } catch {}
+        try {
+            socket.close() 
+        } catch {}
+        return
+    }
 
-        if (client.auth(token)) {
-            client.send({ type: 'auth_ok' })
-        } else {
-            client.send({ type: 'error', error: 'invalid_token' })
-            client.ws.close(4003, 'Invalid token')
-        }
-    },
+    if (!socket.__client) {
+        socket.__client = new Client(socket)
+    }
+    socket.__client.auth = true
+    socket.__client.username = username
+    socket.__client.token = token
+    socket.__client.send({ type: 'auth_ok', username })
 }

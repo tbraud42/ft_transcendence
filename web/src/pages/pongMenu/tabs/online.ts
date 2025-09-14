@@ -105,8 +105,8 @@ export function renderOnlineTab(): HTMLElement {
                 overlay.close()
                 createTournament(nameInput.value, difficulty.getValue() as keyof typeof Difficulty, parseInt(maxPlayers.getValue()))
                     .then(room => {
-                        setRoomId(room.lastInsertRowid)
-                        navigateTo(`/pong/lobby/${room.lastInsertRowid}`)
+                        setRoomId(room.id)
+                        navigateTo(`/pong/lobby/${room.id}`)
                     })
                     .catch(() => alert(i18n.t('pong_online_error_create')))
             }

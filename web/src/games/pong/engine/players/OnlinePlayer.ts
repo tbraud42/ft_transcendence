@@ -1,5 +1,5 @@
 import { PlayerBase } from './PlayerBase';
-import { WSClient } from '../../../../socket/WSClient';
+import { WsClient } from '../../../../api/socket/wsClient';
 
 /**
  * OnlinePlayer
@@ -8,7 +8,7 @@ import { WSClient } from '../../../../socket/WSClient';
  * - Does NOT perform local movement integration; the server is authoritative.
  */
 export class OnlinePlayer extends PlayerBase {
-    private ws: WSClient;
+    private ws: WsClient;
     private slot: 0 | 1;
     private remoteY: number = 0;
     private lastSentUp = false;
@@ -18,7 +18,7 @@ export class OnlinePlayer extends PlayerBase {
         isLeft: boolean,
         canvas: HTMLCanvasElement,
         name: string,
-        ws: WSClient,
+        ws: WsClient,
         slot: 0 | 1,
         speed: number = 5
     ) {

@@ -1,21 +1,20 @@
-const API_URL = process.env.API_URL;
+const API_URL = process.env.API_URL
 
 export async function getTournamentFromApi(token, id) {
-    const url = `http://${API_URL}/tournaments/${id}`;
-
+    const url = `http://${API_URL}/tournaments/${encodeURIComponent(id)}`
     const res = await fetch(url, {
+        method: 'GET',
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
         },
-    });
-
+    })
     if (!res.ok) {
-        let errText = "";
+        let text = ''
         try {
-            errText = await res.text(); 
+            text = await res.text() 
         } catch {}
-        throw new Error(`Failed to fetch tournament: ${res.status} ${errText}`);
+        throw new Error(`tournament_fetch_failed ${res.status} ${text}`)
     }
-    return res.json();
+    return res.json()
 }
