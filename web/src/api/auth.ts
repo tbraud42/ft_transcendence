@@ -37,6 +37,8 @@ async function requestAuth(
         throw new Error(i18n.t('login_error_user_not_found'))
     }
 
+    console.log(res)
+
     if (!res.ok) {
         throw new Error(i18n.t('login_error_failed'))
     }
@@ -48,7 +50,7 @@ async function requestAuth(
     return { token: data.token, twofa_required: false }
 }
 
-export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: string, username: string } } | null> {
+export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: number, username: string } } | null> {
     if (!code || !state) {
         return null
     }

@@ -1,4 +1,5 @@
 export type SrvSnapshot = {
+    creator: { id: number; username: string },
     type: 'snapshot',
     tournamentId: string,
     players: { username: string; connected: boolean; isBot: boolean }[],
@@ -61,8 +62,7 @@ export type ServerEvent =
     | SrvStart | SrvState | SrvStopped
     | SrvEliminated | SrvWinner | SrvError
 
-// Messages client -> serveur
-export type CliAuth    = { type: 'auth', token: string, username: string }
+export type CliAuth    = { type: 'auth', token: string }
 export type CliJoin    = { type: 'join', tournamentId: string }
 export type CliReady   = { type: 'ready' }
 export type CliInput   = { type: 'input', up?: boolean, down?: boolean }

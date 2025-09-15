@@ -1,5 +1,7 @@
+import type { Snapshot } from '../../components/bracket/types';
 import type { ClientEvent, ServerEvent } from './messageTypes'
-import { renderBracket } from '../../games/tournament/BracketTree'
+import { getUsername } from "../../utils/storage";
+import {renderBracket} from "../../components/bracket";
 
 export class WSClient {
     private ws: WebSocket | null = null
@@ -12,6 +14,7 @@ export class WSClient {
 
     connect(url: string, onOpen?: () => void) {
         this.ws = new WebSocket(url)
+        console.log(url)
         this.ws.onopen = () => {
             onOpen?.()
             for (const m of this.queued) {
@@ -32,7 +35,18 @@ export class WSClient {
 
             switch (msg.type) {
             case 'snapshot': {
-                renderBracket(this.host, msg)
+                console.log(msg)
+                renderBracket(this.host, msg as Snapshot, {
+                    myUsername: getUsername(),
+                    isOwner: msg.creator.username === getUsername(),
+                    onAddBot: (addr) => {
+                        // ws.send({ type: 'add_bot', addr })
+                    },
+                    onReady: (addr) => {
+                        // ws.send({ type: 'ready', addr })
+                    },
+                    isReady: (addr) => false // Return true if the player at addr is ready
+                })
                 break
             }
             default:

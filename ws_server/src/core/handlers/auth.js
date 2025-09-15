@@ -5,8 +5,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key'
 
 export default function handleAuth(msg, socket) {
     const token = msg?.token
-    const username = msg?.username ? String(msg.username) : null
-    if (!token || !username) {
+    if (!token) {
         try {
             socket.send(JSON.stringify({ type: 'error', error: 'auth_missing' })) 
         } catch {}
@@ -16,10 +15,11 @@ export default function handleAuth(msg, socket) {
         return
     }
 
+    let payload
+
     try {
-        const payload = jwt.verify(token, JWT_SECRET)
-        // minimal claim check
-        if (payload?.username && payload.username !== username) {
+        payload = jwt.verify(token, JWT_SECRET)
+        if (!payload?.id || !payload?.username) {
             try {
                 socket.send(JSON.stringify({ type: 'error', error: 'token_mismatch' })) 
             } catch {}
@@ -37,12 +37,12 @@ export default function handleAuth(msg, socket) {
         } catch {}
         return
     }
-
     if (!socket.__client) {
         socket.__client = new Client(socket)
     }
     socket.__client.auth = true
-    socket.__client.username = username
+    socket.__client.id = payload.id
+    socket.__client.username = payload.username
     socket.__client.token = token
-    socket.__client.send({ type: 'auth_ok', username })
+    socket.__client.send({ type: 'auth_ok', username: payload.username })
 }

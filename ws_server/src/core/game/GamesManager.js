@@ -7,14 +7,11 @@ class TournamentManager {
     }
 
     // token: JWT du client ; params: { id }
-    async getOrCreate(token, { id }) {
+    async getOrCreate(token, { id, name, maxPlayers, creator }) {
         const key = String(id)
         if (this.tournaments.has(key)) {
             return this.tournaments.get(key)
         }
-
-        let name = 'Tournament'
-        let maxPlayers = 2
 
         try {
             const data = await getTournamentFromApi(token, key)
@@ -28,7 +25,7 @@ class TournamentManager {
             // keep defaults
         }
 
-        const t = new Tournament({ id: key, name, maxPlayers })
+        const t = new Tournament({ id: key, name, maxPlayers, creator })
         this.tournaments.set(key, t)
         return t
     }

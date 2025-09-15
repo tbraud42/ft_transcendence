@@ -11,8 +11,8 @@ export default async function handleJoin(msg, socket) {
     const maxPlayers = Number(msg.maxPlayers || 2)
 
     const tm = getTournamentManager()
-    const t = await tm.getOrCreate(c.token, { id, name, maxPlayers })
+    const t = await tm.getOrCreate(c.token, { id, name, maxPlayers, creator: { id: c.id, username: c.username } })
 
     c.attachToTournament?.(t)
-    t.addPlayer(c.username, c)
+    t.addPlayer(c)
 }
