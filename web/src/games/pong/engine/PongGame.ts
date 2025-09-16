@@ -7,7 +7,7 @@ import { OnlinePlayer } from './players/OnlinePlayer'
 import { getUsername } from '../../../utils/storage'
 import { Difficulty, secondPlayerName } from '../pongState'
 import i18n from '../../../utils/lang/i18n'
-import { WsClient, ServerState } from '../../../api/socket/wsClient'
+import { WsClient, ServerState } from '../../../api/socket/WSClient'
 import {navigateTo} from "../../../utils/router";
 
 export class PongGame {

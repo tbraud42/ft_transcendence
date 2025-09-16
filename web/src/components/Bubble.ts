@@ -1,4 +1,4 @@
-import {ClientStatus} from "./bracket/types";
+import {ClientStatus} from "../api/socket/types";
 
 export function bubble(stage: HTMLElement, x: number, y: number, w: number, h: number) {
     const el = document.createElement('div')

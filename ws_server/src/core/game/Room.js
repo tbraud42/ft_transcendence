@@ -43,50 +43,6 @@ export class Match {
         }
     }
 
-    beginReadyCheck() {
-        this.tournament.broadcastAll({
-            type: 'ready_check',
-            roomId: this.id,
-            players: [this.p1, this.p2],
-            timeoutMs: this.readyTimeoutMs
-        })
-
-        // bots auto-ready
-        for (const u of [this.p1, this.p2]) {
-            const part = this.tournament.participants.get(u)
-            if (part?.isBot) {
-                this.markReady(u)
-            }
-        }
-
-        // humans not ready -> replace by bot after timeout (before start)
-        this.readyTimer = setTimeout(() => {
-            for (const u of [this.p1, this.p2]) {
-                if (!this.ready.get(u)) {
-                    const botName = `Bot_${u}`
-                    this.tournament.participants.set(botName, { username: botName, connected: true, isBot: true, client: null })
-                    this.tournament.participants.delete(u)
-                    this.tournament.alive.delete(u)
-
-                    if (this.p1 === u) {
-                        this.p1 = botName;
-                    } else {
-                        this.p2 = botName
-                    }
-                    this.ready.set(botName, true)
-                    this.bots[botName] = new Bot(botName)
-
-                    // keep state in sync for bot slot detection
-                    this.state.players = [this.p1, this.p2]
-
-                    this.tournament.broadcastAll({ type: 'player_joined', username: botName })
-                    this.tournament.broadcastAll({ type: 'eliminated', tournamentId: this.tournament.id, user: u })
-                }
-            }
-            this.tryStart()
-        }, this.readyTimeoutMs)
-    }
-
     markReady(username) {
         if (!this.ready.has(username)) {
             return

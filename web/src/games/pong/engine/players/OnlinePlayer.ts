@@ -1,5 +1,5 @@
 import { PlayerBase } from './PlayerBase';
-import { WsClient } from '../../../../api/socket/wsClient';
+import { WsClient } from '../../../../api/socket/WSClient';
 
 /**
  * OnlinePlayer

@@ -1,4 +1,5 @@
-import { WSClient } from '../api/socket/wsClient'
+import { WSClient } from '../api/socket/WSClient'
+import {CliMessageType} from "../api/socket/protocol";
 
 export type TournamentElement = HTMLElement & { close: () => void }
 
@@ -15,8 +16,8 @@ export function renderTournament(
 
     const ws = new WSClient(page)
     ws.connect(wsUrl, () => {
-        ws.send({ type: 'auth', token } as any)
-        ws.send({ type: 'join', tournamentId } as any)
+        ws.send({ type: CliMessageType.AUTH, token } as any)
+        ws.send({ type: CliMessageType.JOIN, tournamentId } as any)
     })
 
     page.close = () => ws.close()

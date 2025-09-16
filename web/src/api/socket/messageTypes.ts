@@ -1,72 +1,96 @@
-export type SrvSnapshot = {
-    creator: { id: number; username: string },
-    type: 'snapshot',
-    tournamentId: string,
-    players: { username: string; connected: boolean; isBot: boolean }[],
-    matches: {
-        id: string; round: number; p1: string; p2: string;
-        status: 'waiting'|'ready_check'|'running'|'finished';
-        winner?: string|null; score?: Record<string, number>|null;
-    }[]
-}
+import {LeafAddress, Match, Player} from './types';
+import {CliMessageType, SrvMessageType} from "./protocol";
 
-export type SrvPlayerJoined = { type: 'player_joined', username: string }
-export type SrvPlayerLeft   = { type: 'player_left', username: string }
+// ----- Serveur -> Client
+export type SrvSnapshot = {
+    type: typeof SrvMessageType.SNAPSHOT;
+    creator: string;
+    matches: Match[];
+    maxPlayers: number;
+    name: string;
+    players: Player[];
+    tournamentId: number;
+};
+
+export type SrvPlayerJoined = {
+    type: typeof SrvMessageType.PLAYER_JOINED;
+    username: string;
+};
+
+export type SrvPlayerLeft = {
+    type: typeof SrvMessageType.PLAYER_LEFT;
+    username: string;
+};
 
 export type SrvMatchAssigned = {
-    type: 'match_assigned',
-    tournamentId?: string,
-    maxPlayers?: number,
-    match: { id: string; round: number; p1: string; p2: string; status: 'ready_check'|'waiting'|'running'|'finished' }
-}
-
-export type SrvReadyCheck = {
-    type: 'ready_check',
-    roomId: string,
-    players: [string, string],
-    timeoutMs: number
-}
+    type: typeof SrvMessageType.MATCH_ASSIGNED;
+    tournamentId: number;
+    maxPlayers: number;
+    match: Match;
+};
 
 export type SrvPlayerReady = {
-    type: 'player_ready',
-    roomId: string,
-    username: string
-}
+    type: typeof SrvMessageType.PLAYER_READY;
+    roomId: string;
+    username: string;
+};
 
 export type SrvStart = {
-    type: 'start',
-    roomId: string,
-    clients: { username: string; slot: 0|1 }[]
-}
+    type: typeof SrvMessageType.MATCH_START;
+    roomId: string;
+    clients: { username: string; slot: 0 | 1 }[];
+};
 
 export type SrvState = {
-    type: 'state',
-    roomId: string,
-    state: any
-}
+    type: typeof SrvMessageType.MATCH_STATE;
+    roomId: string;
+    state: any;
+};
 
 export type SrvStopped = {
-    type: 'stopped',
-    roomId: string,
-    winner: string,
-    score?: Record<string, number>|null
-}
+    type: typeof SrvMessageType.STOPPED;
+    roomId: string;
+    winner: string;
+    score?: Record<string, number> | null;
+};
 
-export type SrvEliminated = { type: 'eliminated', tournamentId: string, user: string }
-export type SrvWinner     = { type: 'tournament_winner', tournamentId: string, winner: string }
-export type SrvError      = { type: 'error', error: string }
+export type SrvEliminated = {
+    type: typeof SrvMessageType.PLAYER_ELIMINATED;
+    tournamentId: number;
+    user: string;
+};
+
+export type SrvWinner = {
+    type: typeof SrvMessageType.TOURNAMENT_WINNER;
+    tournamentId: number;
+    winner: string;
+};
+
+export type SrvError = {
+    type: typeof SrvMessageType.ERROR;
+    error: string;
+};
 
 export type ServerEvent =
-    | SrvSnapshot | SrvPlayerJoined | SrvPlayerLeft
-    | SrvMatchAssigned | SrvReadyCheck | SrvPlayerReady
-    | SrvStart | SrvState | SrvStopped
-    | SrvEliminated | SrvWinner | SrvError
+    | SrvSnapshot
+    | SrvPlayerJoined
+    | SrvPlayerLeft
+    | SrvMatchAssigned
+    | SrvPlayerReady
+    | SrvStart
+    | SrvState
+    | SrvStopped
+    | SrvEliminated
+    | SrvWinner
+    | SrvError;
 
-export type CliAuth    = { type: 'auth', token: string }
-export type CliJoin    = { type: 'join', tournamentId: string }
-export type CliReady   = { type: 'ready' }
-export type CliInput   = { type: 'input', up?: boolean, down?: boolean }
-export type CliAddBot  = { type: 'add_bot', tournamentId: string, username?: string }
-export type CliSnapshot= { type: 'snapshot', tournamentId: string }
+// ----- Client -> Serveur
+export type CliAuth = { type: typeof CliMessageType.AUTH; token: string };
+export type CliJoin = { type: typeof CliMessageType.JOIN; tournamentId: number };
+export type CliReady = { type: typeof CliMessageType.READY, ready: boolean };
+export type CliInput = { type: typeof CliMessageType.INPUT; up?: boolean; down?: boolean };
+export type CliAddBot = { type: typeof CliMessageType.ADD_BOT; addr: LeafAddress };
+export type CliRemoveBot = { type: typeof CliMessageType.REMOVE_BOT; addr: LeafAddress };
+export type CliSnapshot = { type: typeof CliMessageType.SNAPSHOT; tournamentId: number };
 
-export type ClientEvent = CliAuth | CliJoin | CliReady | CliInput | CliAddBot | CliSnapshot
+export type ClientEvent = CliAuth | CliJoin | CliReady | CliInput | CliAddBot | CliRemoveBot | CliSnapshot;

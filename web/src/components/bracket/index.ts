@@ -1,8 +1,9 @@
-import type { Snapshot, RenderOptions, Player } from './types';
+import type { RenderOptions, Player } from '../../api/socket/types';
 import { buildLevels, mapRound1, pow2ceil, decorateLeaves } from './layout';
 import { createSvg, draw } from './svg';
+import { SrvSnapshot } from "../../api/socket/messageTypes";
 
-export function renderBracket(host: HTMLElement, snap: Snapshot, opts: RenderOptions = {}) {
+export function renderBracket(host: HTMLElement, snap: SrvSnapshot, opts: RenderOptions = {}) {
     host.innerHTML = '';
 
     const outer = div('w-full flex justify-center');

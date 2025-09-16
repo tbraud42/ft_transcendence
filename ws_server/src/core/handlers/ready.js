@@ -3,9 +3,7 @@ export default function handleReady(msg, socket) {
     if (!c?.auth || !c.tournament) {
         return
     }
-    const room = c.tournament.findRoomByPlayer(c.username)
-    if (!room) {
-        return
-    }
-    room.markReady(c.username)
+    const ready = msg?.ready === true
+    console.log(ready)
+    c.tournament.setReady(c.username, ready)
 }
