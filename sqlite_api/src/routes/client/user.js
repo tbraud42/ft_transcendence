@@ -45,6 +45,10 @@ export default async function (fastify, options) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
+    if (fastify.usernameEndsWith42(req.user.username)) {
+      return reply.code(400).send({ error: 'cannot change 42 auth password' });
+    }
+
     if (!await fastify.verifyPassword(oldPassword, req.user.password_hash)) {
       return reply.code(403).send({ error: 'Access denied' });
     }
@@ -81,7 +85,7 @@ export default async function (fastify, options) {
 
   fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth, fastify.allowSelfOrAdmin()]}, async (req, reply) => {
     const targetId = Number(req.params.id);
-    const tournaments = await fastify.db.prepare(`SELECT * FROM tournament_participants WHERE user_id = ?`).all(targetId); // facoriser dans manage.js ?
+    const tournaments = await fastify.db.prepare(`SELECT * FROM tournament_participants WHERE user_id = ?`).all(targetId);
 
     reply.send(tournaments);
   });

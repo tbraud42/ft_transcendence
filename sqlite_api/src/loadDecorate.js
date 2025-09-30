@@ -7,27 +7,33 @@ import {
   deleteUser,
   isAdmin,
   isAdminOrCreator,
-  showAllData
+  showAllData,
+  updateTimeStamp
 } from './database/manage.js';
 
 import {
   getAllTournaments,
   getTournamentById,
+  getTournamentsByStatus,
   getTournamentByName,
   createTournament,
-  changeTournamentStatus,
-  getTournamentsByStatus,
   updateTournament,
+  changeTournamentStatus,
+  setTournamentWinner,
   deleteTournament,
-  getParticipantsByTournamentId,
-  addParticipant,
-  updateParticipant,
-  deleteParticipant
+  insertStatGame,
+  userExists,
+  tournamentExists,
+  getStat,
+  topWinRate,
+  topLoseRate,
+  topTotalPlayTime,
+  topTournamentsCreated,
+  topTournamentsWon
 } from './database/tournaments.js';
 
 import {
   generateToken,
-  requireRole,
   authenticate,
   verifyPassword,
   allowSelfOrAdmin,
@@ -53,22 +59,29 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
+  fastify.decorate('updateTimeStamp', updateTimeStamp);
   // --- Tournament ---
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
+  fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
   fastify.decorate('getTournamentByName', getTournamentByName);
   fastify.decorate('createTournament', createTournament);
-  fastify.decorate('changeTournamentStatus', changeTournamentStatus);
-  fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
   fastify.decorate('updateTournament', updateTournament);
+  fastify.decorate('changeTournamentStatus', changeTournamentStatus);
+  fastify.decorate('setTournamentWinner', setTournamentWinner);
   fastify.decorate('deleteTournament', deleteTournament);
-  fastify.decorate('getParticipantsByTournamentId', getParticipantsByTournamentId);
-  fastify.decorate('addParticipant', addParticipant);
-  fastify.decorate('updateParticipant', updateParticipant);
-  fastify.decorate('deleteParticipant', deleteParticipant);
+  fastify.decorate('insertStatGame', insertStatGame);
+  fastify.decorate('userExists', userExists);
+  fastify.decorate('tournamentExists', tournamentExists);
+
+  fastify.decorate('getStat', getStat);
+  fastify.decorate('topWinRate', topWinRate);
+  fastify.decorate('topLoseRate', topLoseRate);
+  fastify.decorate('topTotalPlayTime', topTotalPlayTime);
+  fastify.decorate('topTournamentsCreated', topTournamentsCreated);
+  fastify.decorate('topTournamentsWon', topTournamentsWon);
   // --- Security ---
   fastify.decorate('generateToken', generateToken);
-  fastify.decorate('requireRole', requireRole);
   fastify.decorate('auth', authenticate(fastify));
   fastify.decorate('auth2faPending', authenticate(fastify, { allow2FAPending: true }));
   fastify.decorate('verifyPassword', verifyPassword);
@@ -76,8 +89,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
-
   // --- Stats ---
-  fastify.decorate('stat', { request: 0, login: 0, signup: 0 });
-  fastify.addHook('onRequest', (req, reply, done) => { fastify.stat.request++; done(); });
+  fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
+  fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });
 }

@@ -1,119 +1,314 @@
 // database/manage.js
 import bcrypt from 'bcrypt';
+import crypto from 'node:crypto';
 
-export async function createUser(db, { username, password }) {
+// CREATE
+export async function createUser(db, { username, password, avatar } = {}) {
   if (!password || typeof password !== 'string') {
-    throw new Error("Password is required and must be a string");
+    throw new Error('Password is required and must be a string');
+  }
+  if (typeof username !== 'string' || username.trim() === '') {
+    throw new Error('Invalid username');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
 
-  const info = db.prepare(`INSERT INTO users (username, password_hash) VALUES (?, ?)`).run(username, hashedPassword);
+  const info = db.prepare(`INSERT INTO users (username, password_hash, avatar) VALUES (?, ?, ?)`).run(username.trim(), hashedPassword, avatar ?? null);
 
   return {
     success: true,
-    userId: info.lastInsertRowid,
-    username,
-    role: 'user'
+    userId: Number(info.lastInsertRowid),
+    username: username.trim(),
+    role: 'user',
   };
 }
 
 export function showUserByUsername(db, username) {
+  if (typeof username !== 'string') return null;
   const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-
   return user || null;
 }
 
 export function showUserById(db, id) {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
-
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) return null;
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(uid);
   return user || null;
 }
 
 export async function updateUser(db, id, password) {
-  const userId = Number(id);
-  if (!Number.isFinite(userId)) {
-    throw new Error('Invalid user id');
-  }
-
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) throw new Error('Invalid user id');
   if (typeof password !== 'string' || password.length === 0) {
     throw new Error('Password is required and must be a string');
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10); // 10 = saltRounds
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const info = db.prepare(`UPDATE users SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(hashedPassword, uid);
 
-  const info = db.prepare(`UPDATE users SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(hashedPassword, userId);
-
-  if (info.changes === 0) {
-    throw new Error('User not found');
-  }
-
-  return { success: true, id: userId };
+  if (info.changes === 0) throw new Error('User not found');
+  return { success: true, id: uid };
 }
 
 export async function deleteUser(db, id) {
-  const result = db.prepare('DELETE FROM users WHERE id = ?').run(id);
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) return null;
 
-  return { success: true, id };
+  const dummy = await bcrypt.hash(crypto.randomUUID(), 12);
+
+  const info = db.prepare(`
+    UPDATE users
+    SET
+      username         = 'deleted_' || id,
+      password_hash    = ?,
+      role             = 'user',
+      twofa_secret     = NULL,
+      is_twofa_enabled = 0,
+      avatar           = NULL,
+      last_timestamp   = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).run(dummy, uid);
+
+  return info.changes > 0 ? { success: true, id: uid, anonymized: true } : null;
 }
 
 export function isAdmin(db, userId) {
-  const row = db.prepare('SELECT role FROM users WHERE id = ?').get(userId);
-
-  return row?.role?.toLowerCase?.() === 'admin';
+  const uid = Number(userId);
+  if (!Number.isFinite(uid)) return false;
+  const row = db.prepare('SELECT role FROM users WHERE id = ?').get(uid);
+  return row?.role?.toLowerCase() === 'admin';
 }
 
-export async function isAdminOrCreator(fastify, tournamentId, userId) {
-  const resultAdmin = await fastify.db.prepare(`SELECT role FROM users WHERE id = ?`).get([userId]);
+export function isAdminOrCreator(fastify, tournamentId, userId) {
+  const tid = Number(tournamentId);
+  const uid = Number(userId);
+  if (!Number.isFinite(tid) || !Number.isFinite(uid)) return false;
 
-  if (resultAdmin && resultAdmin.role === 'admin') {
-    return true;
-  }
+  const adminRow = fastify.db.prepare('SELECT role FROM users WHERE id = ?').get(uid);
+  if (adminRow?.role?.toLowerCase() === 'admin') return true;
 
-  const resultUser = await fastify.db.prepare(`SELECT creator_id FROM tournaments WHERE id = ?`).get([tournamentId]);
-
-  if (resultUser && resultUser.creator_id === userId) {
-    return true;
-  }
-
-  return false;
+  const t = fastify.db.prepare('SELECT creator_id FROM tournaments WHERE id = ?').get(tid);
+  return !!t && Number(t.creator_id) === uid;
 }
 
 export async function crontab(fastify) {
-  fastify.db.exec('BEGIN');
+  const users = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
 
-  try {
-    const inactiveUsers = fastify.db.prepare(`SELECT id, username, last_timestamp FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
-
-    const anonymizeStmt = fastify.db.prepare(`UPDATE users SET username = 'deleted_' || id, password_hash = hex(randomblob(32)), role = 'user' WHERE id = ?`);
-
-    for (const user of inactiveUsers) {
-      anonymizeStmt.run(user.id);
-      fastify.log.info(`User ${user.username} (ID: ${user.id}) anonymized due to inactivity (RGPD)`);
-    }
-
-    fastify.db.exec('COMMIT');
-  } catch (err) {
-    fastify.db.exec('ROLLBACK');
-    fastify.log.error({ err }, 'RGPD anonymization failed');
-    throw err;
+  for (const { id } of users) {
+    await fastify.deleteUser(fastify.db, id);
+    fastify.log.info({ id }, 'User anonymized due to inactivity (RGPD)');
   }
 }
 
-export async function showAllData(db) {
+export function showAllData(db) {
   const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
 
   for (const { name } of tables) {
     console.log(`\nTable: ${name}`);
-
     const result = db.prepare(`SELECT * FROM ${name}`).all();
-
-    if (result.length === 0) {
-      console.log('empty db');
-    } else {
-      for (const row of result) {
-        console.log(row);
-      }
-    }
+    if (result.length === 0) console.log('empty db');
+    else for (const row of result) console.log(row);
   }
 }
+
+export function updateTimeStamp(db, id) {
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) return false;
+
+  const result = db.prepare(` UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`);
+  const info = result.run(uid);
+  return info.changes > 0;
+}
+
+
+// new
+// db/api.js
+// Utilise better-sqlite3
+// Toutes les fonctions sont synchrones (c'est SQLite), donc simples à tester.
+
+function normalizePair(a, b) {
+  const x = Number(a), y = Number(b);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('INVALID_USER_ID');
+  if (x === y) throw new Error('CANNOT_FRIEND_SELF');
+  return x < y ? [x, y] : [y, x];
+}
+
+/* -------------------- AMIS -------------------- */
+
+export function addFriend(db, userA, userB) {
+  const [u, f] = normalizePair(userA, userB);
+
+  const exists = db.prepare(`SELECT id FROM users WHERE id IN (?, ?)`).all(u, f);
+  if (exists.length !== 2) throw new Error('UNKNOWN_USER');
+
+  const alreadyFriend = db.prepare(`SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?`).get(u, f);
+  if (alreadyFriend) throw new Error('ALREADY_FRIEND');
+
+  try {
+    db.prepare(`INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)`).run(u, f);
+    return { user_id: u, friend_id: f };
+  } catch (e) {
+    if (String(e.message).includes('FRIEND_LIMIT')) throw new Error('FRIEND_LIMIT');
+    throw e;
+  }
+}
+
+export function removeFriend(db, userA, userB) {
+  const [u, f] = normalizePair(userA, userB);
+  const info = db.prepare(`DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?`).run(u, f);
+  return info.changes > 0;
+}
+
+export function listFriends(db, userId) {
+  const uid = Number(userId);
+  if (!Number.isFinite(uid)) return [];
+
+  // Deux sens : soit uid=user_id, soit uid=friend_id (on mappe pour récupérer "l’autre")
+  const sql = `
+    SELECT u.id, u.username, uf.created_at AS since
+    FROM user_friends uf
+    JOIN users u ON u.id = CASE WHEN uf.user_id = ? THEN uf.friend_id ELSE uf.user_id END
+    WHERE uf.user_id = ? OR uf.friend_id = ?
+    ORDER BY u.username COLLATE NOCASE
+  `;
+  return db.prepare(sql).all(uid, uid, uid);
+}
+
+/* -------------------- TOURNOIS : membres & stats -------------------- */
+
+export function listTournamentMembers(db, tournamentId) {
+  const tid = Number(tournamentId);
+  if (!Number.isFinite(tid)) return [];
+  const sql = `
+    SELECT DISTINCT u.id, u.username
+    FROM games g
+    JOIN users u ON u.id IN (g.player1_id, g.player2_id)
+    WHERE g.tournament_id = ?
+    ORDER BY u.username COLLATE NOCASE
+  `;
+  return db.prepare(sql).all(tid);
+}
+
+export function listTournamentMembersWithStats(db, tournamentId) {
+  const tid = Number(tournamentId);
+  if (!Number.isFinite(tid)) return [];
+
+  // Agrégation en une passe : on empile via UNION ALL côté lignes joueur/match puis on agrège
+  const sql = `
+    WITH participants AS (
+      SELECT g.tournament_id, g.id AS game_id,
+             g.player1_id AS user_id,
+             CASE WHEN g.winner_id = g.player1_id THEN 1 ELSE 0 END AS win,
+             CASE WHEN g.winner_id IS NOT NULL AND g.winner_id != g.player1_id THEN 1 ELSE 0 END AS loss,
+             g.duration_sec AS seconds
+      FROM games g WHERE g.tournament_id = ?
+      UNION ALL
+      SELECT g.tournament_id, g.id,
+             g.player2_id,
+             CASE WHEN g.winner_id = g.player2_id THEN 1 ELSE 0 END,
+             CASE WHEN g.winner_id IS NOT NULL AND g.winner_id != g.player2_id THEN 1 ELSE 0 END,
+             g.duration_sec
+      FROM games g WHERE g.tournament_id = ?
+    )
+    SELECT u.id, u.username,
+           SUM(win)   AS wins,
+           SUM(loss)  AS losses,
+           COUNT(*)   AS matches,
+           COALESCE(SUM(seconds), 0) AS seconds_total
+    FROM participants p
+    JOIN users u ON u.id = p.user_id
+    GROUP BY u.id, u.username
+    ORDER BY wins DESC, losses ASC, u.username COLLATE NOCASE`;
+
+  return db.prepare(sql).all(tid, tid);
+}
+
+export function getTournamentStandings(db, tournamentId) {
+  return listTournamentMembersWithStats(db, tournamentId);
+}
+
+/* -------------------- RÉSULTATS : insertion de matchs -------------------- */
+
+export function addTournamentResults(db, tournamentId, games) {
+  const tid = Number(tournamentId);
+  if (!Number.isFinite(tid)) throw new Error('INVALID_TOURNAMENT');
+  const t = db.prepare(`SELECT id FROM tournaments WHERE id = ?`).get(tid);
+  if (!t) throw new Error('INVALID_TOURNAMENT');
+
+  if (!Array.isArray(games) || games.length === 0) return { inserted: 0 };
+
+  const insGame = db.prepare(`
+    INSERT INTO games
+      (tournament_id, player1_id, player2_id, winner_id, started_at, duration_sec, p1_score, p2_score)
+    VALUES (?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)
+  `);
+  const updUser = db.prepare(`
+    UPDATE users
+      SET total_games = total_games + 1,
+          total_seconds = total_seconds + ?
+    WHERE id = ?
+  `);
+
+  const userExists = db.prepare(`SELECT 1 FROM users WHERE id = ?`);
+
+  const tx = db.transaction((rows) => {
+    let count = 0;
+    for (const g of rows) {
+      const p1 = Number(g?.player1_id);
+      const p2 = Number(g?.player2_id);
+      const s1 = Number(g?.p1_score);
+      const s2 = Number(g?.p2_score);
+      const dur = Number(g?.duration_sec);
+      if (![p1, p2, s1, s2, dur].every(Number.isFinite) || dur < 0) {
+        throw new Error('INVALID_GAME_ROW');
+      }
+      if (!userExists.get(p1) || !userExists.get(p2)) {
+        throw new Error('UNKNOWN_USER');
+      }
+      const winner_id = (s1 === s2) ? null : (s1 > s2 ? p1 : p2);
+
+      insGame.run(tid, p1, p2, winner_id, g.started_at ?? null, dur, s1, s2);
+      updUser.run(dur, p1);
+      updUser.run(dur, p2);
+      count++;
+    }
+    return count;
+  });
+
+  const inserted = tx(games);
+  return { inserted };
+}
+
+export function setTournamentWinner(db, tournamentId, winnerUserId) {
+  const tid = Number(tournamentId), wid = Number(winnerUserId);
+  if (!Number.isFinite(tid) || !Number.isFinite(wid)) return null;
+  const okU = db.prepare(`SELECT 1 FROM users WHERE id = ?`).get(wid);
+  const okT = db.prepare(`SELECT 1 FROM tournaments WHERE id = ?`).get(tid);
+  if (!okU || !okT) return null;
+  return db.prepare(` UPDATE tournaments SET winner = ?, status = 2 WHERE id = ? RETURNING id, name, status, winner`).get(wid, tid);
+}
+
+export function changeTournamentStatus(db, tournamentId, nextStatus = null) {
+  const tid = Number(tournamentId);
+  if (!Number.isFinite(tid)) return null;
+  const cur = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(tid);
+  if (!cur) return null;
+  const ns = (nextStatus === 0 || nextStatus === 1 || nextStatus === 2)
+    ? nextStatus
+    : (cur.status === 0 ? 1 : 2);
+  return db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(ns, tid);
+}
+
+/* -------------------- exports -------------------- */
+export default {
+  addFriend,
+  removeFriend,
+  listFriends,
+  listTournamentMembers,
+  listTournamentMembersWithStats,
+  getTournamentStandings,
+  addTournamentResults,
+  setTournamentWinner,
+  changeTournamentStatus,
+};
+
