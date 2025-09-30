@@ -1,16 +1,16 @@
 // routes/auth/2fa.js
-// | Method   | Route              | Description                            | Access           |
-// | -------- | ------------------ | -------------------------------------- | ---------------- |
-// | `POST`   | `/auth/2fa/setup`  | create QR code auth                    | Public           |
-// | `POST`   | `/auth/2fa/verif`  | generate JWT after auth                | Public           |
+// | Method   | Route              | Description                 | Access           |
+// | -------- | ------------------ | --------------------------- | ---------------- |
+// | `POST`   | `/auth/2fa/setup`  | create QR code auth         | Authenticated    |
+// | `POST`   | `/auth/2fa/verif`  | generate JWT after auth     | Authenticated    |
 
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 
 export default async function (fastify, options) {
   fastify.post('/setup', {preHandler: [fastify.auth]}, async (req, reply) => {
-    const ftUser = await fastify.usernameEndsWith42(req.user.username);
-    if (ftUser) {
+
+    if (fastify.usernameEndsWith42(req.user.username)) {
       return reply.code(400).send({ error: '2FA not allowed for 42 users' });
     }
 
@@ -42,11 +42,11 @@ export default async function (fastify, options) {
     const isValid = speakeasy.totp.verify({
       secret: req.user.twofa_secret,
       encoding: 'base32',
-      token: req.body.token // token must be a string
+      token: req.body.token // string
     });
 
     if (isValid) {
-      await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(req.user.id);
+      fastify.updateTimeStamp(fastify.db, req.user.id);
       const fullToken = fastify.generateToken(
         {
           id: req.user.id,

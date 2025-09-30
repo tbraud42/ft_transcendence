@@ -1,38 +1,38 @@
-# services:
-#   nginx:
-#     environment:
-#       WEB_PORT: 5173
-#     image: ft_transcendence-nginx:dev
+services:
+  nginx:
+    environment:
+      WEB_PORT: 5173
+    image: ft_transcendence-nginx:dev
 
-#   web:
-#     build:
-#       context: ./web
-#       dockerfile: Dockerfile.dev
-#     image: ft_transcendence-web:dev
-#     hostname: web
-#     volumes:
-#       - ./web:/app
-#       - /app/node_modules
-#     environment:
-#       - NODE_ENV=development
-#     expose:
-#       - "5173"
-#     healthcheck:
-#       test: [ "CMD", "curl", "-i", "http://localhost:5173" ]
-#       interval: 5s
-#       timeout: 3s
-#       retries: 3
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    image: ft_transcendence-web:dev
+    hostname: web
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    expose:
+      - "5173"
+    healthcheck:
+      test: [ "CMD", "curl", "-i", "http://localhost:5173" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
 
-#   sqlite_api:
-#     volumes:
-#       - ./sqlite_api/src:/app/src
-#     environment:
-#       - NODE_ENV=development
-#     command: npm run dev
+  sqlite_api:
+    volumes:
+      - ./sqlite_api/src:/app/src
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
 
-#   ws_server:
-#     volumes:
-#       - ./ws_server/src:/app/src
-#     environment:
-#       - NODE_ENV=development
-#     command: npm run dev
+  ws_server:
+    volumes:
+      - ./ws_server/src:/app/src
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
