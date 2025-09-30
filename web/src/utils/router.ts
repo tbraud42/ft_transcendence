@@ -13,6 +13,36 @@ const PONG_WS_URL = env.PONG_WS_URL
 
 let currentCleanup: (() => void) | null = null
 
+function notLoggedIn(main: HTMLElement, mainPage: string, subPage: string): void {
+    if (mainPage === 'auth' && subPage === '42') {
+        const query = window.location.search
+        const params = new URLSearchParams(query)
+
+        const code = params.get('code')
+        const state = params.get('state')
+
+        if (code && state) {
+            request42Auth(code, state)
+                .then((res) => {
+                    if (!res || !res.token || !res.user || !res.user.username) {
+                        navigateTo('/login')
+                        return
+                    }
+                    login(res.token, res.user.username)
+                    navigateTo('/home')
+                })
+                .catch(() => {
+                    navigateTo('/login')
+                })
+        } else {
+            console.error('42 login failed: missing token or username in callback')
+            navigateTo('/login')
+        }
+    } else {
+        main.appendChild(renderAuth(mainPage as 'login' | 'signup' | '2fa'))
+    }
+}
+
 export function router(): void {
     const app = document.getElementById('app')
     if (!app) {
@@ -39,33 +69,7 @@ export function router(): void {
     main.className = 'flex-grow p-4'
 
     if (!isLoggedIn()) {
-        if (mainPage === 'auth' && subPage === '42') {
-            const query = window.location.search
-            const params = new URLSearchParams(query)
-
-            const code = params.get('code')
-            const state = params.get('state')
-
-            if (code && state) {
-                request42Auth(code, state)
-                    .then((res) => {
-                        if (!res || !res.token || !res.user || !res.user.username) {
-                            navigateTo('/login')
-                            return
-                        }
-                        login(res.token, res.user.username)
-                        navigateTo('/home')
-                    })
-                    .catch(() => {
-                        navigateTo('/login')
-                    })
-            } else {
-                console.error('42 login failed: missing token or username in callback')
-                navigateTo('/login')
-            }
-        } else {
-            main.appendChild(renderAuth(mainPage as 'login' | 'signup' | '2fa'))
-        }
+        notLoggedIn(main, mainPage, subPage)
     } else {
         switch (mainPage) {
         case 'pong': {
