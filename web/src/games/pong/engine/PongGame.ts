@@ -7,7 +7,7 @@ import { OnlinePlayer } from './players/OnlinePlayer'
 import { getUsername } from '../../../utils/storage'
 import { Difficulty, secondPlayerName } from '../pongState'
 import i18n from '../../../utils/lang/i18n'
-import { WSClient, ServerState } from '../../../socket/WSClient'
+import { WsClient, ServerState } from '../../../api/socket/WSClient'
 import {navigateTo} from "../../../utils/router";
 
 export class PongGame {
@@ -21,8 +21,7 @@ export class PongGame {
     private gameEnded = false
     private winTextEl: HTMLDivElement
 
-    // Online-only state
-    private ws?: WSClient
+    private ws?: WsClient
     private online = false
     private mySlot: 0 | 1 = 0
     private lastState?: ServerState
@@ -34,7 +33,7 @@ export class PongGame {
         difficulty: Difficulty,
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement,
-        ws?: WSClient,
+        ws?: WsClient,
         mySlot?: 0 | 1
     ) {
         this.canvas = canvas
@@ -59,7 +58,7 @@ export class PongGame {
         canvas.parentElement?.appendChild(this.winTextEl)
     }
 
-    private hookWebSocket(ws: WSClient) {
+    private hookWebSocket(ws: WsClient) {
         ws.on('state', (s) => {
             this.lastState = s
             if (this.player1 instanceof OnlinePlayer) {
@@ -212,7 +211,7 @@ export class PongGame {
 
     static createOnline(
         canvas: HTMLCanvasElement,
-        ws: WSClient,
+        ws: WsClient,
         mySlot: 0 | 1,
         names: { me: string; opponent: string },
         difficulty: Difficulty,

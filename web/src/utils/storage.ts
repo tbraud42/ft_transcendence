@@ -14,12 +14,15 @@ export function isLoggedIn(): boolean {
 export function login(token: string, username: string): void {
     setToken(token)
     setUsername(username)
+    if (getTmpToken()) {
+        removeItem(TMP_TOKEN_KEY)
+    }
     navigateTo('/home')
 }
 
 export function logout(): void {
-    localStorage.removeItem(USERNAME_KEY)
-    localStorage.removeItem(TOKEN_KEY)
+    removeItem(USERNAME_KEY)
+    removeItem(TOKEN_KEY)
     navigateTo('/')
 }
 

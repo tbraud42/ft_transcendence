@@ -56,7 +56,7 @@ export function renderOnlineTab(): HTMLElement {
             joinBtn.className = 'bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded'
             joinBtn.onclick = () => {
                 setSelectedGameMode(GameMode.ONLINE)
-                navigateTo(`/pong/play/${tournament.id}`)
+                navigateTo(`/pong/lobby/${tournament.id}`)
             }
 
             card.append(info, joinBtn)
@@ -81,24 +81,32 @@ export function renderOnlineTab(): HTMLElement {
                 ],
                 selected: Difficulty.MEDIUM
             })
+            const maxPlayers = createOptionSelector({
+                label: i18n.t('pong_online_max_players'),
+                values: [
+                    { value: '2', label: '2' },
+                    { value: '4', label: '4' },
+                    { value: '8', label: '8' }
+                ],
+                selected: '2'
+            })
 
             const confirm = createButton(i18n.t('pong_start'), 'button', 'black')
             const overlay = createOverlayCard({
                 title: i18n.t('pong_configuration'),
-                children: [nameInput, difficulty.element, confirm]
+                children: [nameInput, difficulty.element, maxPlayers.element, confirm]
             })
 
             confirm.onclick = () => {
                 setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
                 setSelectedGameMode(GameMode.ONLINE)
-                setMaxPlayers(2)
+                setMaxPlayers(parseInt(maxPlayers.getValue()))
                 setIsPrivate(false)
                 overlay.close()
-                createTournament(nameInput.value, difficulty.getValue() as keyof typeof Difficulty)
+                createTournament(nameInput.value, difficulty.getValue() as keyof typeof Difficulty, parseInt(maxPlayers.getValue()))
                     .then(room => {
-                        // lastInsertRowid is the id of the newly created room
-                        setRoomId(room.lastInsertRowid)
-                        navigateTo(`/pong/play/${room.lastInsertRowid}`)
+                        setRoomId(room.id)
+                        navigateTo(`/pong/lobby/${room.id}`)
                     })
                     .catch(() => alert(i18n.t('pong_online_error_create')))
             }
