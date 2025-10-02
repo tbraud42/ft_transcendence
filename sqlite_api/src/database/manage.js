@@ -120,12 +120,6 @@ export function updateTimeStamp(db, id) {
   return info.changes > 0;
 }
 
-
-// new
-// db/api.js
-// Utilise better-sqlite3
-// Toutes les fonctions sont synchrones (c'est SQLite), donc simples à tester.
-
 function normalizePair(a, b) {
   const x = Number(a), y = Number(b);
   if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('INVALID_USER_ID');
@@ -163,7 +157,6 @@ export function listFriends(db, userId) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return [];
 
-  // Deux sens : soit uid=user_id, soit uid=friend_id (on mappe pour récupérer "l’autre")
   const sql = `
     SELECT u.id, u.username, uf.created_at AS since
     FROM user_friends uf
@@ -193,7 +186,6 @@ export function listTournamentMembersWithStats(db, tournamentId) {
   const tid = Number(tournamentId);
   if (!Number.isFinite(tid)) return [];
 
-  // Agrégation en une passe : on empile via UNION ALL côté lignes joueur/match puis on agrège
   const sql = `
     WITH participants AS (
       SELECT g.tournament_id, g.id AS game_id,
@@ -227,88 +219,23 @@ export function getTournamentStandings(db, tournamentId) {
   return listTournamentMembersWithStats(db, tournamentId);
 }
 
-/* -------------------- RÉSULTATS : insertion de matchs -------------------- */
-
-export function addTournamentResults(db, tournamentId, games) {
-  const tid = Number(tournamentId);
-  if (!Number.isFinite(tid)) throw new Error('INVALID_TOURNAMENT');
-  const t = db.prepare(`SELECT id FROM tournaments WHERE id = ?`).get(tid);
-  if (!t) throw new Error('INVALID_TOURNAMENT');
-
-  if (!Array.isArray(games) || games.length === 0) return { inserted: 0 };
-
-  const insGame = db.prepare(`
-    INSERT INTO games
-      (tournament_id, player1_id, player2_id, winner_id, started_at, duration_sec, p1_score, p2_score)
-    VALUES (?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)
-  `);
-  const updUser = db.prepare(`
-    UPDATE users
-      SET total_games = total_games + 1,
-          total_seconds = total_seconds + ?
-    WHERE id = ?
-  `);
-
-  const userExists = db.prepare(`SELECT 1 FROM users WHERE id = ?`);
-
-  const tx = db.transaction((rows) => {
-    let count = 0;
-    for (const g of rows) {
-      const p1 = Number(g?.player1_id);
-      const p2 = Number(g?.player2_id);
-      const s1 = Number(g?.p1_score);
-      const s2 = Number(g?.p2_score);
-      const dur = Number(g?.duration_sec);
-      if (![p1, p2, s1, s2, dur].every(Number.isFinite) || dur < 0) {
-        throw new Error('INVALID_GAME_ROW');
-      }
-      if (!userExists.get(p1) || !userExists.get(p2)) {
-        throw new Error('UNKNOWN_USER');
-      }
-      const winner_id = (s1 === s2) ? null : (s1 > s2 ? p1 : p2);
-
-      insGame.run(tid, p1, p2, winner_id, g.started_at ?? null, dur, s1, s2);
-      updUser.run(dur, p1);
-      updUser.run(dur, p2);
-      count++;
-    }
-    return count;
-  });
-
-  const inserted = tx(games);
-  return { inserted };
+export function mapUserForSelfOrAdmin(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    created_at: user.created_at,
+    last_timestamp: user.last_timestamp,
+    avatar: user.avatar ?? null,
+    is_twofa_enabled: !!user.is_twofa_enabled,
+    total_seconds: user.total_seconds,
+    total_games: user.total_games,
+  };
 }
 
-export function setTournamentWinner(db, tournamentId, winnerUserId) {
-  const tid = Number(tournamentId), wid = Number(winnerUserId);
-  if (!Number.isFinite(tid) || !Number.isFinite(wid)) return null;
-  const okU = db.prepare(`SELECT 1 FROM users WHERE id = ?`).get(wid);
-  const okT = db.prepare(`SELECT 1 FROM tournaments WHERE id = ?`).get(tid);
-  if (!okU || !okT) return null;
-  return db.prepare(` UPDATE tournaments SET winner = ?, status = 2 WHERE id = ? RETURNING id, name, status, winner`).get(wid, tid);
+export function mapUserForPublic(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    avatar: user.avatar ?? null,
+  };
 }
-
-export function changeTournamentStatus(db, tournamentId, nextStatus = null) {
-  const tid = Number(tournamentId);
-  if (!Number.isFinite(tid)) return null;
-  const cur = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(tid);
-  if (!cur) return null;
-  const ns = (nextStatus === 0 || nextStatus === 1 || nextStatus === 2)
-    ? nextStatus
-    : (cur.status === 0 ? 1 : 2);
-  return db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(ns, tid);
-}
-
-/* -------------------- exports -------------------- */
-export default {
-  addFriend,
-  removeFriend,
-  listFriends,
-  listTournamentMembers,
-  listTournamentMembersWithStats,
-  getTournamentStandings,
-  addTournamentResults,
-  setTournamentWinner,
-  changeTournamentStatus,
-};
-

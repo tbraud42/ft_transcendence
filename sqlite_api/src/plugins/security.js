@@ -1,7 +1,6 @@
 // plugins/security.js
 import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
-// const jwtSecret = await getSecretFromVault('jwt-secret-key'); // pour import key JWT depuis vault
 
 // import verif password
 import bcrypt from 'bcrypt';

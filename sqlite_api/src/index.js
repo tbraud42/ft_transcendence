@@ -75,7 +75,7 @@ const start = async () => {
   }, { timezone: 'Europe/Paris' });
 
   const ADDRESS = '0.0.0.0';
-  const PORT = process.env.DATABASE_PORT || 3000;
+  const PORT = 3000;
 
   try {
     await fastify.register(cors, {

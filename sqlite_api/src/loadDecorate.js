@@ -8,7 +8,12 @@ import {
   isAdmin,
   isAdminOrCreator,
   showAllData,
-  updateTimeStamp
+  updateTimeStamp,
+  addFriend,
+  removeFriend,
+  listFriends,
+  mapUserForSelfOrAdmin,
+  mapUserForPublic
 } from './database/manage.js';
 
 import {
@@ -60,6 +65,13 @@ export function loadDecorate(fastify) {
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
   fastify.decorate('updateTimeStamp', updateTimeStamp);
+
+  fastify.decorate('addFriend', addFriend);
+  fastify.decorate('removeFriend', removeFriend);
+  fastify.decorate('listFriends', listFriends);
+  fastify.decorate('mapUserForSelfOrAdmin', mapUserForSelfOrAdmin);
+  fastify.decorate('mapUserForPublic', mapUserForPublic);
+
   // --- Tournament ---
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);

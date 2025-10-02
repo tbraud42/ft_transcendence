@@ -14,26 +14,23 @@ export default async function (fastify, options) {
 
   fastify.get('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const targetId = Number(req.params.id);
-
-    if (targetId === req.user.id || req.user.role === 'admin') {
-      const user = await fastify.showUserById(fastify.db, targetId);
-
-      if (!user) {
-        return reply.code(404).send({ error: 'User not found' });
-      }
-
-      return reply.send({
-        user: {
-          id: user.id,
-          username: user.username,
-          password_hash: 'Not displayed for security reasons (RGPD)',
-          role: user.role,
-          created_at: user.created_at,
-        }
-      });
+    if (!Number.isFinite(targetId)) {
+      return reply.code(400).send({ error: 'Invalid id' });
     }
 
-    return reply.code(403).send({ error: 'Access denied' });
+    const user = await fastify.showUserById(fastify.db, targetId);
+    if (!user) return reply.code(404).send({ error: 'User not found' });
+
+    const isSelf = targetId === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (isSelf || isAdmin) {
+      // profil “complet” (mais sans secrets)
+      return reply.send({ user: mapUserForSelfOrAdmin(user) });
+    }
+
+    // profil “public” pour un autre utilisateur
+    return reply.send({ user: mapUserForPublic(user) });
   });
 
   fastify.patch('/', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42
