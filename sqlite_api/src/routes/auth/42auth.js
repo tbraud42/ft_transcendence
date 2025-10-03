@@ -1,11 +1,10 @@
 // routes/auth/42auth.js
-// | Method   | Route               | Description                | Access           |
-// | -------- | ------------------- | -------------------------- | ---------------- |
-// | `GET`    | `/auth/42/login`    | login with 42 auth         | Authenticated    |
-// | `GET`    | `/auth/42/callback` | url redirect by 42 auth    | Authenticated    |
+// | Method   | Route               | Description                            | Access           |
+// | -------- | ------------------- | -------------------------------------- | ---------------- |
+// | `GET`    | `/auth/42/login`    | login with 42 auth                     | public           |
+// | `GET`    | `/auth/42/callback` | url redirect by 42 auth                | public           | ??
 
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
 
 const FT_AUTHORIZE_URL = 'https://api.intra.42.fr/oauth/authorize';
 const FT_TOKEN_URL = 'https://api.intra.42.fr/oauth/token';
@@ -32,7 +31,7 @@ export default async function ft42Routes(fastify) {
     reply.redirect(`${FT_AUTHORIZE_URL}?${params.toString()}`);
   });
 
-  fastify.get('/callback', async (req, reply) => { // a tester
+  fastify.get('/callback', async (req, reply) => {
     const q = req.query ?? {};
     const code  = typeof q.code  === 'string' ? q.code.trim()  : '';
     const state = typeof q.state === 'string' ? q.state.trim() : '';
@@ -82,13 +81,11 @@ export default async function ft42Routes(fastify) {
     let user = fastify.db.prepare(`SELECT * FROM users WHERE username = ?`).get(wantedUsername);
 
     if (!user) {
-      const randomePass = await bcrypt.hash(crypto.randomUUID(), 12);
-      const info = fastify.db.prepare(`INSERT INTO users (username, password_hash, role) VALUES (?, ?, 'user')`).run(wantedUsername, randomePass);
+      const info = fastify.db.prepare(`INSERT INTO users (username, password_hash, role) VALUES (?, 'OAUTH_ONLY', 'user')`).run(wantedUsername); // quelle password?
       user = fastify.db.prepare(`SELECT * FROM users WHERE id = ?`).get(info.lastInsertRowid);
-      fastify.apiStat.signup++;
     }
 
-    fastify.updateTimeStamp(fastify.db, user.id);
+    fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
 
     const token = fastify.generateToken({
       id: user.id,

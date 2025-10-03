@@ -23,7 +23,7 @@ import refreshRoute from './routes/auth/refreshAuth.js';
 import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
 import tournamentRoute from './routes/matchs/tournaments.js';
-import tournamentClientRoute from './routes/matchs/tournamentsClient.js';
+import tournamentClientRoute from './routes/matchs/tournaments_client.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
 
@@ -51,31 +51,11 @@ const start = async () => {
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
-  // cron.schedule('0 0 0 * * *', () => crontab(fastify), { timezone: 'Europe/Paris' });
-
-  let retryTask = null;
-
-  cron.schedule('0 0 0 * * *', () => { // toujours pas bon
-    try {
-      crontab(fastify)
-    } catch (err) {
-      console.error("overloading process fot crontab, setup to every 5 min", err);
-
-      retryTask = cron.schedule("*/5 * * * *", () => {
-        try {
-          crontab(fastify)
-          console.log("crontab successful");
-          retryTask.stop();
-          retryTask = null;
-        } catch (err2) {
-          console.error("crontab fail", err2);
-        }
-      });
-    }
-  }, { timezone: 'Europe/Paris' });
+  cron.schedule('0 0 0 * * *', () => crontab(fastify), { timezone: 'Europe/Paris' });
 
   const ADDRESS = '0.0.0.0';
   const PORT = process.env.DATABASE_PORT || 3000;
+  const DOMAIN = process.env.DOMAIN || 'trans.clesucre.fr';
 
   try {
     await fastify.register(cors, {
@@ -83,11 +63,11 @@ const start = async () => {
         const isDev = process.env.NODE_ENV === 'development'
 
         if (isDev) {
-          cb(null, true)
+          cb(null, true) // autorise tout en dev
         } else {
           const allowedOrigins = [
-            `https://${process.env.VITE_DOMAIN}`,
-            `https://www.${process.env.VITE_DOMAIN}`
+            `https://${DOMAIN}`
+            `https://pong.ws.${DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {
@@ -105,15 +85,14 @@ const start = async () => {
     })
 
     fastify.listen({ port: PORT, host: ADDRESS });
-    //------insert admin-------
-    // const username = 'bob';
+    // const username = 'admin';
     // const password = 'supersecurepassword';
+
     // const password_hash = await bcrypt.hash(password, 10);
+
     // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
     // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
-
-    // -----crontab-------------
-    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE username = ?`).run("bob"); // tmp pour test crontab
+    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE id = ?`).run(2); // tmp pour test crontab
 
     console.log(`----------show time !----------\n`);
     await fastify.showAllData(fastify.db);

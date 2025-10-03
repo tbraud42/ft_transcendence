@@ -21,30 +21,13 @@ async function requestAuth(
     if (!username || !password) {
         return null
     }
-
-    const url = `${API_URL}/auth/${endpoint}`
+    const url = `https://${API_URL}/auth/${endpoint}`
 
     const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
     })
-
-    if (res.status === 429) {
-    let msg = 'Too many attempts. Please try again later.';
-    try {
-      const j = await res.json();
-      if (j?.message) msg = j.message;
-    } catch {}
-    alert(msg);
-    throw new Error(msg);
-  }
-
-    if (!res.ok) {
-        const errText = await res.text().catch(() => '')
-        console.error(`${endpoint} error:`, res.status, errText)
-        throw new Error(`Failed to ${endpoint}`)
-    }
 
     const data = await res.json()
 

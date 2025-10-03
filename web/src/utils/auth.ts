@@ -1,8 +1,7 @@
 import i18n from './lang/i18n'
 import {login, setTmpToken, setUsername} from './storage'
 import { apiSignup, apiLogin } from "../api/auth";
-import { env } from "./env";
-
+import {env} from "./env";
 
 const API_URL = env.API_URL
 

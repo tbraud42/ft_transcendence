@@ -1,11 +1,10 @@
 // routes/auth/isAuth.js
-// | Method   | Route              | Description                | Access           |
-// | -------- | ------------------ | -------------------------- | ---------------- |
-// | `GET`    | `/auth/isAuth`     | verif JWT token            | Authenticated    |
+// | Method   | Route              | Description                            | Access           |
+// | -------- | ------------------ | -------------------------------------- | ---------------- |
+// | `GET`    | `/auth/isAuth`     | verif JWT token                        | Public           |
 
 export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
-    fastify.updateTimeStamp(fastify.db, req.user.id);
     return reply.send({
       status: 'authenticated',
       user: {
