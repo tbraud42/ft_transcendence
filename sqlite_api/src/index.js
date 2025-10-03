@@ -86,8 +86,8 @@ const start = async () => {
           cb(null, true)
         } else {
           const allowedOrigins = [
-            `https://${process.env.VITE_DOMAIN}`,
-            `https://www.${process.env.VITE_DOMAIN}`
+            `https://${process.env.DOMAIN}`,
+            `https://www.${process.env.DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {
