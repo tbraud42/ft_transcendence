@@ -26,7 +26,7 @@ export async function fetchTournaments(): Promise<any[]> {
 export async function createTournament(
     name: string,
     difficulty: string,
-    maxPlayers: number,
+    maxPlayer: number,
 ): Promise<any> {
     await refreshToken();
 
@@ -36,7 +36,7 @@ export async function createTournament(
         name,
         description: '',
         difficulty,
-        maxPlayers,
+        maxPlayer,
         isPrivate: false
     }
 

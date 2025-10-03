@@ -79,10 +79,10 @@ services:
       - "3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      PORT: 3000
+      API_URL: api.${DOMAIN_NAME}
     restart: unless-stopped
     extra_hosts:
-      - "api.dev.local:host-gateway"
+      - "api.${DOMAIN_NAME}:host-gateway"
     networks:
       - backend
 

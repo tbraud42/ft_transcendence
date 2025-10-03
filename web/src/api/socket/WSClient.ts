@@ -35,9 +35,7 @@ export class WSClient {
 
             switch (msg.type) {
             case SrvMessageType.SNAPSHOT: {
-                console.log(msg)
                 this.latestSnapshot = msg as SrvSnapshot
-                //TODO: save snapshot somewhere
                 renderBracket(this.host, this.latestSnapshot, {
                     myUsername: getUsername(),
                     isOwner: msg.creator === getUsername(),

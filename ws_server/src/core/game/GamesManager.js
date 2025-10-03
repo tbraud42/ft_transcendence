@@ -6,7 +6,6 @@ class TournamentManager {
         this.tournaments = new Map()
     }
 
-    // token: JWT du client ; params: { id }
     async getOrCreate(token, { id, name, maxPlayers, creator }) {
         const key = String(id)
         if (this.tournaments.has(key)) {
@@ -18,11 +17,11 @@ class TournamentManager {
             if (data?.name) {
                 name = String(data.name)
             }
-            if (data?.maxPlayers) {
-                maxPlayers = Number(data.maxPlayers)
+            if (data?.maxPlayer) {
+                maxPlayers = Number(data.maxPlayer)
             }
-        } catch {
-            // keep defaults
+        } catch (err) {
+            console.log(err)
         }
 
         const t = new Tournament({ id: key, name, maxPlayers, creator })

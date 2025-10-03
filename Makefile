@@ -28,5 +28,6 @@ clean:
 	docker-compose -f $(COMPOSE_FILE) down --volumes --remove-orphans
 	$(RM) .$(DIRSEP)nginx$(DIRSEP)data
 	$(RM) .$(DIRSEP)web$(DIRSEP)dist
+	$(RM) .$(DIRSEP)sqlite_api$(DIRSEP)data
 
 .PHONY: up build logs dev down clean

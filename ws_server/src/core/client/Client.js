@@ -1,5 +1,3 @@
-import { getTournamentManager } from '../game/GamesManager.js'
-
 export class Client {
     constructor(socket) {
         this.socket = socket

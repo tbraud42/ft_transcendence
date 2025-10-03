@@ -173,35 +173,72 @@ export class Tournament {
         } catch {}
     }
 
+    _makeEmptyR1() {
+        const cap = this.maxPlayers;
+        const r1 = new Array(cap);
+        for (let k = 0; k < cap; k++) {
+            const isLeftSlot  = (k % 2) === 0;
+            const pairIndex   = Math.floor(k / 2) + 1;
+            const id = isLeftSlot
+                ? `${this.id}-r1-${pairIndex}`
+                : `${this.id}-r1-ph${k}`;
+
+            r1[k] = {
+                id,
+                round: 1,
+                p1: null,
+                p2: null,
+                status: MatchStatus.WAITING,
+            };
+        }
+        return r1;
+    }
+
     _buildRound1Matches() {
-        const players = [...this.participants.values()]
+        const cap = this.maxPlayers;
+        const r1  = this._makeEmptyR1();
+
+        const ordered = [...this.participants.values()]
             .sort((a, b) => a.seed - b.seed)
             .map(p => p.username)
+            .slice(0, cap);
 
-        const cap = this.maxPlayers
-        const matches = []
+        const used = new Set();
 
-        for (let i = 0; i < cap; i += 2) {
-            const p1 = players[i] || null
-            const p2 = players[i+1] || null
-            matches.push({
-                id: `${this.id}-r1-${(i/2)+1}`,
-                round: 1,
-                p1, p2,
-                status: MatchStatus.WAITING
-            })
+        for (const [slotIndex, ov] of this._r1Fixed.entries()) {
+            if (slotIndex < 0 || slotIndex >= cap) {
+                continue;
+            }
+            const m = r1[slotIndex];
+
+            if (ov && ov.p1 && !used.has(ov.p1)) {
+                m.p1 = ov.p1;
+                used.add(ov.p1);
+            }
+            if (ov && ov.p2 && !used.has(ov.p2)) {
+                m.p2 = ov.p2;
+                used.add(ov.p2);
+            }
         }
 
-        while (matches.length < cap) {
-            matches.push({
-                id: `${this.id}-r1-ph${matches.length}`,
-                round: 1,
-                p1: null, p2: null,
-                status: MatchStatus.WAITING
-            })
+        for (const name of ordered) {
+            if (used.has(name)) {
+                continue;
+            }
+
+            let placed = false;
+            for (let k = 0; k < cap && !placed; k++) {
+                const m = r1[k];
+                if (!m.p1) {
+                    m.p1 = name; used.add(name); placed = true; break; 
+                }
+                if (!m.p2) {
+                    m.p2 = name; used.add(name); placed = true; break; 
+                }
+            }
         }
 
-        return matches
+        return r1;
     }
 
     _leafToSlotIndex(addr) {

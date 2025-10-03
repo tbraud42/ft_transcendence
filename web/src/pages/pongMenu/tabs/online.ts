@@ -47,7 +47,7 @@ export function renderOnlineTab(): HTMLElement {
             const details = document.createElement('p')
             details.className = 'text-sm text-gray-400'
             const difficulty = tournament.difficulty || i18n.t('pong_ai_difficulty_unknown')
-            details.textContent = `${difficulty} • ` + i18n.t("pong_online_players", { count: tournament.maxPlayers })
+            details.textContent = `${difficulty} • ` + i18n.t("pong_online_players", { count: tournament.maxPlayer })
 
             info.append(title, details)
 

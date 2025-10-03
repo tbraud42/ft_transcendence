@@ -1,7 +1,7 @@
 const API_URL = process.env.API_URL
 
 export async function getTournamentFromApi(token, id) {
-    const url = `http://${API_URL}/tournaments/${encodeURIComponent(id)}`
+    const url = `https://${API_URL}/tournaments/${encodeURIComponent(id)}`
     const res = await fetch(url, {
         method: 'GET',
         headers: {
@@ -12,7 +12,7 @@ export async function getTournamentFromApi(token, id) {
     if (!res.ok) {
         let text = ''
         try {
-            text = await res.text() 
+            text = await res.text()
         } catch {}
         throw new Error(`tournament_fetch_failed ${res.status} ${text}`)
     }
