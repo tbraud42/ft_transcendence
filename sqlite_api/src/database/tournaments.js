@@ -6,16 +6,13 @@ export const T_STATUS = {
   FINISHED: 2,
 };
 
-// plugins/tournaments.js
-
 export function getAllTournaments(db) {
   return db.prepare(`
     SELECT t.*, u.username AS creator_username, uw.username AS winner_username
     FROM tournaments t
     JOIN users u ON u.id = t.creator_id
     LEFT JOIN users uw ON uw.id = t.winner
-    ORDER BY t.created_at DESC
-  `).all();
+    ORDER BY t.created_at DESC`).all();
 };
 
 export function getTournamentById(db, id) {
@@ -24,8 +21,8 @@ export function getTournamentById(db, id) {
     FROM tournaments t
     JOIN users u ON u.id = t.creator_id
     LEFT JOIN users uw ON uw.id = t.winner
-    WHERE t.id = ?
-  `).get(id);
+    WHERE t.id = ?`).get(id);
+
   if (!tournament) return null;
 
   const participants = db.prepare(`
@@ -33,8 +30,7 @@ export function getTournamentById(db, id) {
     FROM games g
     JOIN users u ON u.id IN (g.player1_id, g.player2_id)
     WHERE g.tournament_id = ?
-    ORDER BY u.username COLLATE NOCASE
-  `).all(id);
+    ORDER BY u.username COLLATE NOCASE`).all(id);
 
   const games = db.prepare(`
     SELECT g.*,
@@ -46,8 +42,7 @@ export function getTournamentById(db, id) {
     JOIN users u2 ON u2.id = g.player2_id
     LEFT JOIN users uw ON uw.id = g.winner_id
     WHERE g.tournament_id = ?
-    ORDER BY g.started_at ASC, g.id ASC
-  `).all(id);
+    ORDER BY g.started_at ASC, g.id ASC`).all(id);
 
   return { ...tournament, participants, games };
 };
@@ -59,8 +54,7 @@ export function getTournamentsByStatus(db, status){
       JOIN users u ON u.id = t.creator_id
       LEFT JOIN users uw ON uw.id = t.winner
       WHERE t.status = ?
-      ORDER BY t.created_at DESC
-    `).all(status);
+      ORDER BY t.created_at DESC`).all(status);
   };
 
 export function getTournamentByName(db, name){
@@ -153,8 +147,7 @@ export function listUserMatches(db, userId) {
     JOIN users u2      ON u2.id = g.player2_id
     LEFT JOIN users uw ON uw.id = g.winner_id
     WHERE g.player1_id = ? OR g.player2_id = ?
-    ORDER BY g.started_at DESC, g.id DESC
-  `).all(uid, uid);
+    ORDER BY g.started_at DESC, g.id DESC`).all(uid, uid);
 
   return result;
 }
@@ -174,9 +167,7 @@ export function getStat(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return null;
 
-  const row = db
-    .prepare(
-      `
+  const row = db.prepare(`
     SELECT
       u.id                        AS userId,
       u.username                  AS username,
@@ -190,18 +181,13 @@ export function getStat(db, id) {
     FROM users u
     LEFT JOIN tournament_participants tp ON tp.user_id = u.id
     WHERE u.id = ?
-    GROUP BY u.id, u.username, u.total_matches, u.total_seconds
-  `
-    )
-    .get(uid);
+    GROUP BY u.id, u.username, u.total_matches, u.total_seconds`).get(uid);
 
   return row || null;
 }
 
 export function topWinRate(db, limit = 10, minGames = 1) {
-  return db
-    .prepare(
-      `
+  return db.prepare(`
     SELECT
       u.id                        AS userId,
       u.username                  AS username,
@@ -217,16 +203,11 @@ export function topWinRate(db, limit = 10, minGames = 1) {
     WHERE u.total_matches >= ?
     GROUP BY u.id, u.username, u.total_matches, u.total_seconds
     ORDER BY winRate DESC, games DESC, wins DESC
-    LIMIT ?
-  `
-    )
-    .all(minGames, limit);
+    LIMIT ?`).all(minGames, limit);
 }
 
 export function topLoseRate(db, limit = 10, minGames = 1) {
-  return db
-    .prepare(
-      `
+  return db.prepare(`
     SELECT
       u.id                        AS userId,
       u.username                  AS username,
@@ -242,15 +223,11 @@ export function topLoseRate(db, limit = 10, minGames = 1) {
     WHERE u.total_matches >= ?
     GROUP BY u.id, u.username, u.total_matches, u.total_seconds
     ORDER BY winRate ASC, games DESC
-    LIMIT ?
-  `
-    )
-    .all(minGames, limit);
+    LIMIT ?`).all(minGames, limit);
 }
 
 export function topTotalPlayTime(db, limit = 10, minGames = 1) {
-  return db
-    .prepare(
+  return db.prepare(
       `
     SELECT
       u.id                        AS userId,
@@ -267,16 +244,11 @@ export function topTotalPlayTime(db, limit = 10, minGames = 1) {
     WHERE u.total_matches >= ?
     GROUP BY u.id, u.username, u.total_matches, u.total_seconds
     ORDER BY time DESC, games DESC
-    LIMIT ?
-  `
-    )
-    .all(minGames, limit);
+    LIMIT ?`).all(minGames, limit);
 }
 
 export function topTournamentsCreated(db, limit = 10) {
-  return db
-    .prepare(
-      `
+  return db.prepare(`
     SELECT
       u.id                        AS userId,
       u.username                  AS username,
@@ -292,16 +264,11 @@ export function topTournamentsCreated(db, limit = 10) {
     WHERE EXISTS (SELECT 1 FROM tournaments t WHERE t.creator_id = u.id)
     GROUP BY u.id, u.username, u.total_matches, u.total_seconds
     ORDER BY (SELECT COUNT(*) FROM tournaments t WHERE t.creator_id = u.id) DESC
-    LIMIT ?
-  `
-    )
-    .all(limit);
+    LIMIT ?`).all(limit);
 }
 
 export function topTournamentsWon(db, limit = 10) {
-  return db
-    .prepare(
-      `
+  return db.prepare(`
     SELECT
       u.id                        AS userId,
       u.username                  AS username,
@@ -317,8 +284,35 @@ export function topTournamentsWon(db, limit = 10) {
     WHERE EXISTS (SELECT 1 FROM tournaments t WHERE t.winner = u.id)
     GROUP BY u.id, u.username, u.total_matches, u.total_seconds
     ORDER BY (SELECT COUNT(*) FROM tournaments t WHERE t.winner = u.id) DESC
-    LIMIT ?
-  `
-    )
-    .all(limit);
+    LIMIT ?`).all(limit);
+}
+
+export function listUserRecentMatches(db, userId, limit = 20) { // a tester
+  const uid = Number(userId);
+  if (!Number.isFinite(uid)) return [];
+
+  const lim = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 500) : 20;
+
+  return db.prepare(`
+    SELECT
+      g.id               AS game_id,
+      g.tournament_id,
+      g.started_at,
+      g.p1_score,
+      g.p2_score,
+      g.winner_id,
+
+      CASE WHEN g.player1_id = ? THEN g.player2_id ELSE g.player1_id END AS opponent_id,
+      CASE WHEN g.player1_id = ? THEN u2.username  ELSE u1.username  END AS opponent_username,
+
+      CASE WHEN g.player1_id = ? THEN g.p1_score ELSE g.p2_score END AS your_score,
+      CASE WHEN g.player1_id = ? THEN g.p2_score ELSE g.p1_score END AS opp_score,
+
+      CASE WHEN g.winner_id = ? THEN 1 ELSE 0 END AS did_win
+    FROM games g
+    JOIN users u1 ON u1.id = g.player1_id
+    JOIN users u2 ON u2.id = g.player2_id
+    WHERE g.player1_id = ? OR g.player2_id = ?
+    ORDER BY g.started_at DESC, g.id DESC
+    LIMIT ?`).all(uid, uid, uid, uid, uid, uid, uid, lim);
 }

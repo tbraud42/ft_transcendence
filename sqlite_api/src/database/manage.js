@@ -2,7 +2,10 @@
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 
-// CREATE
+export function isDev() {
+  return process.env.NODE_ENV === 'development';
+}
+
 export async function createUser(db, { username, password, avatar } = {}) {
   if (!password || typeof password !== 'string') {
     throw new Error('Password is required and must be a string');
@@ -111,7 +114,7 @@ export function showAllData(db) {
   }
 }
 
-export function updateTimeStamp(db, id) {
+export async function updateTimeStamp(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return false;
 

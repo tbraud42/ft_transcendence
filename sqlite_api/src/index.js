@@ -4,12 +4,7 @@ dotenv.config();
 
 // import fastify
 import Fastify from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import cors from '@fastify/cors'
-
-// import crontab module
-import cron from 'node-cron';
-import { crontab } from './database/manage.js';
 
 // import decorate loader
 import { loadDecorate } from './loadDecorate.js';
@@ -30,14 +25,14 @@ import statRoutes from './routes/stat.js';
 import bcrypt from 'bcrypt'; // tmp pour clean database
 
 const start = async () => {
-  const fastify = Fastify({ logger: true });
+  let fastify;
+  if (process.env.NODE_ENV === 'development') {
+    fastify = Fastify({ logger: true });
+  } else {
+    fastify = Fastify();
+  }
 
   loadDecorate(fastify);
-
-  fastify.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute'
-  });
 
   await fastify.register(twoFaRoute, { prefix: '/auth/2fa' });
   await fastify.register(ftRoutes, { prefix: '/auth/42' });
@@ -51,38 +46,13 @@ const start = async () => {
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
-  // cron.schedule('0 0 0 * * *', () => crontab(fastify), { timezone: 'Europe/Paris' });
-
-  let retryTask = null;
-
-  cron.schedule('0 0 0 * * *', () => { // toujours pas bon
-    try {
-      crontab(fastify)
-    } catch (err) {
-      console.error("overloading process fot crontab, setup to every 5 min", err);
-
-      retryTask = cron.schedule("*/5 * * * *", () => {
-        try {
-          crontab(fastify)
-          console.log("crontab successful");
-          retryTask.stop();
-          retryTask = null;
-        } catch (err2) {
-          console.error("crontab fail", err2);
-        }
-      });
-    }
-  }, { timezone: 'Europe/Paris' });
-
   const ADDRESS = '0.0.0.0';
   const PORT = 3000;
 
   try {
     await fastify.register(cors, {
       origin: (origin, cb) => {
-        const isDev = process.env.NODE_ENV === 'development'
-
-        if (isDev) {
+        if (fastify.isDev()) {
           cb(null, true)
         } else {
           const allowedOrigins = [
@@ -106,7 +76,7 @@ const start = async () => {
 
     fastify.listen({ port: PORT, host: ADDRESS });
     //------insert admin-------
-    // const username = 'bob';
+    // const username = 'sylvie';
     // const password = 'supersecurepassword';
     // const password_hash = await bcrypt.hash(password, 10);
     // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
@@ -115,8 +85,10 @@ const start = async () => {
     // -----crontab-------------
     // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE username = ?`).run("bob"); // tmp pour test crontab
 
-    console.log(`----------show time !----------\n`);
-    await fastify.showAllData(fastify.db);
+    if (fastify.isDev()) {
+      console.log(`----------show time !----------\n`);
+      await fastify.showAllData(fastify.db);
+    }
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
@@ -124,3 +96,4 @@ const start = async () => {
 };
 
 start();
+

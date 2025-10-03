@@ -1,5 +1,6 @@
 import db from './database/db.js'
 import {
+  isDev,
   createUser,
   showUserByUsername,
   showUserById,
@@ -13,7 +14,8 @@ import {
   removeFriend,
   listFriends,
   mapUserForSelfOrAdmin,
-  mapUserForPublic
+  mapUserForPublic,
+  crontab
 } from './database/manage.js';
 
 import {
@@ -47,6 +49,12 @@ import {
   usernameEndsWith42
 } from './plugins/security.js'
 
+// import crontab module
+import cron from 'node-cron';
+
+// import rate-limit module
+import rateLimit from '@fastify/rate-limit';
+
 export function loadDecorate(fastify) {
   // --- DB ---
   fastify.decorate('db', db);
@@ -54,6 +62,7 @@ export function loadDecorate(fastify) {
     try { fastify.db?.close?.(); } catch (e) { app.log?.error(e, 'DB close failed'); }
     done();
   });
+  fastify.decorate('isDev', isDev);
   fastify.decorate('showAllData', showAllData);
 
   // --- Users  ---
@@ -104,4 +113,31 @@ export function loadDecorate(fastify) {
   // --- Stats ---
   fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
   fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });
+
+
+    let retryTask = null;
+
+    cron.schedule('0 0 0 * * *', () => {
+      try {
+        crontab(fastify)
+      } catch (err) {
+        console.error("overloading process fot crontab, setup to every 5 min", err);
+
+        retryTask = cron.schedule("*/5 * * * *", () => {
+          try {
+            crontab(fastify)
+            console.log("crontab successful");
+            retryTask.stop();
+            retryTask = null;
+          } catch (err2) {
+            console.error("crontab fail", err2);
+          }
+        });
+      }
+    }, { timezone: 'Europe/Paris' });
+
+  fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute'
+  });
 }
