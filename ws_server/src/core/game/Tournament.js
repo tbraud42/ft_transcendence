@@ -47,6 +47,7 @@ export class Tournament {
     }
 
     addBotAt(addr) {
+        console.log(addr)
         if (this._countTotal() >= this.maxPlayers) {
             return;
         }
@@ -196,8 +197,40 @@ export class Tournament {
 
     _buildRound1Matches() {
         const cap = this.maxPlayers;
-        const r1  = this._makeEmptyR1();
 
+        if (cap === 2) {
+            const ordered = [...this.participants.values()]
+                .sort((a, b) => a.seed - b.seed)
+                .map(p => p.username);
+
+            const ovL = this._r1Fixed.get(0) || {};
+            const ovR = this._r1Fixed.get(1) || {};
+
+            const used = new Set();
+            let p1 = null, p2 = null;
+
+            if (ovL.p1 && !used.has(ovL.p1)) { p1 = ovL.p1; used.add(ovL.p1); }
+            else if (ovL.p2 && !used.has(ovL.p2)) { p1 = ovL.p2; used.add(ovL.p2); }
+
+            if (ovR.p1 && !used.has(ovR.p1)) { p2 = ovR.p1; used.add(ovR.p1); }
+            else if (ovR.p2 && !used.has(ovR.p2)) { p2 = ovR.p2; used.add(ovR.p2); }
+
+            for (const name of ordered) {
+                if (used.has(name)) continue;
+                if (!p1) { p1 = name; used.add(name); continue; }
+                if (!p2) { p2 = name; used.add(name); continue; }
+                break;
+            }
+
+            return [{
+                id: `${this.id}-r1-1`,
+                round: 1,
+                p1, p2,
+                status: MatchStatus.WAITING
+            }];
+        }
+
+        const r1 = this._makeEmptyR1();
         const ordered = [...this.participants.values()]
             .sort((a, b) => a.seed - b.seed)
             .map(p => p.username)
@@ -206,35 +239,19 @@ export class Tournament {
         const used = new Set();
 
         for (const [slotIndex, ov] of this._r1Fixed.entries()) {
-            if (slotIndex < 0 || slotIndex >= cap) {
-                continue;
-            }
+            if (slotIndex < 0 || slotIndex >= cap) continue;
             const m = r1[slotIndex];
-
-            if (ov && ov.p1 && !used.has(ov.p1)) {
-                m.p1 = ov.p1;
-                used.add(ov.p1);
-            }
-            if (ov && ov.p2 && !used.has(ov.p2)) {
-                m.p2 = ov.p2;
-                used.add(ov.p2);
-            }
+            if (ov.p1 && !used.has(ov.p1)) { m.p1 = ov.p1; used.add(ov.p1); }
+            if (ov.p2 && !used.has(ov.p2)) { m.p2 = ov.p2; used.add(ov.p2); }
         }
 
         for (const name of ordered) {
-            if (used.has(name)) {
-                continue;
-            }
-
+            if (used.has(name)) continue;
             let placed = false;
             for (let k = 0; k < cap && !placed; k++) {
                 const m = r1[k];
-                if (!m.p1) {
-                    m.p1 = name; used.add(name); placed = true; break; 
-                }
-                if (!m.p2) {
-                    m.p2 = name; used.add(name); placed = true; break; 
-                }
+                if (!m.p1) { m.p1 = name; used.add(name); placed = true; break; }
+                if (!m.p2) { m.p2 = name; used.add(name); placed = true; break; }
             }
         }
 
