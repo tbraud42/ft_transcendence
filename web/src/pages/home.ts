@@ -1,5 +1,6 @@
 import i18n from '../utils/lang/i18n'
 import { renderPongMenu } from './pongMenu'
+import {refreshToken} from "../api/auth";
 type SortKey = 'username' | 'wins' | 'gamesPlayed' | 'totalScore' | 'winStreak' | 'bestStreak' | 'winRate' | 'avgScore'
 type SortOrder = 'asc' | 'desc'
 interface LeaderEntry { username: string; wins: number; gamesPlayed: number; totalScore: number; winStreak: number; bestStreak: number }
@@ -155,6 +156,7 @@ function renderLeaderboard(): HTMLElement {
 }
 
 export function renderHome(): HTMLElement {
+    refreshToken().catch(() => {})
     const page = document.createElement('div')
     page.className = 'w-full h-full px-4 py-6'
 

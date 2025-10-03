@@ -1,131 +1,86 @@
--- User
+PRAGMA foreign_keys = ON;
+
+-- USERS
 CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username VARCHAR(30) NOT NULL UNIQUE,
-  password_hash VARCHAR(100) NOT NULL,
-  role VARCHAR(10) NOT NULL DEFAULT 'user'
-    CHECK (role IN ('user', 'admin')),
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  last_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-  twofa_secret TEXT,
-  is_twofa_enabled INTEGER NOT NULL DEFAULT 0, -- bool 0/1
-  total_seconds INTEGER NOT NULL DEFAULT 0,
-  total_matches INTEGER NOT NULL DEFAULT 0
+  id               INTEGER PRIMARY KEY AUTOINCREMENT,
+  username         VARCHAR(30) NOT NULL UNIQUE,
+  password_hash    VARCHAR(100) NOT NULL,
+  role             VARCHAR(10) NOT NULL DEFAULT 'user' CHECK (role IN ('user','admin')),
+  avatar           BLOB,
+  created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_timestamp   DATETIME DEFAULT CURRENT_TIMESTAMP,
+  twofa_secret     TEXT,
+  is_twofa_enabled INTEGER NOT NULL DEFAULT 0,
+  total_seconds    INTEGER NOT NULL DEFAULT 0,
+  total_games      INTEGER NOT NULL DEFAULT 0
 );
 
--- Tournaments
-CREATE TABLE tournaments (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name VARCHAR(50) NOT NULL,
-  description VARCHAR(255),
-  creator_id INTEGER NOT NULL,
-  winner INTEGER, -- nullable tant que le tournoi n'est pas fini
-  difficulty VARCHAR(15) NOT NULL
-    CHECK (difficulty IN ('easy','medium','hard')),
-  maxPlayers INTEGER DEFAULT 16,
-  isPrivate INTEGER NOT NULL DEFAULT 0, -- 0/1 en SQLite
-  status INTEGER NOT NULL DEFAULT 0 -- 0=waiting, 1=playing, 2=finished
-    CHECK (status IN (0,1,2)),
+-- FRIENDS
+CREATE TABLE user_friends (
+  user_id    INTEGER NOT NULL,
+  friend_id  INTEGER NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CHECK (user_id < friend_id),
+  PRIMARY KEY (user_id, friend_id),
+  FOREIGN KEY (user_id)   REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_friends_user   ON user_friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_friends_friend ON user_friends(friend_id);
+
+CREATE TRIGGER IF NOT EXISTS trg_limit_friends_ins
+AFTER INSERT ON user_friends
+BEGIN
+  SELECT CASE
+    WHEN (SELECT COUNT(*) FROM user_friends uf WHERE uf.user_id = NEW.user_id OR uf.friend_id = NEW.user_id) > 10
+    THEN RAISE(ABORT, 'FRIEND_LIMIT')
+  END;
+  SELECT CASE
+    WHEN (SELECT COUNT(*) FROM user_friends uf WHERE uf.user_id = NEW.friend_id OR uf.friend_id = NEW.friend_id) > 10
+    THEN RAISE(ABORT, 'FRIEND_LIMIT')
+  END;
+END;
+
+-- TOURNAMENTS
+CREATE TABLE tournaments (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  name         VARCHAR(50) NOT NULL,
+  description  VARCHAR(255),
+  creator_id   INTEGER NOT NULL,
+  winner       INTEGER,
+  difficulty   VARCHAR(15) NOT NULL CHECK (difficulty IN ('easy','medium','hard')),
+  status       INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0,1,2)),
+  created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (creator_id) REFERENCES users(id),
   FOREIGN KEY (winner)     REFERENCES users(id) ON DELETE SET NULL
 );
 
--- Tournament_participants
-CREATE TABLE tournament_participants (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  tournament_id INTEGER NOT NULL,
-  user_id INTEGER NOT NULL,
-  wins INTEGER DEFAULT 0, -- implement "win"
-  losses INTEGER DEFAULT 0, -- implement "loose"
-  joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id)       REFERENCES users(id),
-  UNIQUE(tournament_id, user_id)
-);
-
--- Index
 CREATE UNIQUE INDEX IF NOT EXISTS uq_tournaments_name_nocase
   ON tournaments(name COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS idx_tournaments_status     ON tournaments(status);
 CREATE INDEX IF NOT EXISTS idx_tournaments_creator_id ON tournaments(creator_id);
-CREATE INDEX IF NOT EXISTS idx_tp_tournament_id       ON tournament_participants(tournament_id);
-CREATE INDEX IF NOT EXISTS idx_tp_user_id             ON tournament_participants(user_id);
+CREATE INDEX IF NOT EXISTS idx_tournaments_winner     ON tournaments(winner);
 
+-- GAMES
+CREATE TABLE games (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  tournament_id INTEGER NOT NULL,
+  player1_id    INTEGER NOT NULL,
+  player2_id    INTEGER NOT NULL,
+  winner_id     INTEGER,
+  started_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  duration_sec  INTEGER,
+  p1_score      INTEGER,
+  p2_score      INTEGER,
+  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+  FOREIGN KEY (player1_id)    REFERENCES users(id),
+  FOREIGN KEY (player2_id)    REFERENCES users(id),
+  FOREIGN KEY (winner_id)     REFERENCES users(id)
+);
 
--- -- Utilisateurs (auth + profil joueur)
--- CREATE TABLE users (
---   id INTEGER PRIMARY KEY AUTOINCREMENT,
---   username VARCHAR(30) NOT NULL UNIQUE,
---   password_hash VARCHAR(100) NOT NULL,
---   role VARCHAR(10) NOT NULL DEFAULT 'user'
---     CHECK (role IN ('user', 'admin')), -- 'user' or 'admin'
---   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---   last_timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
--- );
+CREATE INDEX IF NOT EXISTS idx_games_tournament ON games(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_games_p1         ON games(player1_id);
+CREATE INDEX IF NOT EXISTS idx_games_p2         ON games(player2_id);
+CREATE INDEX IF NOT EXISTS idx_games_winner     ON games(winner_id);
 
--- -- 2FA
--- ALTER TABLE users ADD COLUMN twofa_secret TEXT;
--- ALTER TABLE users ADD COLUMN is_twofa_enabled BOOLEAN DEFAULT false;
-
--- -- Tournois
--- CREATE TABLE tournaments (
---   id INTEGER PRIMARY KEY AUTOINCREMENT,
---   name VARCHAR(50) NOT NULL,
---   description VARCHAR(255),
---   creator_id INTEGER NOT NULL,
---   winner INTEGER, -- nullable tant que le tournoi n'est pas fini
---   difficulty VARCHAR(15), -- ex: 'easy', 'medium', 'hard'
---   maxPlayers INTEGER DEFAULT 16,
---   isPrivate BOOLEAN DEFAULT 0,
---   -- status INTEGER DEFAULT 0, -- 0=waiting, 1=playing, 2=finished
---   status INTEGER NOT NULL DEFAULT 0  -- 0=waiting, 1=playing, 2=finished
---     CHECK (status IN (0,1,2)),
---   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---   FOREIGN KEY (creator_id) REFERENCES users(id),
---   FOREIGN KEY (winner) REFERENCES users(id)
--- );
-
--- -- Participants aux tournois
--- CREATE TABLE tournament_participants ( -- temps total
---   id INTEGER PRIMARY KEY AUTOINCREMENT,
---   tournament_id INTEGER NOT NULL,
---   user_id INTEGER NOT NULL,
---   win INTEGER DEFAULT 0,   -- a implementer
---   loose INTEGER DEFAULT 0, -- a implementer
---   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---   FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
---   FOREIGN KEY (user_id) REFERENCES users(id),
---   UNIQUE(tournament_id, user_id)
--- );
-
--- -- Tournois
--- CREATE TABLE tournaments (
---   id INTEGER PRIMARY KEY AUTOINCREMENT,
---   name VARCHAR(50) NOT NULL,
---   description VARCHAR(255),
---   creator_id INTEGER NOT NULL,
---   winner INTEGER NOT NULL, -- a implmenter
---   difficulty VARCHAR(15), -- ex: 'easy', 'medium', 'hard'
---   maxPlayers INTEGER DEFAULT 16,
---   isPrivate BOOLEAN DEFAULT 0,
---   -- status INTEGER DEFAULT 0, -- 0=waiting, 1=playing, 2=finished
---   status INTEGER NOT NULL DEFAULT 0  -- 0=waiting, 1=playing, 2=finished
---     CHECK (status IN (0,1,2)),
---   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---   FOREIGN KEY (creator_id) REFERENCES users(id)
---   FOREIGN KEY (winner) REFERENCES users(id)
--- );
-
--- -- Participants aux tournois
--- CREATE TABLE tournament_participants ( -- temps total
---   id INTEGER PRIMARY KEY AUTOINCREMENT,
---   tournament_id INTEGER NOT NULL,
---   user_id INTEGER NOT NULL,
---   win INTEGER DEFAULT 0, -- a implmenter
---   loose INTEGER DEFAULT 0, -- a implmenter
---   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
---   FOREIGN KEY (tournament_id) REFERENCES tournaments(id),
---   FOREIGN KEY (user_id) REFERENCES users(id),
---   UNIQUE(tournament_id, user_id)
--- );

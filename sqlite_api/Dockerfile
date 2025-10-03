@@ -21,6 +21,4 @@ COPY --from=builder /app/package*.json ./
 
 EXPOSE 3000
 
-ENTRYPOINT ["/scripts/vault-run.sh", "/secrets/sqlite_api/app.env"]
-
 CMD ["npm", "start"]

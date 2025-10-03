@@ -1,37 +1,20 @@
 #!/bin/bash
-# set -euo pipefail
-
-while [ ! -f /secrets/nginx/app.env ]; do
-    echo "[INFO] Waiting for /secrets/nginx/app.env to be available..."
-    sleep 2
-done
-
-# Load environment variables from the .env file
-set -o allexport
-source /secrets/nginx/app.env
-set +o allexport
-
-
-echo "[INFO] Environment variables loaded."
 
 CERT_DIR="/etc/nginx/certs"
 DOMAIN_NAME="${DOMAIN_NAME:-localhost}"
 WEB_PORT="${WEB_PORT:-80}"
 ADMIN_EMAIL="admin@${DOMAIN_NAME}"
 LE_LIVE_DIR="/etc/letsencrypt/live/$DOMAIN_NAME"
-CERT_FILE="$CERT_DIR/fullchain.pem_$DOMAIN_NAME.crt"
-KEY_FILE="$CERT_DIR/privkey.pem_$DOMAIN_NAME.key"
+CERT_FILE="$CERT_DIR/fullchain.pem_$DOMAIN_NAME"
+KEY_FILE="$CERT_DIR/privkey.pem_$DOMAIN_NAME"
 
-
-# Generate self-signed certificates 
 function selfsigned_cert() {
     NAME=$1
     openssl req -x509 -nodes -days 365 \
         -newkey rsa:2048 \
-        -keyout "$CERT_DIR/privkey.pem_$NAME.key" \
-        -out "$CERT_DIR/fullchain.pem_$NAME.crt" \
-        -subj "/C=FR/ST=France/L=Local/O=Dev/OU=SelfSigned/CN=$NAME" \
-        -addext "subjectAltName=DNS:$NAME" 
+        -keyout "$CERT_DIR/privkey.pem_$NAME" \
+        -out "$CERT_DIR/fullchain.pem_$NAME" \
+        -subj "/C=FR/ST=France/L=Local/O=Dev/OU=SelfSigned/CN=$NAME"
     echo "[INFO] Self-signed certificate created for $NAME"
 }
 
@@ -59,7 +42,6 @@ else
     elif [[ -f "$LE_LIVE_DIR/fullchain.pem" && -f "$LE_LIVE_DIR/privkey.pem" ]]; then
         cp "$LE_LIVE_DIR/fullchain.pem" "$CERT_FILE"
         cp "$LE_LIVE_DIR/privkey.pem" "$KEY_FILE"
-
         echo "[SUCCESS] Let's Encrypt certificates copied to $CERT_DIR"
     else
         echo "[ERROR] Let's Encrypt certificates not found after generation."

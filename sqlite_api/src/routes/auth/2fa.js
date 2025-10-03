@@ -42,11 +42,11 @@ export default async function (fastify, options) {
     const isValid = speakeasy.totp.verify({
       secret: req.user.twofa_secret,
       encoding: 'base32',
-      token: req.body.token // token must be a string
+      token: req.body.token // string
     });
 
     if (isValid) {
-      await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(req.user.id);
+      fastify.updateTimeStamp(fastify.db, req.user.id);
       const fullToken = fastify.generateToken(
         {
           id: req.user.id,

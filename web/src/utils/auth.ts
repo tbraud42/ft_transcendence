@@ -72,7 +72,7 @@ export async function handleSignup(
 }
 
 export function handleFtLogin(): void {
-    const apiBaseUrl = `https://${API_URL}`;
+    const apiBaseUrl = `${API_URL}`;
     const authUrl = `${apiBaseUrl.replace(/\/+$/, '')}/auth/42/login`;
     window.location.assign(authUrl);
 }

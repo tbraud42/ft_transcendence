@@ -88,7 +88,7 @@ export default async function ft42Routes(fastify) {
       fastify.apiStat.signup++;
     }
 
-    fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
+    fastify.updateTimeStamp(fastify.db, user.id);
 
     const token = fastify.generateToken({
       id: user.id,
