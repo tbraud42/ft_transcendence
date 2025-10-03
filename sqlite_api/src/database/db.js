@@ -12,13 +12,19 @@ const dbPath = path.join(dataDir, 'database.sqlite');
 if (!fs.existsSync(dbPath)) {
   await initDb(dbPath);
 } else {
-  console.log('Database already init');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Database already init');
+  }
 }
 
-const db = new Database(dbPath, {
-  verbose: console.log // print toute les action dans la console
-});
+let db;
 
-db.pragma('foreign_keys = ON');
+if (process.env.NODE_ENV === 'development') {
+  db = new Database(dbPath, {
+    verbose: console.log // print toute les action dans la console
+  });
+} else {
+  db = new Database(dbPath);
+}
 
 export default db;

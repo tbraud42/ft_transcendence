@@ -1,8 +1,3 @@
-import i18n from '../../utils/lang/i18n'
-import { createButton } from '../../components/button'
-import { createInput } from '../../components/input'
-import { api2faSetup, twofaVerify } from '../../api/auth'
-import {setToast} from "../../components/toast";
 
 export function render2faView(): HTMLElement {
     const section = h('section', 'h-full flex flex-col justify-center items-center text-center gap-4')

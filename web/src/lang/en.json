@@ -75,6 +75,7 @@
   "pong_ai_difficulty_easy": "Easy",
   "pong_ai_difficulty_medium": "Medium",
   "pong_ai_difficulty_hard": "Hard",
+  "pong_online_max_players": "Max players",
   "pong_ai_opponent": "AI",
   "pong_configuration": "Configuration",
   "pong_start": "Start",

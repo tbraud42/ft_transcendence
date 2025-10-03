@@ -54,6 +54,8 @@ async function requestAuth(
         throw new Error(i18n.t('login_error_user_not_found'))
     }
 
+    console.log(res)
+
     if (!res.ok) {
         throw new Error(i18n.t('login_error_failed'))
     }
@@ -65,11 +67,11 @@ async function requestAuth(
     return { token: data.token, twofa_required: false }
 }
 
-export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: string, username: string } } | null> {
+export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: number, username: string } } | null> {
     if (!code || !state) {
         return null
     }
-    const url = `https://${API_URL}/auth/42/callback?code=${code}&state=${state}`
+    const url = `${API_URL}/auth/42/callback?code=${code}&state=${state}`
 
     const res = await fetch(url, {
         method: 'GET',
@@ -86,7 +88,7 @@ export async function request42Auth(code: string, state: string): Promise<{ toke
 export async function updatePassword(current: string, newPass: string) {
     await refreshToken();
 
-    const url = `https://${API_URL}/users`;
+    const url = `${API_URL}/users`;
 
     const res = await fetch(url, {
         method: 'PATCH',
@@ -118,7 +120,7 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
         return getToken();
     }
 
-    const url = `https://${API_URL}/auth/refreshAuth`;
+    const url = `${API_URL}/auth/refreshAuth`;
 
     const res = await fetch(url, {
         method: 'GET',
@@ -146,7 +148,7 @@ export const apiLogin = (name: string, password: string) =>
 
 
 export async function api2faSetup(): Promise<{ qrCode: string, secret: string, otpauthUrl: string } | null> {
-    const url = `https://${API_URL}/auth/2fa/setup`
+    const url = `${API_URL}/auth/2fa/setup`
     const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -177,7 +179,7 @@ export async function twofaVerify(code: string): Promise<boolean> {
         token = getToken()
     }
 
-    const url = `https://${API_URL}/auth/2fa/verify`
+    const url = `${API_URL}/auth/2fa/verify`
     const res = await fetch(url, {
         method: 'POST',
         headers: {

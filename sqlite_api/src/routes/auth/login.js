@@ -19,14 +19,14 @@ export default async function (fastify, options) {
 
     const user = await fastify.showUserByUsername(fastify.db, username);
     if (!user) {
-      return reply.code(404).send({ error: 'User not found' });
+      return reply.code(401).send({ error: 'User not found' });
     }
 
     if (!(await fastify.verifyPassword(password, user.password_hash))) {
       return reply.code(401).send({ error: 'Invalid password' });
     }
 
-    await fastify.db.prepare(`UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(user.id);
+    fastify.updateTimeStamp(fastify.db, user.id);
     fastify.apiStat.login++;
 
     if (user.is_twofa_enabled) {
