@@ -47,6 +47,7 @@ CREATE TABLE tournaments (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   name         VARCHAR(50) NOT NULL,
   description  VARCHAR(255),
+  maxPlayer    INTEGER NOT NULL DEFAULT 2 CHECK (maxPlayer IN (2, 4, 8)),
   creator_id   INTEGER NOT NULL,
   winner       INTEGER,
   difficulty   VARCHAR(15) NOT NULL CHECK (difficulty IN ('easy','medium','hard')),

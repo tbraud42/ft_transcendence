@@ -18,7 +18,7 @@ import refreshRoute from './routes/auth/refreshAuth.js';
 import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
 import tournamentRoute from './routes/matchs/tournaments.js';
-import tournamentClientRoute from './routes/matchs/tournamentsClient.js';
+import tournamentUserRoute from './routes/matchs/tournamentsUser.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
 
@@ -42,7 +42,7 @@ const start = async () => {
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
-  await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
+  // await fastify.register(tournamentUserRoute, { prefix: '/tournaments/user' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
@@ -75,7 +75,7 @@ const start = async () => {
     })
 
     fastify.listen({ port: PORT, host: ADDRESS });
-    //------insert admin-------
+    // ------insert admin-------
     // const username = 'sylvie';
     // const password = 'supersecurepassword';
     // const password_hash = await bcrypt.hash(password, 10);

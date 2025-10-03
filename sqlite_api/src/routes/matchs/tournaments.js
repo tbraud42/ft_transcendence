@@ -16,7 +16,7 @@ export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getAllTournaments(fastify.db);
     if (!tournament || tournament.length === 0) {
-      return reply.code(404).send({ error: 'no tournaments yet' });
+      return reply.code(404).send({});
     }
     reply.send(tournament);
   });
@@ -51,19 +51,19 @@ export default async function (fastify, options) {
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
-
+    const maxPlayer  = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
     const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
+
     if (!name || name.length > 50) return bad();
     if (description && description.length > 255) return bad();
     if (!['easy','medium','hard'].includes(difficulty)) return bad();
-
-    const exists = await fastify.getTournamentByName(fastify.db, name);
-    if (exists) return reply.code(400).send({ error: 'Name already taken' });
+    if (maxPlayer != 2 && maxPlayer != 4 && maxPlayer != 8) return bad();
 
     const data = {
       name,
       description,
       difficulty,
+      maxPlayer,
       creator_id: req.user.id,
     };
 
@@ -81,14 +81,17 @@ export default async function (fastify, options) {
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
+    const maxPlayer  = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
     const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
 
     if (!name || name.length > 50) return bad();
     if (description && description.length > 255) return bad();
     if (!['easy','medium','hard'].includes(difficulty)) return bad();
+    if (maxPlayer != 2 && maxPlayer != 4 && maxPlayer != 8) return bad();
 
-    const tournament = await fastify.updateTournament(fastify.db, id, { name, description, difficulty });
+    const tournament = await fastify.updateTournament(fastify.db, id, { name, description, difficulty, maxPlayer});
     if (!tournament || tournament.changes === 0) return reply.code(404).send({ error: 'Not found' });
+
     reply.send({ success: true });
   });
 

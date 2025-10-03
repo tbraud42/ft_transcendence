@@ -1,10 +1,10 @@
-// routes/matchs/tournamentsClient.js
+// routes/matchs/tournamentsUser.js
 // | Method   | Route                     | Description                            | Access           |
 // | -------- | ------------------------- | -------------------------------------- | ---------------- |
-// | `GET`    | `/tournaments/id`         | View user last match                   | Authenticated    |
+// | `GET`    | `/tournaments/user/id`    | View user last match                   | Authenticated    |
 
 export default async function (fastify, options) {
-  fastify.get('/tournaments/:id(\\d+)', { preHandler: [fastify.auth, fastify.allowSelfOrAdmin()] }, async (req, reply) => {
+  fastify.get('/tournaments/user/:id(\\d+)', { preHandler: [fastify.auth, fastify.allowSelfOrAdmin()] }, async (req, reply) => {
     const targetId = Number(req.params.id);
     const limit = req.query?.limit !== undefined ? Number(req.query.limit) : 20;
 

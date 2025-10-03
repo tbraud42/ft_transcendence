@@ -61,15 +61,14 @@ export function getTournamentByName(db, name){
     return db.prepare(`SELECT * FROM tournaments WHERE name = ? COLLATE NOCASE`).get(name);
   };
 
-export function createTournament(db, { name, description, difficulty, creator_id }){
-    const stmt = db.prepare(`INSERT INTO tournaments (name, description, creator_id, difficulty, status) VALUES (?, ?, ?, ?, 0)`);
-    const info = stmt.run(name, description || null, creator_id, difficulty);
+export function createTournament(db, { name, description, difficulty, maxPlayer, creator_id}){
+    const info = db.prepare(`INSERT INTO tournaments (name, description, creator_id, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, 0)`).run(name, description || null, creator_id, difficulty, maxPlayer);
     return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);
   };
 
-export function updateTournament(db, id, { name, description, difficulty }){
-    const stmt = db.prepare(`UPDATE tournaments SET name = ?, description = ?, difficulty = ? WHERE id = ?`);
-    return stmt.run(name, description || null, difficulty, id);
+export function updateTournament(db, id, { name, description, difficulty, maxPlayer}){
+    const info = db.prepare(`UPDATE tournaments SET name = ?, description = ?, difficulty = ?, maxPlayer = ? WHERE id = ?`);
+    return info.run(name, description || null, difficulty, maxPlayer, id);
   };
 
 export function changeTournamentStatus(db, id, nextStatus = null){
