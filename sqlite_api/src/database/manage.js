@@ -47,7 +47,7 @@ export async function updateUser(db, id, password) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const info = db.prepare(`UPDATE users SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(hashedPassword, uid);
+  const info = db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashedPassword, uid);
 
   if (info.changes === 0) throw new Error('User not found');
   return { success: true, id: uid };
@@ -78,21 +78,26 @@ export async function deleteUser(db, id) {
 export function isAdmin(db, userId) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return false;
+
   const row = db.prepare('SELECT role FROM users WHERE id = ?').get(uid);
   return row?.role?.toLowerCase() === 'admin';
 }
 
-export function isAdminOrCreator(fastify, tournamentId, userId) {
+export function isAdminOrCreator(db, tournamentId, userId) {
   const tid = Number(tournamentId);
   const uid = Number(userId);
   if (!Number.isFinite(tid) || !Number.isFinite(uid)) return false;
 
-  const adminRow = fastify.db.prepare('SELECT role FROM users WHERE id = ?').get(uid);
-  if (adminRow?.role?.toLowerCase() === 'admin') return true;
+  const result = db.prepare(`
+    SELECT u.role, t.creator_id
+    FROM users u
+    JOIN tournaments t ON t.id = ?
+    WHERE u.id = ?`).get(tid, uid);
 
-  const t = fastify.db.prepare('SELECT creator_id FROM tournaments WHERE id = ?').get(tid);
-  return !!t && Number(t.creator_id) === uid;
+  if (!result) return false;
+  return result.role.toLowerCase() === 'admin' || result.creator_id === uid;
 }
+
 
 export async function crontab(fastify) {
   const users = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
@@ -130,7 +135,7 @@ function normalizePair(a, b) {
   return x < y ? [x, y] : [y, x];
 }
 
-/* -------------------- AMIS -------------------- */
+/* -------------------- Friends -------------------- */
 
 export function addFriend(db, userA, userB) {
   const [u, f] = normalizePair(userA, userB);
@@ -170,7 +175,7 @@ export function listFriends(db, userId) {
   return db.prepare(sql).all(uid, uid, uid);
 }
 
-/* -------------------- TOURNOIS : membres & stats -------------------- */
+/* -------------------- Tournaments -------------------- */
 
 export function listTournamentMembers(db, tournamentId) {
   const tid = Number(tournamentId);

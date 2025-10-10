@@ -32,7 +32,7 @@ export default async function ft42Routes(fastify) {
     reply.redirect(`${FT_AUTHORIZE_URL}?${params.toString()}`);
   });
 
-  fastify.get('/callback', async (req, reply) => { // a tester
+  fastify.get('/callback', async (req, reply) => { // a tester avec nouvelle redirc
     const q = req.query ?? {};
     const code  = typeof q.code  === 'string' ? q.code.trim()  : '';
     const state = typeof q.state === 'string' ? q.state.trim() : '';

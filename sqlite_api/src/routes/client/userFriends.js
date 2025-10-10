@@ -14,7 +14,7 @@ export default async function (fastify, options) {
   fastify.post('/friends/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friendId = Number(req.params.id);
     const friend = fastify.addFriend(fastify.db, req.user.id, friendId);
-    return reply.code(201).send(friend); // 201 Created si OK
+    return reply.code(201).send(friend); // 201 creat si ok
   });
 
   fastify.delete('/friends/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {

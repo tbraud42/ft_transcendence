@@ -52,6 +52,7 @@ export default async function (fastify, options) {
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
     const maxPlayer  = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
+    const creator = req.user.username;
     const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
 
     if (!name || name.length > 50) return bad();
@@ -64,7 +65,7 @@ export default async function (fastify, options) {
       description,
       difficulty,
       maxPlayer,
-      creator_id: req.user.id,
+      creator,
     };
 
     const tournament = await fastify.createTournament(fastify.db, data);
@@ -74,8 +75,8 @@ export default async function (fastify, options) {
   fastify.patch('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
 
-    const allowed = await fastify.isAdminOrCreator(id, req.user.id);// ne marche pas
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
+    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
     const body = req.body ?? {};
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
@@ -95,75 +96,79 @@ export default async function (fastify, options) {
     reply.send({ success: true });
   });
 
-  fastify.post('/state/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const id = Number(req.params.id);
-
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
-
-    const next = typeof req.body?.status === 'number' ? req.body.status : null;
-    if (next !== null && ![0,1,2].includes(next)) {
-      return reply.code(400).send({ error: 'Invalid status' });
-    }
-
-    const result = await fastify.changeTournamentStatus(fastify.db, id, next);
-    if (!result) return reply.code(404).send({ error: 'Not found' });
-
-    return reply.send({ id: result.id, status: result.status });
-  });
-
   fastify.post('/result/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const id = Number(req.params.id);
-    const bad = (m='Missing or invalid field') => reply.code(400).send({ error: m });
+    const isAdmin = fastify.isAdmin(fastify.db, req.user.id);
+    if (!isAdmin) return reply.code(403).send({ error: 'Access denied' });
 
-    if (!Number.isFinite(id)) return bad();
+    const tid = Number(req.params.id);
+    if (!Number.isFinite(tid)) return reply.code(400).send({ error: 'Invalid tournament id' });
 
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
+    if (!await fastify.tournamentExists(fastify.db, tid)) {
+      return reply.code(404).send({ error: 'Tournament not found' });
+    }
 
-    if (!await fastify.tournamentExists(fastify.db, id)) return reply.code(404).send({ error: 'Not found' });
-
-    const body = req.body ?? {};
+    const body  = req.body ?? {};
     const games = Array.isArray(body.games) ? body.games : [];
+    const tourWinnerUsername =
+      typeof body?.winner === 'string' ? body.winner.trim()
+      : typeof body?.winner_username === 'string' ? body.winner_username.trim()
+      : undefined;
 
-    if (games.length === 0 && body.winner_id === undefined) {
-      return bad('Provide games and/or winner_id');
+    if (games.length === 0 && tourWinnerUsername === undefined) {
+      return reply.code(400).send({ error: 'Provide games and/or winner' });
     }
 
+    const preparedRows = [];
     for (const g of games) {
-      const p1 = Number(g?.player1_id);
-      const p2 = Number(g?.player2_id);
-      const s1 = Number(g?.p1_score);
-      const s2 = Number(g?.p2_score);
-      const dur = Number(g?.duration_sec);
-      if (![p1,p2,s1,s2,dur].every(Number.isFinite) || dur < 0) return bad();
-      if (!await fastify.userExists(fastify.db, p1) || !await fastify.userExists(fastify.db, p2)) return bad('Unknown user in games');
+      const row = {
+        game_num: g.game_num,
+        p1: g.p1,
+        p2: g.p2,
+        winner: g.winner,
+        started_at: g.started_at,
+        duration_sec: g.duration_sec,
+        p1_score: g.p1_score,
+        p2_score: g.p2_score,
+      };
+
+      const { ok, errors, normalized } = fastify.validateGameRow(row);
+      if (!ok) return reply.code(400).send({ error: `Invalid game row: ${errors.join(', ')}` });
+
+      console.log(`§§§§test§§§§ = ${normalized.game_num}`);
+      const u1 = fastify.showUserByUsername(fastify.db, normalized.p1);
+      const u2 = fastify.showUserByUsername(fastify.db, normalized.p2);
+      if (!u1 || !u2) return reply.code(400).send({ error: 'Unknown user in games' });
+
+      preparedRows.push({
+        game_num: normalized.game_num,
+        player1: normalized.p1,
+        player2: normalized.p2,
+        p1_score: normalized.s1,
+        p2_score: normalized.s2,
+        duration_sec: normalized.dur,
+        started_at: normalized.startedAt,
+        winner: normalized.winner,
+      });
     }
 
-    if (games.length > 0) {
-      try {
-        await fastify.insertStatGame(fastify.db, id, games);
-      } catch (e) {
-        if (e.message === 'INVALID_GAME_ROW') return bad();
-        throw e;
-      }
+    await fastify.insertStatGame(fastify.db, tid, preparedRows);
+
+    if (tourWinnerUsername !== undefined) {
+      const u = fastify.showUserByUsername(fastify.db, tourWinnerUsername);
+      if (!u) return reply.code(400).send({ error: 'Invalid winner' });
+
+      const done = await fastify.setTournamentWinner(fastify.db, tid, tourWinnerUsername);
+      return reply.send({ id: done.id, status: done.status, winner: done.winner });
     }
 
-    if (body.winner_id !== undefined) {
-      const winnerId = Number(body.winner_id);
-      if (!Number.isFinite(winnerId) || !await fastify.userExists(fastify.db, winnerId)) return bad('Invalid winner_id');
-      const done = await fastify.setTournamentWinner(fastify.db, id, winnerId);
-      return reply.send({ id: done.id, status: done.status, winner_id: done.winner });
-    }
-
-    const t = await fastify.getTournamentById(fastify.db, id);
-    return reply.send({ id: t.id, status: t.status, winner_id: t.winner ?? null });
+    const t = await fastify.getTournamentById(fastify.db, tid);
+    return reply.send({ id: t.id, status: t.status, winner: t.winner ?? null });
   });
 
   fastify.delete('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
     const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
     const info = await fastify.deleteTournament(fastify.db, id);
     if (!info || info.changes === 0) return reply.code(404).send({ error: 'Not found' });

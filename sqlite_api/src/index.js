@@ -42,7 +42,7 @@ const start = async () => {
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
-  // await fastify.register(tournamentUserRoute, { prefix: '/tournaments/user' });
+  await fastify.register(tournamentUserRoute, { prefix: '/tournaments/user' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
@@ -76,7 +76,7 @@ const start = async () => {
 
     fastify.listen({ port: PORT, host: ADDRESS });
     // ------insert admin-------
-    // const username = 'sylvie';
+    // const username = 'pauserr';
     // const password = 'supersecurepassword';
     // const password_hash = await bcrypt.hash(password, 10);
     // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');

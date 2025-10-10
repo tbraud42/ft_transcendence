@@ -1,7 +1,8 @@
 // routes/matchs/tournamentsUser.js
-// | Method   | Route                     | Description                            | Access           |
-// | -------- | ------------------------- | -------------------------------------- | ---------------- |
-// | `GET`    | `/tournaments/user/id`    | View user last match                   | Authenticated    |
+// | Method   | Route                           | Description                   | Access           |
+// | -------- | ------------------------------- | ----------------------------- | ---------------- |
+// | `GET`    | `/tournaments/user/id`          | View user last match          | Authenticated    |
+// | `GET`    | `/tournaments/:id/participants` | View user last match          | Authenticated    |
 
 export default async function (fastify, options) {
   fastify.get('/tournaments/user/:id(\\d+)', { preHandler: [fastify.auth, fastify.allowSelfOrAdmin()] }, async (req, reply) => {
@@ -22,4 +23,16 @@ export default async function (fastify, options) {
 
     reply.send(data);
   });
+
+  fastify.get('/tournaments/:id/participants', { preHandler: [fastify.auth] }, async (req, reply) => {
+    const id = Number(req.params.id);
+    const result = fastify.db.prepare(`
+      SELECT username
+      FROM v_tournament_participants
+      WHERE tournament_id = ?
+      ORDER BY username COLLATE NOCASE`).all(id);
+
+    reply.send(result);
+  });
+
 }

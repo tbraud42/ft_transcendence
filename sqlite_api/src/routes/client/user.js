@@ -64,44 +64,38 @@ export default async function (fastify, options) {
     return reply.send('User update successfully');
   });
 
-  fastify.patch('/avatar', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42 // juste do it, make your dream come try, yes you can, nothing is impossible
+  fastify.patch('/avatar', {preHandler: [fastify.auth]}, async (req, reply) => {
     const body = req.body ?? {};
-    const oldPassword = typeof body.oldPassword === 'string' ? body.oldPassword.trim() : '';
+    const newAvatar = typeof body.avatar === 'string' ? body.avatar.trim() : '';
 
-    if (!oldPassword) {
-      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
+    if (!newAvatar) {
+      return reply.code(400).send({ error: 'Missing or invalid field [avatar]' });
     }
 
-    if (fastify.usernameEndsWith42(req.user.username)) {
-      return reply.code(400).send({ error: 'cannot change 42 auth password' });
-    }
+    // test avatar
 
-    if (!await fastify.verifyPassword(oldPassword, req.user.password_hash)) {
-      return reply.code(403).send({ error: 'Access denied' });
-    }
-
-    if (await fastify.verifyPassword(newPassword, req.user.password_hash)) {
-        return reply.code(400).send({error: "need too change the password" });
-    }
-
-      return reply.code(400).send({error: "Bad Request", code: "INVALID_PASSWORD_POLICY", message });
-
-    await fastify.updateUser(fastify.db, req.user.id, newPassword); // a cree pour avatar
+    await fastify.updateUserAvatar(fastify.db, req.user.id, newAvatar); // a cree pour avatar
     return reply.send('User update successfully');
   });
 
   fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
 
-    if (targetId === req.user.id || req.user.role === 'admin') {
-      const user = await fastify.showUserById(fastify.db, targetId);
-      if (!user) {
-        return reply.code(404).send({ error: 'User not found' });
-      }
-
-      await fastify.deleteUser(fastify.db, req.params.id);
-      return reply.send({ success: true });
+    if (targetId !== req.user.id && req.user.role !== 'admin') {
+      return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
     }
-    return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+
+    await fastify.deleteUser(fastify.db, req.params.id);
+    return reply.send({ success: true });
+  });
+
+  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth]}, async (req, reply) => {
+    const targetId = Number(req.params.id);
+
+    if (targetId !== req.user.id && req.user.role !== 'admin') {
+      return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+    }
+
+    return reply.send(fastify.listUserRecentMatches(fastify.db, targetId));
   });
 }
