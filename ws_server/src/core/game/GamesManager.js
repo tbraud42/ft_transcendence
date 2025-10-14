@@ -24,8 +24,8 @@ class TournamentManager {
             if (data?.name) {
                 name = String(data.name)
             }
-            if (data?.maxPlayers) {
-                maxPlayers = Number(data.maxPlayers)
+            if (data?.maxPlayer) {
+                maxPlayers = Number(data.maxPlayer)
             }
 
             if (data?.creator_id) {
