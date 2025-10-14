@@ -22,6 +22,7 @@ sqlite_api/data/*.sqlite
 build_and_push.sh
 
 # MacOS
+
 .DS_Store
 
 *test.sh

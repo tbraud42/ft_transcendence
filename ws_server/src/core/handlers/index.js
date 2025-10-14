@@ -5,7 +5,7 @@ import handleJoin     from './join.js';
 import handleInput    from './input.js';
 import handleReady    from './ready.js';
 import handleAddBot   from './add_bot.js';
-import handleRemoveBot   from './remove_bot.js';
+import handleRemove   from './remove.js';
 import handleSnapshot from './snapshot.js';
 
 const HANDLERS = {
@@ -15,7 +15,7 @@ const HANDLERS = {
     [CliMessageType.READY]:    handleReady,
     [CliMessageType.SNAPSHOT]: handleSnapshot,
     [CliMessageType.ADD_BOT]:  handleAddBot,
-    [CliMessageType.REMOVE_BOT]:  handleRemoveBot,
+    [CliMessageType.REMOVE]:  handleRemove,
 };
 
 export function registerHandlers(socket) {

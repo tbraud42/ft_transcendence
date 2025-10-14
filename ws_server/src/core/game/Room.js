@@ -1,202 +1,204 @@
-import { Bot } from './bot.js'
+import { SrvMessageType } from '../client/protocol.js';
 
-export class Match {
-    constructor({ tournament, id, p1, p2, winScore, readyTimeoutMs, disconnectLoseMs }) {
-        this.tournament = tournament
-        this.id = id
-        this.p1 = p1
-        this.p2 = p2
+export class Room {
+    constructor({ tournament, id, difficulty, tickRate = 20 }) {
+        this.tournament = tournament;
+        this.difficulty = difficulty;
+        this.id = id;
 
-        this.winScore = winScore
-        this.readyTimeoutMs = readyTimeoutMs
-        this.disconnectLoseMs = disconnectLoseMs
+        // store usernames (not objects)
+        this.p1 = null;
+        this.p2 = null;
 
-        this.bots = {}
-        if (this.tournament.participants.get(this.p1)?.isBot) {
-            this.bots[this.p1] = new Bot(this.p1)
-        }
-        if (this.tournament.participants.get(this.p2)?.isBot) {
-            this.bots[this.p2] = new Bot(this.p2)
-        }
+        this.tickRate = tickRate;
+        this.loop = null;
+        this.started = false; // broadcasting started
 
-        this.ready = new Map([[p1, false], [p2, false]])
-        this.readyTimer = null
+        // world
+        this.W = 640;
+        this.H = 480;
+        this.PAD_W = 10;
+        this.PAD_H = 100;
+        this.PAD_SPEED = 5;
+        this.BALL_R = 16;
 
-        this.paused = false
-        this.disconnectTimers = new Map()
-
-        this.interval = null
-        this.state = this.initState()
-
-        // throttle bot state push (1s)
-        this._botAccum = 0
-        this._botUpdateMs = 1000
+        // minimal state; keys will be usernames
+        this.state = {
+            tick: 0,
+            score: {},
+            paddles: {},
+            ball: { x: this.W / 2, y: this.H / 2 },
+        };
     }
 
-    initState() {
+    /* ---------------- player slots (by position) ---------------- */
+
+    getPlayerByPosition(pos) {
+        if (pos === 1) {
+            return this.p1;
+        }
+        if (pos === 2) {
+            return this.p2;
+        }
+        return null;
+    }
+
+    getPlayerByUsername(username) {
+        if (this.p1.getUsername() === username) {
+            return this.p1;
+        }
+        if (this.p2.getUsername() === username) {
+            return this.p2;
+        }
+        return null;
+    }
+
+    removePlayer(username) {
+        const u = String(username || '');
+        if (this.p1 === u) {
+            this.p1 = null;
+        }
+        if (this.p2 === u) {
+            this.p2 = null;
+        }
+        this._rebuildStateKeys();
+
+        // stop broadcasting if one leaves
+        if (this.loop && (!this.p1 || !this.p2)) {
+            clearInterval(this.loop);
+            this.loop = null;
+            this.started = false;
+        }
+    }
+
+    getPlayers() {
+        return [this.p1, this.p2].filter(Boolean);
+    }
+
+    checkStart() {
+        if (!this.p1 || !this.p2) {
+            return false;
+        }
+        if (this.p1.isReady() && this.p2.isReady()) {
+            this._broadcast({
+                type: SrvMessageType.MATCH_START, roomId: this.id, clients: [
+                    {
+                        username: this.p1.getUsername(),
+                        slot: 0
+                    },
+                    {
+                        username: this.p2.getUsername(),
+                        slot: 1
+                    },
+                ],
+                difficulty: this.difficulty
+            });
+            //this._broadcast(this._publicState());
+            //this._rebuildStateKeys();
+            this._startBroadcast();
+            return true;
+        }
+        return false;
+    }
+
+    applyInput(username, up, down) {
+        const player = this.getPlayerByUsername(username);
+        player.up = up;
+        player.down = down;
+    }
+
+    /* ---------------- broadcast loop (idle) ---------------- */
+
+    _startBroadcast() {
+        if (this.started) {
+            return;
+        }
+        if (!this.p1 || !this.p2) {
+            return;
+        }
+
+        const intervalMs = Math.max(16, Math.round(1000 / this.tickRate));
+        this.started = true;
+        this.loop = setInterval(() => {
+            try {
+                this._tick();
+                this._broadcast(this._publicState());
+            } catch (e) {
+                clearInterval(this.loop);
+                this.loop = null;
+                this.started = false;
+                // Keep it minimal: we only broadcast state, no match end logic here
+            }
+        }, intervalMs);
+    }
+
+    _tick() {
+        this.state.tick += 1;
+        this.p1.tick(); //TODO: give ball for ai
+        this.p2.tick(); //TODO: give ball for ai
+        // no physics; just time passing so clients can draw the court
+        // update player pos depending on up or down
+        // update ball movement
+    }
+
+    _publicState() {
+        const u1 = this.p1.getUsername();
+        const u2 = this.p2.getUsername();
+
         return {
-            players: [this.p1, this.p2],
-            ball: { x: 400, y: 225, vx: 4, vy: 3 },
-            p: [200, 200],
-            score: [0, 0],
-            w: 800, h: 450,
-        }
+            type: SrvMessageType.MATCH_STATE,
+            roomId: this.id,
+            tick: this.state.tick | 0,
+            players: [
+                {
+                    username: u1,
+                    score: this.state.score[u1] || 0,
+                    y: this.p1.y,
+                    pad: { width: this.PAD_W, height: this.PAD_H, speed: this.PAD_SPEED },
+                },
+                {
+                    username: u2,
+                    score: this.state.score[u2] || 0,
+                    y: this.p2.y,
+                    pad: { width: this.PAD_W, height: this.PAD_H, speed: this.PAD_SPEED },
+                },
+            ],
+            ball: {
+                x: this.state.ball.x,
+                y: this.state.ball.y,
+                radius: this.BALL_R,
+            },
+            size: { w: this.W, h: this.H },
+        };
     }
 
-    markReady(username) {
-        if (!this.ready.has(username)) {
-            return
+    _rebuildStateKeys() {
+        const u1 = this.p1, u2 = this.p2;
+
+        const paddles = {};
+        const score = {};
+
+        if (u1) {
+            paddles[u1] = { x: 24, y: this.H / 2 - this.PAD_H / 2, vy: 0 };
+            score[u1] = this.state.score[u1] || 0;
         }
-        this.ready.set(username, true)
-        this.tournament.broadcastAll({ type: 'player_ready', roomId: this.id, username })
-        this.tryStart()
+        if (u2) {
+            paddles[u2] = { x: this.W - 24 - this.PAD_W, y: this.H / 2 - this.PAD_H / 2, vy: 0 };
+            score[u2] = this.state.score[u2] || 0;
+        }
+
+        this.state.paddles = paddles;
+        this.state.score = score;
+
+        this.state.ball = { x: this.W / 2, y: this.H / 2 };
     }
 
-    tryStart() {
-        if (![this.p1, this.p2].every(u => this.ready.get(u))) {
-            return
+    _broadcast(msg) {
+        if (this.p1) {
+            this.p1.send(msg);
         }
-        if (this.readyTimer) {
-            clearTimeout(this.readyTimer); this.readyTimer = null 
+        if (this.p2) {
+            this.p2.send(msg);
         }
-        this.paused = false
-        this.tournament.onMatchStarted(this)
-
-        Object.values(this.bots).forEach(bot => {
-            bot.start((input) => this.applyInput(bot.username, input))
-        })
-
-        this.loopStart()
-    }
-
-    loopStart() {
-        if (this.interval) {
-            return
-        }
-        let last = Date.now()
-        this.interval = setInterval(() => {
-            if (this.paused) {
-                return
-            }
-            const now = Date.now()
-            const dt = Math.min(32, now - last)
-            last = now
-
-            this.step(dt)
-
-            // throttle bot state updates to 1s
-            this._botAccum += dt
-            if (this._botAccum >= this._botUpdateMs) {
-                this._botAccum = 0
-                Object.values(this.bots).forEach(bot => bot.updateState(this.state))
-            }
-
-            this.tournament.onMatchState(this, this.state)
-        }, 1000 / 60)
-    }
-
-    step(_dt) {
-        const s = this.state
-        s.ball.x += s.ball.vx
-        s.ball.y += s.ball.vy
-        if (s.ball.y < 0 || s.ball.y > s.h) {
-            s.ball.vy *= -1
-        }
-
-        // simple paddle follow for server-side bots (baseline)
-        const pInfo = [
-            this.tournament.participants.get(this.p1),
-            this.tournament.participants.get(this.p2)
-        ]
-        ;[0, 1].forEach(i => {
-            const u = i === 0 ? this.p1 : this.p2
-            if (pInfo[i]?.isBot) {
-                const target = s.ball.y - 40
-                s.p[i] += Math.sign(target - s.p[i]) * 4
-            }
-        })
-
-        // scoring
-        if (s.ball.x < 0) {
-            s.score[1]++; this.resetBall(1) 
-        }
-        if (s.ball.x > s.w) {
-            s.score[0]++; this.resetBall(-1) 
-        }
-
-        if (s.score[0] >= this.winScore || s.score[1] >= this.winScore) {
-            const winner = s.score[0] > s.score[1] ? this.p1 : this.p2
-            const loser = winner === this.p1 ? this.p2 : this.p1
-            this.stop('score_limit', winner, loser)
-        }
-    }
-
-    resetBall(dir) {
-        const s = this.state
-        s.ball.x = s.w / 2
-        s.ball.y = s.h / 2
-        s.ball.vx = 4 * dir
-        s.ball.vy = (Math.random() > .5 ? 3 : -3)
-    }
-
-    onDisconnected(username) {
-        if (![this.p1, this.p2].includes(username)) {
-            return
-        }
-        this.paused = true
-        const timer = setTimeout(() => {
-            if (!this.paused) {
-                return
-            }
-            const winner = (username === this.p1) ? this.p2 : this.p1
-            const loser = username
-            this.stop('disconnect_timeout', winner, loser)
-        }, this.disconnectLoseMs)
-        this.disconnectTimers.set(username, timer)
-    }
-
-    onReconnected(username) {
-        if (![this.p1, this.p2].includes(username)) {
-            return
-        }
-        const t = this.disconnectTimers.get(username)
-        if (t) {
-            clearTimeout(t); this.disconnectTimers.delete(username) 
-        }
-        if (![...this.disconnectTimers.keys()].length) {
-            this.paused = false
-        }
-    }
-
-    applyInput(username, input) {
-        const i = (username === this.p1) ? 0 : (username === this.p2) ? 1 : -1
-        if (i < 0) {
-            return
-        }
-        const s = this.state
-        const speed = 6
-        if (input?.up) {
-            s.p[i] -= speed
-        }
-        if (input?.down) {
-            s.p[i] += speed
-        }
-        s.p[i] = Math.max(0, Math.min(s.h - 100, s.p[i]))
-    }
-
-    stop(reason, winner, loser) {
-        if (this.interval) {
-            clearInterval(this.interval); this.interval = null 
-        }
-        for (const t of this.disconnectTimers.values()) {
-            clearTimeout(t)
-        }
-        this.disconnectTimers.clear()
-        this.paused = false
-
-        Object.values(this.bots).forEach(bot => bot.stop())
-
-        const score = { [this.p1]: this.state.score[0], [this.p2]: this.state.score[1] }
-        this.tournament.onMatchEnded(this, { id: this.id, winner, loser, score, reason })
     }
 }

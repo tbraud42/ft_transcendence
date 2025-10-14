@@ -65,7 +65,7 @@ export function renderPongPlay(roomId: string): HTMLElement {
     if (mode === GameMode.AI) {
         const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
         const p2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty)
-        game = new PongGame(canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
+        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
         currentGame = game
         game.start()
         launchCountdown(countdown, () => {
@@ -79,7 +79,7 @@ export function renderPongPlay(roomId: string): HTMLElement {
     if (mode === GameMode.LOCAL) {
         const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
         const p2 = new LocalPlayer(false, canvas, secondPlayerName || i18n.t('pong_opponent'))
-        game = new PongGame(canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
+        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
         currentGame = game
         game.start()
         launchCountdown(countdown, () => {

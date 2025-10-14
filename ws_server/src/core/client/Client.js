@@ -1,35 +1,17 @@
-export class Client {
-    constructor(socket) {
-        this.socket = socket
-        this.username = null
-        this.token = null
-        this.auth = false
+import {ClientBase} from "./ClientBase.js";
 
-        // session state
-        this.tournament = null
-        this.roomId = null
-        this.slot = null
+export class Client extends ClientBase {
+    constructor(socket, auth, id, username, token) {
+        super(id, username);
+        this.socket = socket
+        this.auth = auth
+        this.token = token
+        this.bot = false;
     }
 
     send(obj) {
         try {
-            this.socket.send(JSON.stringify(obj)) 
+            this.socket.send(JSON.stringify(obj))
         } catch {}
-    }
-
-    attachToTournament(t) {
-        this.tournament = t
-    }
-
-    detachFromTournament() {
-        this.tournament = null
-        this.roomId = null
-        this.slot = null
-    }
-
-    onDisconnect() {
-        if (this.tournament) {
-            this.tournament.markDisconnected(this.username)
-        }
     }
 }

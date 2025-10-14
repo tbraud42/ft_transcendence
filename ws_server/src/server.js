@@ -20,7 +20,8 @@ setInterval(() => {
         if (!client.isAlive) {
             try {
                 client.terminate() 
-            } catch {} ; continue 
+            } catch {}
+            continue;
         }
         client.isAlive = false
         try {
@@ -30,8 +31,5 @@ setInterval(() => {
 }, 15000)
 
 process.on('SIGINT', () => {
-    try {
-        getTournamentManager().shutdown() 
-    } catch {}
     process.exit(0)
 })
