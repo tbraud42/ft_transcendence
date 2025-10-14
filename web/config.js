@@ -1,2 +1,0 @@
-// config.js Here for runtime configuration
-window.__APP_CONFIG__ = window.__APP_CONFIG__ || {};

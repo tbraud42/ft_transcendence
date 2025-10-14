@@ -21,8 +21,7 @@ async function requestAuth(
     if (!username || !password) {
         return null
     }
-
-    const url = `${API_URL}/auth/${endpoint}`
+    const url = `https://${API_URL}/auth/${endpoint}`
 
     const res = await fetch(url, {
         method: 'POST',

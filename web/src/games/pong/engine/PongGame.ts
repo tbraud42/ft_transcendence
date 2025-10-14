@@ -7,8 +7,10 @@ import { OnlinePlayer } from './players/OnlinePlayer'
 import { getUsername } from '../../../utils/storage'
 import { Difficulty, secondPlayerName } from '../pongState'
 import i18n from '../../../utils/lang/i18n'
-import { WsClient, ServerState } from '../../../api/socket/WSClient'
+import { WSClient } from '../../../api/socket/WSClient'
 import {navigateTo} from "../../../utils/router";
+import {ServerEvent, SrvState} from "../../../api/socket/messageTypes";
+import {SrvMessageType} from "../../../api/socket/protocol";
 
 export class PongGame {
     private canvas: HTMLCanvasElement
@@ -21,20 +23,18 @@ export class PongGame {
     private gameEnded = false
     private winTextEl: HTMLDivElement
 
-    private ws?: WsClient
     private online = false
-    private mySlot: 0 | 1 = 0
-    private lastState?: ServerState
+    private lastState?: SrvState
 
     constructor(
+        private id: string,
         canvas: HTMLCanvasElement,
         player1: PlayerBase,
         player2: PlayerBase,
         difficulty: Difficulty,
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement,
-        ws?: WsClient,
-        mySlot?: 0 | 1
+        private ws?: WSClient
     ) {
         this.canvas = canvas
         this.ctx = canvas.getContext('2d')!
@@ -45,9 +45,6 @@ export class PongGame {
         if (ws) {
             this.ws = ws
             this.online = true
-            if (typeof mySlot !== 'undefined') {
-                this.mySlot = mySlot
-            }
             this.hookWebSocket(ws)
         }
 
@@ -58,19 +55,42 @@ export class PongGame {
         canvas.parentElement?.appendChild(this.winTextEl)
     }
 
-    private hookWebSocket(ws: WsClient) {
-        ws.on('state', (s) => {
-            this.lastState = s
-            if (this.player1 instanceof OnlinePlayer) {
-                this.player1.setRemoteY(s.p1y)
+    getId(): string {
+        return this.id
+    }
+
+    private hookWebSocket(ws: WSClient) {
+        if (!ws.ws) {
+            return;
+        }
+        ws.ws.onmessage = (ev) => {
+            let msg: ServerEvent | null = null
+            try {
+                msg = JSON.parse(ev.data)
+            } catch {
+                return
             }
-            if (this.player2 instanceof OnlinePlayer) {
-                this.player2.setRemoteY(s.p2y)
+            if (!msg) {
+                return
             }
-        })
+
+            switch (msg.type) {
+            case SrvMessageType.MATCH_STATE: {
+                this.lastState = msg as SrvState;
+                if (!this.gameEnded) {
+                    this.update()
+                    this.draw()
+                }
+                break
+            }
+            }
+        }
     }
 
     start() {
+        if (this.online) {
+            return;
+        }
         const loop = () => {
             if (!this.gameEnded) {
                 this.update()
@@ -94,15 +114,17 @@ export class PongGame {
 
     private update() {
 
-        this.player1.update(this.ball)
-        this.player2.update(this.ball)
-
         if (this.online) {
             if (this.lastState) {
-                this.updateScore(this.lastState.s1, this.lastState.s2)
+                this.player1.setRemoteY(this.lastState.players[0].y);
+                this.player2.setRemoteY(this.lastState.players[1].y);
+                this.updateScore(this.lastState.players[0].score, this.lastState.players[1].score)
             }
             return
         }
+
+        this.player1.update(this.ball)
+        this.player2.update(this.ball)
 
         this.updateScore(this.player1.score, this.player2.score)
         if (this.ballActive) {
@@ -137,10 +159,10 @@ export class PongGame {
         if (this.online) {
             const s = this.lastState
             if (s) {
-                const r = s.ballSize / 2
+                const r = s.ball.radius / 2
                 this.ctx.fillStyle = 'white'
                 this.ctx.beginPath()
-                this.ctx.arc(s.bX, s.bY, r, 0, Math.PI * 2)
+                this.ctx.arc(s.ball.x, s.ball.y, r, 0, Math.PI * 2)
                 this.ctx.fill()
             }
         } else {
@@ -194,7 +216,7 @@ export class PongGame {
     ) {
         const p1 = new LocalPlayer(true, canvas, names.left)
         const p2 = new LocalPlayer(false, canvas, names.right)
-        return new PongGame(canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
+        return new PongGame("local", canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
     }
 
     static createLocalVsAi(
@@ -206,12 +228,13 @@ export class PongGame {
     ) {
         const p1 = new LocalPlayer(true, canvas, nameLeft)
         const p2 = new AiPlayer(false, canvas, 'AI', difficulty)
-        return new PongGame(canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
+        return new PongGame("local", canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
     }
 
     static createOnline(
+        id: string,
         canvas: HTMLCanvasElement,
-        ws: WsClient,
+        ws: WSClient,
         mySlot: 0 | 1,
         names: { me: string; opponent: string },
         difficulty: Difficulty,
@@ -220,12 +243,14 @@ export class PongGame {
     ) {
         const leftIsMe = mySlot === 0
         const pLeft = leftIsMe
-            ? new OnlinePlayer(true, canvas, names.me, ws, 0)
-            : new OnlinePlayer(true, canvas, names.opponent, ws, 0)
+            ? new OnlinePlayer(true, canvas, names.me, ws)
+            : new OnlinePlayer(true, canvas, names.opponent, ws)
         const pRight = !leftIsMe
-            ? new OnlinePlayer(false, canvas, names.me, ws, 1)
-            : new OnlinePlayer(false, canvas, names.opponent, ws, 1)
+            ? new OnlinePlayer(false, canvas, names.me, ws)
+            : new OnlinePlayer(false, canvas, names.opponent, ws)
 
-        return new PongGame(canvas, pLeft, pRight, difficulty, scoreLeftEl, scoreRightEl, ws, mySlot)
+        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, scoreLeftEl, scoreRightEl, ws);
+        game.online = true;
+        return game;
     }
 }

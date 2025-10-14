@@ -1,297 +1,266 @@
-import {
-    MatchStatus,
-    SrvMessageType,
-} from '../client/protocol.js';
+import { MatchStatus, SrvMessageType } from '../client/protocol.js';
+import { Room } from './Room.js';
+import { Bot } from '../client/Bot.js';
 
 export class Tournament {
-    constructor({ id, name, maxPlayers, creator }) {
+    constructor({ id, name, maxPlayers, creator, difficulty }) {
         this.id = String(id);
         this.name = name || 'Tournament';
         this.maxPlayers = Math.max(2, Number(maxPlayers || 2));
         this.creator = creator || { id: null, username: '' };
+        this.difficulty = difficulty;
 
-        this.participants = new Map();
-        this.clients = new Map();
+        this.participants = new Map();     // username -> Client | Bot
+        this.rooms = new Map();            // round -> Map(matchIndex -> Room)
+        this._generateRooms();
 
-        this._r1Fixed = new Map();
-
-        this._nextSeed = 1;
         this._botCounter = 1;
     }
 
+    /* ---------------- players ---------------- */
+
     addPlayer(client) {
-        const username = String(client.username || '');
-        if (!username) {
-            return;
+        const username = client.getUsername();
+        if (!username || this.participants.has(username) || this.participants.size >= this.maxPlayers) {
+            return false;
         }
 
-        const exists = this.participants.has(username);
-        if (!exists && this._countHumans() >= this.maxPlayers) {
-            return;
-        }
+        this.participants.set(username, client);
+        this._assignNextFreeSlot(client);
 
-        let p = this.participants.get(username);
-        if (!p) {
-            p = { username, connected: true, isReady: false, isBot: false, seed: this._nextSeed++ };
-            this.participants.set(username, p);
-        } else {
-            p.connected = true;
-        }
-
-        if (client.id != null && this.creator && client.id === this.creator.id) {
+        if (client.id === this.creator.id) {
             this.creator.username = username;
         }
 
-        this.clients.set(username, client);
         this.broadcastSnapshot();
+        return true;
     }
 
     addBotAt(addr) {
-        console.log(addr)
-        if (this._countTotal() >= this.maxPlayers) {
+        const a = validateAddr(addr);
+        if (!a) {
+            return;
+        }
+        if (this.participants.size >= this.maxPlayers) {
             return;
         }
 
-        const slotIndex = this._leafToSlotIndex(addr);
-        if (slotIndex == null) {
+        const idx = roomIndexFromAddr(this.maxPlayers, a);
+        if (!idx) {
             return;
         }
 
-        const username = `BOT_${this._botCounter++}`;
-        const p = {
-            username,
-            connected: true,
-            isReady: true,
-            isBot: true,
-            seed: this._nextSeed++,
-        };
-        this.participants.set(username, p);
+        const room = this.getRoom(1, idx);
+        if (!room) {
+            return;
+        }
 
-        const ov = this._r1Fixed.get(slotIndex) || {};
-        if (addr.pos === 'top')  {
-            ov.p1 = username;
-        }
-        if (addr.pos === 'bottom') {
-            ov.p2 = username;
-        }
-        this._r1Fixed.set(slotIndex, ov);
+        const targetSlot = a.pos === 'top' ? 'p1' : 'p2';
+        if (room[targetSlot]) {
+            return;
+        } // already occupied
+
+        const botName = `BOT_${this._botCounter++}`;
+        const bot = new Bot(botName);
+        this.participants.set(botName, bot);
+
+        room[targetSlot] = bot;
+        bot.position = { round: 1, match: idx, slot: targetSlot };
+        bot.attachToTournament(this);
+        bot.setReady(true);
 
         this.broadcastSnapshot();
     }
 
-    removeBotAt(addr) {
-        if (!addr || (addr.side !== 'left' && addr.side !== 'right')) {
-            return;
-        }
-        if (addr.pos !== 'top' && addr.pos !== 'bottom') {
-            return;
-        }
-        if (typeof addr.pair !== 'number' || addr.pair < 0) {
+    removeAt(addr) {
+        const a = validateAddr(addr);
+        if (!a) {
             return;
         }
 
-        const slotIndex = this._leafToSlotIndex(addr);
-        if (slotIndex == null) {
+        const idx = roomIndexFromAddr(this.maxPlayers, a);
+        if (!idx) {
             return;
         }
 
-        const ov = this._r1Fixed.get(slotIndex);
-        if (!ov) {
+        const room = this.getRoom(1, idx);
+        if (!room) {
             return;
         }
 
-        const key = addr.pos === 'top' ? 'p1' : 'p2';
-        const username = ov[key] ?? null;
-        if (!username) {
+        const targetSlot = a.pos === 'top' ? 'p1' : 'p2';
+        const client = room[targetSlot];
+        if (!client) {
             return;
         }
 
-        const p = this.participants.get(String(username));
-        if (!p || !p.isBot) {
-            return;
+        const username = client.getUsername?.() || String(client.username || '');
+        if (username) {
+            if (!client.isBot()) {
+                this._broadcast({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
+                this.participants.delete(username);
+                client.detachTournament(this);
+            }
         }
 
-        this.participants.delete(String(username));
-
-        ov[key] = null;
-        this._r1Fixed.set(slotIndex, ov);
+        room[targetSlot] = null;
+        if (typeof room.removePlayer === 'function') {
+            try {
+                room.removePlayer(username); 
+            } catch {}
+        }
 
         this.broadcastSnapshot();
     }
 
-    markDisconnected(username) {
-        const u = String(username || '');
-        const p = this.participants.get(u);
-        if (p) {
-            p.connected = false;
-        }
-        this.clients.delete(u);
-        this.broadcastSnapshot();
+    getPlayerByUsername(username) {
+        return this.participants.get(username);
     }
 
-    setReady(username, ready) {
-        const u = String(username || '');
-        const p = this.participants.get(u);
-        if (!p) {
-            return;
-        }
-        p.isReady = !!ready;
-
-        this._broadcast({ type: SrvMessageType.PLAYER_READY, roomId: '', username: u });
-        this.broadcastSnapshot();
-    }
+    /* ---------------- snapshot ---------------- */
 
     buildSnapshot() {
-        const r1 = this._buildRound1Matches();
+        const ordered = [...this.participants.values()].sort((a, b) =>
+            leafIndex(a) - leafIndex(b)
+        );
+
+        const matches = [];
+        for (const [round, roundMap] of this.rooms) {
+            for (const [index, room] of roundMap) {
+                matches.push({
+                    id: `${this.id}-r${round}-${index}`,
+                    round,
+                    p1: room.p1 ? (room.p1.getUsername?.() || room.p1.username) : null,
+                    p2: room.p2 ? (room.p2.getUsername?.() || room.p2.username) : null,
+                    status: room.started ? MatchStatus.RUNNING : MatchStatus.WAITING
+                });
+            }
+        }
+
         return {
             type: SrvMessageType.SNAPSHOT,
-            tournamentId: Number.isFinite(+this.id) ? +this.id : this.id,
+            tournamentId: this._tid(),
             name: this.name,
             maxPlayers: this.maxPlayers,
-            creator: String(this.creator?.username || ''),
-            players: this._orderedParticipants().map(p => ({
-                username: p.username,
-                connected: !!p.connected,
-                isReady: !!p.isReady,
-                isBot: !!p.isBot,
+            creator: this.creator.username || '',
+            players: ordered.map(p => ({
+                username: p.getUsername?.() || p.username,
+                connected: !!p.isConnected?.(),
+                isReady: !!p.isReady?.(),
+                isBot: !!p.isBot?.()
             })),
-            matches: r1,
+            matches
         };
     }
 
     broadcastSnapshot() {
-        const snap = this.buildSnapshot();
-        for (const c of this.clients.values()) {
-            try {
-                c.send(snap); 
-            } catch {}
-        }
+        this._broadcast(this.buildSnapshot());
     }
 
-    sendSnapshotTo(client) {
-        try {
-            client.send(this.buildSnapshot()); 
-        } catch {}
-    }
+    /* ---------------- rooms ---------------- */
 
-    _makeEmptyR1() {
-        const cap = this.maxPlayers;
-        const r1 = new Array(cap);
-        for (let k = 0; k < cap; k++) {
-            const isLeftSlot  = (k % 2) === 0;
-            const pairIndex   = Math.floor(k / 2) + 1;
-            const id = isLeftSlot
-                ? `${this.id}-r1-${pairIndex}`
-                : `${this.id}-r1-ph${k}`;
+    _generateRooms() {
+        this.rooms = new Map();
 
-            r1[k] = {
-                id,
-                round: 1,
-                p1: null,
-                p2: null,
-                status: MatchStatus.WAITING,
-            };
-        }
-        return r1;
-    }
+        const n = this.maxPlayers;
+        const rounds = Math.log2(n) | 0;
 
-    _buildRound1Matches() {
-        const cap = this.maxPlayers;
+        for (let r = 1; r <= rounds; r++) {
+            const count = n >> r;
+            const roundMap = new Map();
 
-        if (cap === 2) {
-            const ordered = [...this.participants.values()]
-                .sort((a, b) => a.seed - b.seed)
-                .map(p => p.username);
-
-            const ovL = this._r1Fixed.get(0) || {};
-            const ovR = this._r1Fixed.get(1) || {};
-
-            const used = new Set();
-            let p1 = null, p2 = null;
-
-            if (ovL.p1 && !used.has(ovL.p1)) { p1 = ovL.p1; used.add(ovL.p1); }
-            else if (ovL.p2 && !used.has(ovL.p2)) { p1 = ovL.p2; used.add(ovL.p2); }
-
-            if (ovR.p1 && !used.has(ovR.p1)) { p2 = ovR.p1; used.add(ovR.p1); }
-            else if (ovR.p2 && !used.has(ovR.p2)) { p2 = ovR.p2; used.add(ovR.p2); }
-
-            for (const name of ordered) {
-                if (used.has(name)) continue;
-                if (!p1) { p1 = name; used.add(name); continue; }
-                if (!p2) { p2 = name; used.add(name); continue; }
-                break;
+            for (let i = 1; i <= count; i++) {
+                const roomId = `${this.id}-r${r}-${i}`;
+                const room = new Room({ tournament: this, id: roomId, difficulty: this.difficulty });
+                roundMap.set(i, room);
             }
+            this.rooms.set(r, roundMap);
+        }
+    }
 
-            return [{
-                id: `${this.id}-r1-1`,
-                round: 1,
-                p1, p2,
-                status: MatchStatus.WAITING
-            }];
+    getRoom(r, i) {
+        return this.rooms.get(r)?.get(i) || null;
+    }
+
+    _assignNextFreeSlot(client) {
+        // Ne place que sur les feuilles (round 1)
+        const round1 = this.rooms.get(1);
+        if (!round1) {
+            return false;
         }
 
-        const r1 = this._makeEmptyR1();
-        const ordered = [...this.participants.values()]
-            .sort((a, b) => a.seed - b.seed)
-            .map(p => p.username)
-            .slice(0, cap);
-
-        const used = new Set();
-
-        for (const [slotIndex, ov] of this._r1Fixed.entries()) {
-            if (slotIndex < 0 || slotIndex >= cap) continue;
-            const m = r1[slotIndex];
-            if (ov.p1 && !used.has(ov.p1)) { m.p1 = ov.p1; used.add(ov.p1); }
-            if (ov.p2 && !used.has(ov.p2)) { m.p2 = ov.p2; used.add(ov.p2); }
-        }
-
-        for (const name of ordered) {
-            if (used.has(name)) continue;
-            let placed = false;
-            for (let k = 0; k < cap && !placed; k++) {
-                const m = r1[k];
-                if (!m.p1) { m.p1 = name; used.add(name); placed = true; break; }
-                if (!m.p2) { m.p2 = name; used.add(name); placed = true; break; }
+        for (const [i, room] of round1) {
+            if (!room.p1) {
+                client.y = room.state.paddles[client.getUsername()]?.y ?? (room.H / 2 - room.PAD_H / 2)
+                room.p1 = client;
+                client.attachToRoom(room);
+                client.position = { round: 1, match: i, slot: 'p1' };
+                return true;
+            }
+            if (!room.p2) {
+                client.y = room.state.paddles[client.getUsername()]?.y ?? (room.H / 2 - room.PAD_H / 2)
+                room.p2 = client;
+                client.attachToRoom(room);
+                client.position = { round: 1, match: i, slot: 'p2' };
+                return true;
             }
         }
-
-        return r1;
+        return false;
     }
 
-    _leafToSlotIndex(addr) {
-        if (!addr) {
-            return null;
-        }
-        const { side, pair } = addr;
-        if (typeof pair !== 'number' || pair < 0) {
-            return null;
-        }
-        return side === 'left' ? pair * 2 : pair * 2 + 1;
-    }
-
-    _orderedParticipants() {
-        return [...this.participants.values()].sort((a, b) => a.seed - b.seed);
-    }
-
-    _countHumans() {
-        let n = 0;
-        for (const p of this.participants.values()) {
-            if (!p.isBot) {
-                n++;
-            }
-        }
-        return n;
-    }
-
-    _countTotal() {
-        return this.participants.size;
+    _tid() {
+        return Number.isFinite(+this.id) ? +this.id : this.id;
     }
 
     _broadcast(msg) {
-        for (const c of this.clients.values()) {
+        for (const c of this.participants.values()) {
             try {
-                c.send(msg); 
+                c.send?.(msg);
             } catch {}
         }
     }
+}
+
+/* ---------------- helpers ---------------- */
+
+function validateAddr(a) {
+    if (!a) {
+        return null;
+    }
+    if (a.side !== 'left' && a.side !== 'right') {
+        return null;
+    }
+    if (a.pos !== 'top' && a.pos !== 'bottom') {
+        return null;
+    }
+    if (typeof a.pair !== 'number' || a.pair < 0) {
+        return null;
+    }
+    return a;
+}
+
+function leafIndex(client) {
+    const pos = client?.position;
+    if (!pos || pos.round !== 1) {
+        return 1e9;
+    }
+    const base = (pos.match - 1) * 2;
+    const offset = pos.slot === 'p1' ? 0 : 1;
+    return base + offset;
+}
+
+function roomIndexFromAddr(maxPlayers, a) {
+    const perSide = maxPlayers / 2;
+    const pairsPerSide = perSide / 2;
+    if (a.pair < 0 || a.pair >= pairsPerSide) {
+        return null;
+    }
+
+    if (a.side === 'left')  {
+        return a.pair + 1;
+    }
+    if (a.side === 'right') {
+        return pairsPerSide + (a.pair + 1);
+    }
+    return null;
 }

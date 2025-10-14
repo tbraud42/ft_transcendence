@@ -13,7 +13,6 @@ services:
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
-      - modsec-data:/var/cache/modsecurity
     depends_on:
       sqlite_api:
         condition: service_healthy
@@ -42,7 +41,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
-
 
   sqlite_api:
     build:
@@ -100,11 +98,3 @@ networks:
     driver_opts:
       com.docker.network.bridge.name: "backend"
       com.docker.network.bridge.enable_icc: "true"
-
-volumes:
-  modsec-data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-
