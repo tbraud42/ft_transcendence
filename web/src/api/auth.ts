@@ -37,8 +37,6 @@ async function requestAuth(
         throw new Error(i18n.t('login_error_user_not_found'))
     }
 
-    console.log(res)
-
     if (!res.ok) {
         throw new Error(i18n.t('login_error_failed'))
     }

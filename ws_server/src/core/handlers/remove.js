@@ -1,4 +1,4 @@
-export default function handleRemoveBot(msg, socket) {
+export default function handleRemove(msg, socket) {
     const t = socket.__client?.tournament;
     if (!t) {
         return;
@@ -22,5 +22,5 @@ export default function handleRemoveBot(msg, socket) {
         return;
     }
 
-    t.removeBotAt(a);
+    t.removeAt(a);
 }

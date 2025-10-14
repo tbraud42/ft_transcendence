@@ -21,6 +21,5 @@ export default function handleAddBot(msg, socket) {
     if (typeof a.pair !== 'number' || a.pair < 0) {
         return;
     }
-
     t.addBotAt(a);
 }

@@ -141,25 +141,6 @@ export function decorateLeaves(
             mount(el, b)
         }
 
-        //remove bot
-        if (label && isOwner) {
-            const p = players.get(label)
-            if (!p) {
-                return
-            }
-            if (p.isBot) {
-                const b = button(
-                    'Remove bot',
-                    'px-2 py-1 text-[11px] rounded bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 ml-2'
-                )
-                b.onclick = e => {
-                    e.stopPropagation(); opts.onRemoveBot?.(addr) 
-                }
-                b.dataset.b = 'remove'
-                mount(el, b)
-            }
-        }
-
         if (label && opts.myUsername === label) {
             const readyLocal = !!opts.isReady?.(opts.myUsername, addr)
             const cls = readyLocal
@@ -170,6 +151,23 @@ export function decorateLeaves(
                 e.stopPropagation(); opts.onReady?.(addr) 
             }
             b.dataset.b = 'ready'
+            mount(el, b)
+        }
+
+        //remove bot or player
+        if (label && isOwner ) {
+            const p = players.get(label)
+            if (!p || p.username === snap.creator) {
+                return
+            }
+            const b = button(
+                p.isBot ? 'Remove bot' : 'Remove player',
+                'px-2 py-1 text-[11px] rounded bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 ml-2'
+            )
+            b.onclick = e => {
+                e.stopPropagation(); opts.onRemove?.(addr)
+            }
+            b.dataset.b = 'remove'
             mount(el, b)
         }
     }

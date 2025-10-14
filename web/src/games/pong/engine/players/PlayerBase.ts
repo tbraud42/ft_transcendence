@@ -33,6 +33,8 @@ export abstract class PlayerBase {
         this.y = (canvas.height - this.height) / 2
     }
 
+    abstract setRemoteY(y: number): void
+
     // Called every frame, implemented by subclasses
     abstract update(ball?: BallBase): void
 

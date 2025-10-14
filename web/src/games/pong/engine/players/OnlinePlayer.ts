@@ -1,5 +1,6 @@
 import { PlayerBase } from './PlayerBase';
-import { WsClient } from '../../../../api/socket/WSClient';
+import { WSClient } from '../../../../api/socket/WSClient';
+import {CliMessageType} from "../../../../api/socket/protocol";
 
 /**
  * OnlinePlayer
@@ -8,8 +9,7 @@ import { WsClient } from '../../../../api/socket/WSClient';
  * - Does NOT perform local movement integration; the server is authoritative.
  */
 export class OnlinePlayer extends PlayerBase {
-    private ws: WsClient;
-    private slot: 0 | 1;
+    private ws: WSClient;
     private remoteY: number = 0;
     private lastSentUp = false;
     private lastSentDown = false;
@@ -18,13 +18,11 @@ export class OnlinePlayer extends PlayerBase {
         isLeft: boolean,
         canvas: HTMLCanvasElement,
         name: string,
-        ws: WsClient,
-        slot: 0 | 1,
+        ws: WSClient,
         speed: number = 5
     ) {
         super(isLeft, canvas, name, speed);
         this.ws = ws;
-        this.slot = slot;
         this.remoteY = (canvas.height - this.height) / 2;
         this.setupControls();
     }
@@ -37,7 +35,7 @@ export class OnlinePlayer extends PlayerBase {
         if (this.lastSentUp !== this.moveUp || this.lastSentDown !== this.moveDown) {
             this.lastSentUp = this.moveUp;
             this.lastSentDown = this.moveDown;
-            this.ws.input(this.moveUp, this.moveDown);
+            this.ws.send({ type: CliMessageType.INPUT, roomId: this.ws.currentGame?.getId() || "", up: this.lastSentUp, down: this.lastSentDown });
         }
     }
 

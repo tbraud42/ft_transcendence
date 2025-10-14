@@ -31,7 +31,7 @@ export type RenderOptions = {
     myUsername?: string;
     isOwner?: boolean;
     onAddBot?: (addr: LeafAddress) => void;
-    onRemoveBot?: (remover: LeafAddress) => void;
+    onRemove?: (remover: LeafAddress) => void;
     onReady?: (addr: LeafAddress) => void;
     isReady?: (username: string, addr: LeafAddress) => boolean;
 };
