@@ -2,8 +2,9 @@
 // | Method   | Route                   | Description                                 | Access        |
 // | -------- | ----------------------- | ------------------------------------------- | ------------- |
 // | `GET`    | `/user/me`              | View a user's id                            | Authenticated |
-// | `GET`    | `/user/:id`             | View a user's profile                       | Admin + self  |
-// | `PATCH`  | `/user/`                | Update user info password                   | Self          |
+// | `GET`    | `/user/:id`             | View a user's profile                       | Authenticated |
+// | `PATCH`  | `/user/pass`            | Update user info password                   | Self          |
+// | `PATCH`  | `/user/avatar`          | Update user avatar                          | Self          |
 // | `DELETE` | `/user/:id`             | Delete an account                           | Admin + self  |
 // | `GET`    | `/user/:id/tournaments` | View tournaments a user has participated in | Admin + self  |
 
@@ -14,35 +15,34 @@ export default async function (fastify, options) {
 
   fastify.get('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const targetId = Number(req.params.id);
-
-    if (targetId === req.user.id || req.user.role === 'admin') {
-      const user = await fastify.showUserById(fastify.db, targetId);
-
-      if (!user) {
-        return reply.code(404).send({ error: 'User not found' });
-      }
-
-      return reply.send({
-        user: {
-          id: user.id,
-          username: user.username,
-          password_hash: 'Not displayed for security reasons (RGPD)',
-          role: user.role,
-          created_at: user.created_at,
-        }
-      });
+    if (!Number.isFinite(targetId)) {
+      return reply.code(400).send({ error: 'Invalid id' });
     }
 
-    return reply.code(403).send({ error: 'Access denied' });
+    const user = await fastify.showUserById(fastify.db, targetId);
+    if (!user) return reply.code(404).send({ error: 'User not found' });
+
+    const isSelf = targetId === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (isSelf || isAdmin) {
+      return reply.send({ user: mapUserForSelfOrAdmin(user) });
+    }
+
+    return reply.send({ user: mapUserForPublic(user) });
   });
 
-  fastify.patch('/', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42
+  fastify.patch('/pass', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42
     const body = req.body ?? {};
     const oldPassword = typeof body.oldPassword === 'string' ? body.oldPassword.trim() : '';
     const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
 
     if (!oldPassword || !newPassword) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
+    }
+
+    if (fastify.usernameEndsWith42(req.user.username)) {
+      return reply.code(400).send({ error: 'cannot change 42 auth password' });
     }
 
     if (!await fastify.verifyPassword(oldPassword, req.user.password_hash)) {
@@ -64,25 +64,38 @@ export default async function (fastify, options) {
     return reply.send('User update successfully');
   });
 
+  fastify.patch('/avatar', {preHandler: [fastify.auth]}, async (req, reply) => {
+    const body = req.body ?? {};
+    const newAvatar = typeof body.avatar === 'string' ? body.avatar.trim() : '';
+
+    if (!newAvatar) {
+      return reply.code(400).send({ error: 'Missing or invalid field [avatar]' });
+    }
+
+    // test avatar
+
+    await fastify.updateUserAvatar(fastify.db, req.user.id, newAvatar); // a cree pour avatar
+    return reply.send('User update successfully');
+  });
+
   fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
 
-    if (targetId === req.user.id || req.user.role === 'admin') {
-      const user = await fastify.showUserById(fastify.db, targetId);
-      if (!user) {
-        return reply.code(404).send({ error: 'User not found' });
-      }
-
-      await fastify.deleteUser(fastify.db, req.params.id);
-      return reply.send({ success: true });
+    if (targetId !== req.user.id && req.user.role !== 'admin') {
+      return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
     }
-    return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+
+    await fastify.deleteUser(fastify.db, req.params.id);
+    return reply.send({ success: true });
   });
 
-  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth, fastify.allowSelfOrAdmin()]}, async (req, reply) => {
+  fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
-    const tournaments = await fastify.db.prepare(`SELECT * FROM tournament_participants WHERE user_id = ?`).all(targetId); // facoriser dans manage.js ?
 
-    reply.send(tournaments);
+    if (targetId !== req.user.id && req.user.role !== 'admin') {
+      return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+    }
+
+    return reply.send(fastify.listUserRecentMatches(fastify.db, targetId));
   });
 }

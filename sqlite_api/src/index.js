@@ -4,12 +4,7 @@ dotenv.config();
 
 // import fastify
 import Fastify from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import cors from '@fastify/cors'
-
-// import crontab module
-import cron from 'node-cron';
-import { crontab } from './database/manage.js';
 
 // import decorate loader
 import { loadDecorate } from './loadDecorate.js';
@@ -23,21 +18,21 @@ import refreshRoute from './routes/auth/refreshAuth.js';
 import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
 import tournamentRoute from './routes/matchs/tournaments.js';
-import tournamentClientRoute from './routes/matchs/tournaments_client.js';
+import tournamentUserRoute from './routes/matchs/tournamentsUser.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
 
 import bcrypt from 'bcrypt'; // tmp pour clean database
 
 const start = async () => {
-  const fastify = Fastify({ logger: true });
+  let fastify;
+  if (process.env.NODE_ENV === 'development') {
+    fastify = Fastify({ logger: true });
+  } else {
+    fastify = Fastify();
+  }
 
   loadDecorate(fastify);
-
-  fastify.register(rateLimit, {
-    max: 100,
-    timeWindow: '1 minute'
-  });
 
   await fastify.register(twoFaRoute, { prefix: '/auth/2fa' });
   await fastify.register(ftRoutes, { prefix: '/auth/42' });
@@ -47,27 +42,22 @@ const start = async () => {
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
-  await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
+  await fastify.register(tournamentUserRoute, { prefix: '/tournaments/user' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
-  cron.schedule('0 0 0 * * *', () => crontab(fastify), { timezone: 'Europe/Paris' });
-
   const ADDRESS = '0.0.0.0';
-  const PORT = process.env.DATABASE_PORT || 3000;
-  const DOMAIN = process.env.DOMAIN || 'trans.clesucre.fr';
+  const PORT = 3000;
 
   try {
     await fastify.register(cors, {
       origin: (origin, cb) => {
-        const isDev = process.env.NODE_ENV === 'development'
-
-        if (isDev) {
-          cb(null, true) // autorise tout en dev
+        if (fastify.isDev()) {
+          cb(null, true)
         } else {
           const allowedOrigins = [
-            `https://${DOMAIN}`
-            `https://pong.ws.${DOMAIN}`
+            `https://${process.env.DOMAIN}`,
+            `https://www.${process.env.DOMAIN}`
           ]
 
           if (!origin || allowedOrigins.includes(origin)) {
@@ -85,17 +75,20 @@ const start = async () => {
     })
 
     fastify.listen({ port: PORT, host: ADDRESS });
-    // const username = 'admin';
+    // ------insert admin-------
+    // const username = 'pauserr';
     // const password = 'supersecurepassword';
-
     // const password_hash = await bcrypt.hash(password, 10);
-
     // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
     // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
-    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE id = ?`).run(2); // tmp pour test crontab
 
-    console.log(`----------show time !----------\n`);
-    await fastify.showAllData(fastify.db);
+    // -----crontab-------------
+    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE username = ?`).run("bob"); // tmp pour test crontab
+
+    if (fastify.isDev()) {
+      console.log(`----------show time !----------\n`);
+      await fastify.showAllData(fastify.db);
+    }
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
@@ -103,3 +96,4 @@ const start = async () => {
 };
 
 start();
+

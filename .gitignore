@@ -24,3 +24,5 @@ build_and_push.sh
 # MacOS
 
 .DS_Store
+
+*test.sh

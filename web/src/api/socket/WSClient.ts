@@ -48,9 +48,7 @@ export class WSClient {
 
             switch (msg.type) {
             case SrvMessageType.SNAPSHOT: {
-                console.log(msg)
                 this.latestSnapshot = msg as SrvSnapshot
-                //TODO: save snapshot somewhere
                 renderBracket(this.host, this.latestSnapshot, {
                     myUsername: getUsername(),
                     isOwner: msg.creator === getUsername(),
@@ -118,7 +116,8 @@ export class WSClient {
     send(msg: ClientEvent) {
         const w = this.ws
         if (!w || w.readyState !== WebSocket.OPEN) {
-            this.queued.push(msg); return 
+            this.queued.push(msg);
+            return
         }
         w.send(JSON.stringify(msg))
     }

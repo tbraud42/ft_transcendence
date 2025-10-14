@@ -76,7 +76,7 @@ export function router(): void {
             if (subPage === 'play') {
                 main.appendChild(renderPongPlay(param))
             } else if (subPage === 'lobby' && param) {
-                const view = renderTournament('wss://' + PONG_WS_URL, getToken(), param)
+                const view = renderTournament(PONG_WS_URL, getToken(), param)
                 main.appendChild(view)
                 currentCleanup = view.close
             } else {

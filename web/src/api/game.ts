@@ -7,7 +7,7 @@ const API_URL = env.API_URL
 export async function fetchTournaments(): Promise<any[]> {
     await refreshToken();
 
-    const url = `https://${API_URL}/tournaments`
+    const url = `${API_URL}/tournaments`
 
     const res = await fetch(url, {
         headers: {
@@ -26,17 +26,17 @@ export async function fetchTournaments(): Promise<any[]> {
 export async function createTournament(
     name: string,
     difficulty: string,
-    maxPlayers: number,
+    maxPlayer: number,
 ): Promise<any> {
     await refreshToken();
 
-    const url = `https://${API_URL}/tournaments`
+    const url = `${API_URL}/tournaments`
 
     const body = {
         name,
         description: '',
         difficulty,
-        maxPlayers,
+        maxPlayer,
         isPrivate: false
     }
 
@@ -59,7 +59,7 @@ export async function createTournament(
 export async function getTournament(id: number): Promise<any> {
     await refreshToken();
 
-    const url = `https://${API_URL}/tournaments/${id}`
+    const url = `${API_URL}/tournaments/${id}`
 
     return fetch(url, {
         headers: {

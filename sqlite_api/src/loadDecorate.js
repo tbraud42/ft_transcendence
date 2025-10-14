@@ -1,5 +1,6 @@
 import db from './database/db.js'
 import {
+  isDev,
   createUser,
   showUserByUsername,
   showUserById,
@@ -7,27 +8,41 @@ import {
   deleteUser,
   isAdmin,
   isAdminOrCreator,
-  showAllData
+  showAllData,
+  updateTimeStamp,
+  addFriend,
+  removeFriend,
+  listFriends,
+  mapUserForSelfOrAdmin,
+  mapUserForPublic,
+  crontab
 } from './database/manage.js';
 
 import {
   getAllTournaments,
   getTournamentById,
+  getTournamentsByStatus,
   getTournamentByName,
   createTournament,
-  changeTournamentStatus,
-  getTournamentsByStatus,
   updateTournament,
+  changeTournamentStatus,
+  setTournamentWinner,
   deleteTournament,
-  getParticipantsByTournamentId,
-  addParticipant,
-  updateParticipant,
-  deleteParticipant
+  insertStatGame,
+  userExists,
+  tournamentExists,
+  getStat,
+  topWinRate,
+  topLoseRate,
+  topTotalPlayTime,
+  topTournamentsCreated,
+  topTournamentsWon,
+  listUserRecentMatches,
+  validateGameRow
 } from './database/tournaments.js';
 
 import {
   generateToken,
-  requireRole,
   authenticate,
   verifyPassword,
   allowSelfOrAdmin,
@@ -36,6 +51,12 @@ import {
   usernameEndsWith42
 } from './plugins/security.js'
 
+// import crontab module
+import cron from 'node-cron';
+
+// import rate-limit module
+import rateLimit from '@fastify/rate-limit';
+
 export function loadDecorate(fastify) {
   // --- DB ---
   fastify.decorate('db', db);
@@ -43,6 +64,7 @@ export function loadDecorate(fastify) {
     try { fastify.db?.close?.(); } catch (e) { app.log?.error(e, 'DB close failed'); }
     done();
   });
+  fastify.decorate('isDev', isDev);
   fastify.decorate('showAllData', showAllData);
 
   // --- Users  ---
@@ -53,22 +75,38 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
+  fastify.decorate('updateTimeStamp', updateTimeStamp);
+
+  fastify.decorate('addFriend', addFriend);
+  fastify.decorate('removeFriend', removeFriend);
+  fastify.decorate('listFriends', listFriends);
+  fastify.decorate('mapUserForSelfOrAdmin', mapUserForSelfOrAdmin);
+  fastify.decorate('mapUserForPublic', mapUserForPublic);
+
   // --- Tournament ---
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
+  fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
   fastify.decorate('getTournamentByName', getTournamentByName);
   fastify.decorate('createTournament', createTournament);
-  fastify.decorate('changeTournamentStatus', changeTournamentStatus);
-  fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
   fastify.decorate('updateTournament', updateTournament);
+  fastify.decorate('changeTournamentStatus', changeTournamentStatus);
+  fastify.decorate('setTournamentWinner', setTournamentWinner);
   fastify.decorate('deleteTournament', deleteTournament);
-  fastify.decorate('getParticipantsByTournamentId', getParticipantsByTournamentId);
-  fastify.decorate('addParticipant', addParticipant);
-  fastify.decorate('updateParticipant', updateParticipant);
-  fastify.decorate('deleteParticipant', deleteParticipant);
+  fastify.decorate('insertStatGame', insertStatGame);
+  fastify.decorate('userExists', userExists);
+  fastify.decorate('tournamentExists', tournamentExists);
+  fastify.decorate('getStat', getStat);
+  fastify.decorate('topWinRate', topWinRate);
+  fastify.decorate('topLoseRate', topLoseRate);
+  fastify.decorate('topTotalPlayTime', topTotalPlayTime);
+  fastify.decorate('topTournamentsCreated', topTournamentsCreated);
+  fastify.decorate('topTournamentsWon', topTournamentsWon);
+  fastify.decorate('listUserRecentMatches', listUserRecentMatches);
+  fastify.decorate('validateGameRow', validateGameRow);
+
   // --- Security ---
   fastify.decorate('generateToken', generateToken);
-  fastify.decorate('requireRole', requireRole);
   fastify.decorate('auth', authenticate(fastify));
   fastify.decorate('auth2faPending', authenticate(fastify, { allow2FAPending: true }));
   fastify.decorate('verifyPassword', verifyPassword);
@@ -76,8 +114,14 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
-
   // --- Stats ---
-  fastify.decorate('stat', { request: 0, login: 0, signup: 0 });
-  fastify.addHook('onRequest', (req, reply, done) => { fastify.stat.request++; done(); });
+  fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
+  fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });
+
+  cron.schedule('0 0 0 * * *', () => { crontab(fastify) }, { timezone: 'Europe/Paris' });
+
+  fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '1 minute'
+  });
 }

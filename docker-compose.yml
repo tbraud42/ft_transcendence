@@ -53,7 +53,6 @@ services:
     environment:
       DOMAIN: ${DOMAIN_NAME}
       JWT_SECRET: ${JWT_SECRET}
-      DATABASE_PORT: ${DATABASE_PORT}
       CLIENT_ID: ${CLIENT_ID}
       CLIENT_SECRET: ${CLIENT_SECRET}
       REDIRECT_URI: ${REDIRECT_URI}
@@ -77,9 +76,11 @@ services:
     expose:
       - "3000"
     environment:
-      - API_URL=sqlite_api:3000
-      - JWT_SECRET=${JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      API_URL: api.${DOMAIN_NAME}
     restart: unless-stopped
+    extra_hosts:
+      - "api.${DOMAIN_NAME}:host-gateway"
     networks:
       - backend
 
