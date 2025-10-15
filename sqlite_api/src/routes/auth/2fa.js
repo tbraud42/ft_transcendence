@@ -11,23 +11,18 @@ export default async function (fastify, options) {
   fastify.post('/setup', {preHandler: [fastify.auth]}, async (req, reply) => {
 
     if (fastify.usernameEndsWith42(req.user.username)) {
-      return reply.code(400).send({ error: '2FA not allowed for 42 users' });
+      return reply.code(403).send({ error: '2FA not allowed for 42 users' });
     }
 
     if (req.user.is_twofa_enabled) {
-      return reply.code(400).send({ error: '2FA already enabled' });
+      return reply.code(403).send({ error: '2FA already enabled' });
     }
 
     const secret = speakeasy.generateSecret({
         name: `ft_transcendence:${req.user.username}`,
     });
 
-    try {
-      await fastify.db.prepare('UPDATE users SET twofa_secret = ?, is_twofa_enabled = 1 WHERE id = ?').run(secret.base32, req.user.id);
-    } catch (err) {
-      console.error('SQL ERROR:', err);
-      return reply.code(500).send({ error: 'DB error' });
-    }
+    await fastify.db.prepare('UPDATE users SET twofa_secret = ?, is_twofa_enabled = 1 WHERE id = ?').run(secret.base32, req.user.id);
 
     const qrDataUrl = await qrcode.toDataURL(secret.otpauth_url);
 
@@ -42,7 +37,7 @@ export default async function (fastify, options) {
     const isValid = speakeasy.totp.verify({
       secret: req.user.twofa_secret,
       encoding: 'base32',
-      token: req.body.token // string
+      token: req.body.token
     });
 
     if (isValid) {

@@ -16,7 +16,7 @@ const REDIRECT_URI = process.env.REDIRECT_URI;
 
 const stateStore = new Map();
 
-export default async function ft42Routes(fastify) {
+export default async function (fastify) {
   fastify.get('/login', async (req, reply) => {
     const state = crypto.randomBytes(16).toString('hex');
     stateStore.set(state, true);
@@ -32,7 +32,7 @@ export default async function ft42Routes(fastify) {
     reply.redirect(`${FT_AUTHORIZE_URL}?${params.toString()}`);
   });
 
-  fastify.get('/callback', async (req, reply) => { // a tester avec nouvelle redirc
+  fastify.get('/callback', async (req, reply) => {
     const q = req.query ?? {};
     const code  = typeof q.code  === 'string' ? q.code.trim()  : '';
     const state = typeof q.state === 'string' ? q.state.trim() : '';
