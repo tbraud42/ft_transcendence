@@ -4,7 +4,8 @@ import {
   createUser,
   showUserByUsername,
   showUserById,
-  updateUser,
+  updateUserPass,
+  updateUserAvatar,
   deleteUser,
   isAdmin,
   isAdminOrCreator,
@@ -67,16 +68,16 @@ export function loadDecorate(fastify) {
   fastify.decorate('isDev', isDev);
   fastify.decorate('showAllData', showAllData);
 
-  // --- Users  ---
+  // --- Users ---
   fastify.decorate('createUser', createUser);
   fastify.decorate('showUserByUsername', showUserByUsername);
   fastify.decorate('showUserById', showUserById);
-  fastify.decorate('updateUser', updateUser);
+  fastify.decorate('updateUserPass', updateUserPass);
+  fastify.decorate('updateUserAvatar', updateUserAvatar);
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
   fastify.decorate('updateTimeStamp', updateTimeStamp);
-
   fastify.decorate('addFriend', addFriend);
   fastify.decorate('removeFriend', removeFriend);
   fastify.decorate('listFriends', listFriends);
@@ -114,6 +115,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
+
   // --- Stats ---
   fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
   fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });

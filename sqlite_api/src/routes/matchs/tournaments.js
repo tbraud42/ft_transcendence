@@ -16,7 +16,7 @@ export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getAllTournaments(fastify.db);
     if (!tournament || tournament.length === 0) {
-      return reply.code(404).send({});
+      return reply.code(404).send({ error: 'no tournament available' });
     }
     reply.send(tournament);
   });
@@ -91,7 +91,7 @@ export default async function (fastify, options) {
     if (maxPlayer != 2 && maxPlayer != 4 && maxPlayer != 8) return bad();
 
     const tournament = await fastify.updateTournament(fastify.db, id, { name, description, difficulty, maxPlayer});
-    if (!tournament || tournament.changes === 0) return reply.code(404).send({ error: 'Not found' });
+    if (!tournament || tournament.changes === 0) return reply.code(404).send({ error: 'tournament not found' });
 
     reply.send({ success: true });
   });
@@ -134,7 +134,6 @@ export default async function (fastify, options) {
       const { ok, errors, normalized } = fastify.validateGameRow(row);
       if (!ok) return reply.code(400).send({ error: `Invalid game row: ${errors.join(', ')}` });
 
-      console.log(`§§§§test§§§§ = ${normalized.game_num}`);
       const u1 = fastify.showUserByUsername(fastify.db, normalized.p1);
       const u2 = fastify.showUserByUsername(fastify.db, normalized.p2);
       if (!u1 || !u2) return reply.code(400).send({ error: 'Unknown user in games' });
@@ -155,7 +154,7 @@ export default async function (fastify, options) {
 
     if (tourWinnerUsername !== undefined) {
       const u = fastify.showUserByUsername(fastify.db, tourWinnerUsername);
-      if (!u) return reply.code(400).send({ error: 'Invalid winner' });
+      if (!u) return reply.code(400).send({ error: 'Invalid tournament winner' });
 
       const done = await fastify.setTournamentWinner(fastify.db, tid, tourWinnerUsername);
       return reply.send({ id: done.id, status: done.status, winner: done.winner });
@@ -171,7 +170,7 @@ export default async function (fastify, options) {
     if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
     const info = await fastify.deleteTournament(fastify.db, id);
-    if (!info || info.changes === 0) return reply.code(404).send({ error: 'Not found' });
+    if (!info || info.changes === 0) return reply.code(404).send({ error: 'Tournament not found' });
 
     return reply.send({ success: true });
   });

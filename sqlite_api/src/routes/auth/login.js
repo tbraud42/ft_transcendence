@@ -9,11 +9,11 @@ export default async function (fastify, options) {
     const username = typeof body.username === 'string' ? body.username.trim() : '';
     const password = typeof body.password === 'string' ? body.password : '';
 
-    if (!username || !password) {
+    if (fastify.usernameEndsWith42(username)) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
-    if (fastify.usernameEndsWith42(username)) {
+    if (!username || !password) {
       return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
@@ -23,7 +23,7 @@ export default async function (fastify, options) {
     }
 
     if (!(await fastify.verifyPassword(password, user.password_hash))) {
-      return reply.code(401).send({ error: 'Invalid password' });
+      return reply.code(400).send({ error: 'Invalid password' });
     }
 
     fastify.updateTimeStamp(fastify.db, user.id);

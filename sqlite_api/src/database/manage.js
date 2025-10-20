@@ -1,4 +1,5 @@
 // database/manage.js
+
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 
@@ -39,7 +40,7 @@ export function showUserById(db, id) {
   return user || null;
 }
 
-export async function updateUser(db, id, password) {
+export async function updateUserPass(db, id, password) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) throw new Error('Invalid user id');
   if (typeof password !== 'string' || password.length === 0) {
@@ -48,6 +49,16 @@ export async function updateUser(db, id, password) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const info = db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashedPassword, uid);
+
+  if (info.changes === 0) throw new Error('User not found');
+  return { success: true, id: uid };
+}
+
+export async function updateUserAvatar(db, id, avatar) {
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) throw new Error('Invalid user id');
+
+  const info = db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatar, uid);
 
   if (info.changes === 0) throw new Error('User not found');
   return { success: true, id: uid };
@@ -97,7 +108,6 @@ export function isAdminOrCreator(db, tournamentId, userId) {
   if (!result) return false;
   return result.role.toLowerCase() === 'admin' || result.creator_id === uid;
 }
-
 
 export async function crontab(fastify) {
   const users = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
@@ -161,19 +171,30 @@ export function removeFriend(db, userA, userB) {
   return info.changes > 0;
 }
 
-export function listFriends(db, userId) {
+export function listFriends(db, userId, minutes = 10) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return [];
 
   const sql = `
-    SELECT u.id, u.username, uf.created_at AS since
+    SELECT
+      u.id,
+      u.username,
+      uf.created_at AS since,
+      u.last_timestamp,
+      CASE
+        WHEN u.last_timestamp IS NULL THEN 0
+        WHEN u.last_timestamp >= datetime('now', ?) THEN 1
+        ELSE 0
+      END AS online,
+      CAST(strftime('%s','now') - strftime('%s', COALESCE(u.last_timestamp, '1970-01-01')) AS INTEGER) AS last_seen_seconds
     FROM user_friends uf
     JOIN users u ON u.id = CASE WHEN uf.user_id = ? THEN uf.friend_id ELSE uf.user_id END
     WHERE uf.user_id = ? OR uf.friend_id = ?
-    ORDER BY u.username COLLATE NOCASE
-  `;
-  return db.prepare(sql).all(uid, uid, uid);
+    ORDER BY u.username COLLATE NOCASE`;
+
+  return db.prepare(sql).all(`-${minutes} minutes`, uid, uid, uid);
 }
+
 
 /* -------------------- Tournaments -------------------- */
 

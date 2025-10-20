@@ -1,11 +1,5 @@
 // database/tournaments.js
 
-export const T_STATUS = {
-  WAITING: 0,
-  PLAYING: 1,
-  FINISHED: 2,
-};
-
 export function getAllTournaments(db) {
   return db.prepare(`
     SELECT t.*, u.username AS creator_username, uw.username AS winner
@@ -123,7 +117,6 @@ export function insertStatGame(db, tournamentId, gamesInput) {
 
   return tx(gamesInput);
 }
-
 
 export function listUserMatches(db, userId) {
   const uid = Number(userId);
@@ -296,6 +289,7 @@ export function topTotalPlayTime(db, limit = 10, minGames = 1) {
   `;
   return db.prepare(sql).all(minGames, limit);
 }
+
 export function topTournamentsCreated(db, limit = 10) {
   const sql = `
     SELECT
@@ -368,7 +362,6 @@ export function listUserRecentMatches(db, userId, limit = 20) {
 
   return db.prepare(sql).all(uname, uname, uname, uname, uname, uname, lim);
 }
-
 
 export function validateGameRow(row) {
   const errors = [];

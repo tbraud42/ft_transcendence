@@ -15,22 +15,18 @@ export default async function (fastify, options) {
 
     const user = await fastify.showUserByUsername(fastify.db, username);
     if (user) {
-      return reply.code(401).send({ error: 'username already use' });
+      return reply.code(400).send({ error: 'Username already use' });
     }
 
     if (fastify.usernameEndsWith42(username)) {
-      return reply.code(401).send({ error: 'invalide username' });
+      return reply.code(400).send({ error: 'Invalide username' });
     }
 
     const validation = await fastify.validatePassword(password);
     if (!validation.valid) {
       const message = await fastify.passwordFeedback(validation.errors);
 
-      return reply.code(400).send({
-        error: "Bad Request",
-        code: "INVALID_PASSWORD_POLICY",
-        message
-      });
+      return reply.code(400).send({ error: "Invalide password policy", message });
     }
 
     fastify.apiStat.signup++;

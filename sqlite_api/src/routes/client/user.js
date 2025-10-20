@@ -26,23 +26,23 @@ export default async function (fastify, options) {
     const isAdmin = req.user.role === 'admin';
 
     if (isSelf || isAdmin) {
-      return reply.send({ user: mapUserForSelfOrAdmin(user) });
+      return reply.send({ user: fastify.mapUserForSelfOrAdmin(user) });
     }
 
-    return reply.send({ user: mapUserForPublic(user) });
+    return reply.send({ user: fastify.mapUserForPublic(user) });
   });
 
-  fastify.patch('/pass', {preHandler: [fastify.auth]}, async (req, reply) => { // tester avec auth 42
+  fastify.patch('/pass', {preHandler: [fastify.auth]}, async (req, reply) => {
     const body = req.body ?? {};
     const oldPassword = typeof body.oldPassword === 'string' ? body.oldPassword.trim() : '';
     const newPassword = typeof body.newPassword === 'string' ? body.newPassword : '';
 
-    if (!oldPassword || !newPassword) {
-      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
+    if (fastify.usernameEndsWith42(req.user.username)) {
+      return reply.code(403).send({ error: 'Cannot change 42 auth password' });
     }
 
-    if (fastify.usernameEndsWith42(req.user.username)) {
-      return reply.code(400).send({ error: 'cannot change 42 auth password' });
+    if (!oldPassword || !newPassword) {
+      return reply.code(400).send({ error: 'Missing or invalid field [username/password]' });
     }
 
     if (!await fastify.verifyPassword(oldPassword, req.user.password_hash)) {
@@ -50,17 +50,17 @@ export default async function (fastify, options) {
     }
 
     if (await fastify.verifyPassword(newPassword, req.user.password_hash)) {
-        return reply.code(400).send({error: "need too change the password" });
+        return reply.code(400).send({error: "Need too change the password" });
     }
 
     const validation = await fastify.validatePassword(newPassword);
     if (!validation.valid) {
       const message = await fastify.passwordFeedback(validation.errors);
 
-      return reply.code(400).send({error: "Bad Request", code: "INVALID_PASSWORD_POLICY", message });
+      return reply.code(400).send({ error: "Invalide password policy", message });
     }
 
-    await fastify.updateUser(fastify.db, req.user.id, newPassword);
+    await fastify.updateUserPass(fastify.db, req.user.id, newPassword);
     return reply.send('User update successfully');
   });
 
@@ -72,17 +72,19 @@ export default async function (fastify, options) {
       return reply.code(400).send({ error: 'Missing or invalid field [avatar]' });
     }
 
-    // test avatar
+    if (newAvatar.length > 1_398_102) {
+      return reply.code(413).send({ error: 'Avatar too large' });
+    }
 
-    await fastify.updateUserAvatar(fastify.db, req.user.id, newAvatar); // a cree pour avatar
-    return reply.send('User update successfully');
+    await fastify.updateUserAvatar(fastify.db, req.user.id, newAvatar);
+    return reply.send({ success: true });
   });
 
   fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
 
     if (targetId !== req.user.id && req.user.role !== 'admin') {
-      return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+      return reply.code(403).send({ error: 'Access denied' });
     }
 
     await fastify.deleteUser(fastify.db, req.params.id);
@@ -93,7 +95,7 @@ export default async function (fastify, options) {
     const targetId = Number(req.params.id);
 
     if (targetId !== req.user.id && req.user.role !== 'admin') {
-      return reply.code(404).send({ error: 'Forbidden: insufficient permissions' });
+      return reply.code(403).send({ error: 'Access denied' });
     }
 
     return reply.send(fastify.listUserRecentMatches(fastify.db, targetId));
