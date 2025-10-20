@@ -57,6 +57,7 @@ export class Tournament {
 
         const targetSlot = a.pos === 'top' ? 'p1' : 'p2';
         if (room[targetSlot]) {
+            console.log("occupied slot for bot:", targetSlot, "in room", room.id);
             return;
         } // already occupied
 
@@ -96,11 +97,9 @@ export class Tournament {
 
         const username = client.getUsername?.() || String(client.username || '');
         if (username) {
-            if (!client.isBot()) {
-                this._broadcast({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
-                this.participants.delete(username);
-                client.detachTournament(this);
-            }
+            this._broadcast({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
+            this.participants.delete(username);
+            client.detachTournament(this);
         }
 
         room[targetSlot] = null;
@@ -192,14 +191,14 @@ export class Tournament {
         for (const [i, room] of round1) {
             if (!room.p1) {
                 client.y = room.state.paddles[client.getUsername()]?.y ?? (room.H / 2 - room.PAD_H / 2)
-                room.p1 = client;
+                room.setPlayer1(client);
                 client.attachToRoom(room);
                 client.position = { round: 1, match: i, slot: 'p1' };
                 return true;
             }
             if (!room.p2) {
                 client.y = room.state.paddles[client.getUsername()]?.y ?? (room.H / 2 - room.PAD_H / 2)
-                room.p2 = client;
+                room.setPlayer2(client);
                 client.attachToRoom(room);
                 client.position = { round: 1, match: i, slot: 'p2' };
                 return true;

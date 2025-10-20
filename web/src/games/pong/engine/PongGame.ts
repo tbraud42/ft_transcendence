@@ -76,6 +76,7 @@ export class PongGame {
 
             switch (msg.type) {
             case SrvMessageType.MATCH_STATE: {
+                console.log(msg)
                 this.lastState = msg as SrvState;
                 if (!this.gameEnded) {
                     this.update()
@@ -114,19 +115,21 @@ export class PongGame {
 
     private update() {
 
+        let p1Score = this.player1.score;
+        let p2Score = this.player2.score;
         if (this.online) {
             if (this.lastState) {
                 this.player1.setRemoteY(this.lastState.players[0].y);
                 this.player2.setRemoteY(this.lastState.players[1].y);
-                this.updateScore(this.lastState.players[0].score, this.lastState.players[1].score)
+                p1Score = this.lastState.players[0].score;
+                p2Score = this.lastState.players[1].score;
             }
-            return
         }
 
         this.player1.update(this.ball)
         this.player2.update(this.ball)
 
-        this.updateScore(this.player1.score, this.player2.score)
+        this.updateScore(p1Score, p2Score)
         if (this.ballActive) {
             this.ball.update(this.canvas, this.player1, this.player2)
             const winner = this.ball.checkScore(this.player1, this.player2, this.canvas)

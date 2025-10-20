@@ -68,6 +68,7 @@
   "pong_online_create_public": "Create Room",
   "pong_online_name": "Room name",
   "pong_online_error_create": "Failed to create room. Please try again.",
+  "pong_online_error_fetch": "Failed to load rooms. Please try again.",
   "pong_local_2p_name": "Player 2 Name",
   "pong_local_2p_error_name": "Please enter a name for Player 2.",
   "pong_local_2p": "Start",
@@ -86,5 +87,6 @@
   "pong_lobby_starting": "Room is full. Starting…",
   "pong_lobby_disconnected": "Disconnected. Refresh the page to retry.",
   "pong_lobby_network_error": "Network error.",
+  "pong_lobby_kicked": "You have been kicked from the room.",
   "pong_winner_announce": "{{player}} wins!"
 }

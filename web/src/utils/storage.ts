@@ -9,11 +9,7 @@ export const LANGUAGE_KEY = 'lang'
 export const THEME_KEY = 'theme'
 
 export function isLoggedIn(): boolean {
-    if (!getToken()) {
-        return false;
-    }
-    return Date.now() - getLastTokenRefresh() <= 15 * 60 * 1000;
-
+    return !!getToken();
 }
 
 export function login(token: string, username: string): void {

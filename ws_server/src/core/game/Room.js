@@ -1,7 +1,8 @@
 import { SrvMessageType } from '../client/protocol.js';
+import {Ball} from "./Ball.js";
 
 export class Room {
-    constructor({ tournament, id, difficulty, tickRate = 20 }) {
+    constructor({ tournament, id, difficulty, tickRate = 60 }) {
         this.tournament = tournament;
         this.difficulty = difficulty;
         this.id = id;
@@ -20,14 +21,14 @@ export class Room {
         this.PAD_W = 10;
         this.PAD_H = 100;
         this.PAD_SPEED = 5;
-        this.BALL_R = 16;
+
+        this.ball = new Ball(this.W / 2, this.H / 2, 16, this.W, this.H);
 
         // minimal state; keys will be usernames
         this.state = {
             tick: 0,
             score: {},
             paddles: {},
-            ball: { x: this.W / 2, y: this.H / 2 },
         };
     }
 
@@ -107,6 +108,20 @@ export class Room {
         player.down = down;
     }
 
+    setPlayer1(client) {
+        this.p1 = client;
+        client.speed = this.PAD_SPEED;
+        client.padWidth = this.PAD_W;
+        client.padHeight = this.PAD_H;
+    }
+
+    setPlayer2(client) {
+        this.p2 = client;
+        client.speed = this.PAD_SPEED;
+        client.padWidth = this.PAD_W;
+        client.padHeight = this.PAD_H;
+    }
+
     /* ---------------- broadcast loop (idle) ---------------- */
 
     _startBroadcast() {
@@ -134,8 +149,9 @@ export class Room {
 
     _tick() {
         this.state.tick += 1;
-        this.p1.tick(); //TODO: give ball for ai
-        this.p2.tick(); //TODO: give ball for ai
+        this.ball.tick(this.p1, this.p2);
+        this.p1.tick(this.ball);
+        this.p2.tick(this.ball);
         // no physics; just time passing so clients can draw the court
         // update player pos depending on up or down
         // update ball movement
@@ -152,21 +168,21 @@ export class Room {
             players: [
                 {
                     username: u1,
-                    score: this.state.score[u1] || 0,
-                    y: this.p1.y,
-                    pad: { width: this.PAD_W, height: this.PAD_H, speed: this.PAD_SPEED },
+                    score: this.p1.getScore(),
+                    y: this.p1.getY(),
+                    pad: { width: this.p1.getPadWidth(), height: this.p1.getPadHeight(), speed: this.p1.getSpeed() }
                 },
                 {
                     username: u2,
-                    score: this.state.score[u2] || 0,
-                    y: this.p2.y,
-                    pad: { width: this.PAD_W, height: this.PAD_H, speed: this.PAD_SPEED },
+                    score: this.p2.getScore(),
+                    y: this.p2.getY(),
+                    pad: { width: this.p2.getPadWidth(), height: this.p2.getPadHeight(), speed: this.p2.getSpeed() }
                 },
             ],
             ball: {
-                x: this.state.ball.x,
-                y: this.state.ball.y,
-                radius: this.BALL_R,
+                x: this.ball.getX(),
+                y: this.ball.getY(),
+                radius: this.ball.getRadius(),
             },
             size: { w: this.W, h: this.H },
         };
@@ -190,7 +206,9 @@ export class Room {
         this.state.paddles = paddles;
         this.state.score = score;
 
-        this.state.ball = { x: this.W / 2, y: this.H / 2 };
+        this.ball.setX(this.W / 2);
+        this.ball.setY(this.H / 2);
+        this.ball.setVelocity(0, 0);
     }
 
     _broadcast(msg) {
