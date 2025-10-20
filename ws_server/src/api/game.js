@@ -1,7 +1,9 @@
-const API_URL = process.env.API_URL
+import {env} from "../utils/env.js";
+
+const API_URL = env.API_URL
 
 export async function getTournamentFromApi(token, id) {
-    const url = `https://${API_URL}/tournaments/${encodeURIComponent(id)}`
+    const url = `${API_URL}/tournaments/${encodeURIComponent(id)}`
     const res = await fetch(url, {
         method: 'GET',
         headers: {

@@ -1,9 +1,9 @@
 import { WebSocketServer } from 'ws'
 import { registerHandlers } from './core/handlers/index.js'
-import { getTournamentManager } from './core/game/GamesManager.js'
+import {env} from "./utils/env.js";
 
 const wss = new WebSocketServer({ port: 3000 })
-const NODE_ENV = process.env.NODE_ENV
+const NODE_ENV = env.NODE_ENV
 
 if (NODE_ENV === 'development') {
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
