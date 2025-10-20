@@ -75,7 +75,7 @@ export default async function (fastify, options) {
   fastify.patch('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
 
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
+    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.username);
     if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
     const body = req.body ?? {};
@@ -166,7 +166,7 @@ export default async function (fastify, options) {
 
   fastify.delete('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
+    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.username);
     if (!allowed) return reply.code(403).send({ error: 'Access denied' });
 
     const info = await fastify.deleteTournament(fastify.db, id);

@@ -41,7 +41,7 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
       return reply.code(401).send({ error: 'Unauthorized' }); // Invalid token
     }
 
-    fastify.updateTimeStamp(fastify.db, user.id); // a tester
+    fastify.updateTimeStamp(fastify.db, user.id);
 
     request.user = { ...user, twofa: tokenHas2FA };
   };

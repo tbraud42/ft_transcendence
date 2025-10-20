@@ -94,20 +94,22 @@ export function isAdmin(db, userId) {
   return row?.role?.toLowerCase() === 'admin';
 }
 
-export function isAdminOrCreator(db, tournamentId, userId) {
+export function isAdminOrCreator(db, tournamentId, username) {
   const tid = Number(tournamentId);
-  const uid = Number(userId);
-  if (!Number.isFinite(tid) || !Number.isFinite(uid)) return false;
+
+  const user = username.trim();
 
   const result = db.prepare(`
-    SELECT u.role, t.creator_id
+    SELECT u.role, t.creator
     FROM users u
     JOIN tournaments t ON t.id = ?
-    WHERE u.id = ?`).get(tid, uid);
+    WHERE u.username = ?
+  `).get(tid, user);
 
   if (!result) return false;
-  return result.role.toLowerCase() === 'admin' || result.creator_id === uid;
+  return result.role.toLowerCase() === 'admin' || result.creator === user;
 }
+
 
 export async function crontab(fastify) {
   const users = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();

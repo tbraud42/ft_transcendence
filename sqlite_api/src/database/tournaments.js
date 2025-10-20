@@ -2,50 +2,84 @@
 
 export function getAllTournaments(db) {
   return db.prepare(`
-    SELECT t.*, u.username AS creator_username, uw.username AS winner
+    SELECT
+      t.id,
+      t.name,
+      t.description,
+      t.maxPlayer,
+      t.difficulty,
+      t.status,
+      t.created_at,
+      t.creator     AS creator_username,
+      t.winner      AS winner_username
     FROM tournaments t
-    JOIN users u ON u.id = t.creator_id
-    LEFT JOIN users uw ON uw.id = t.winner
-    ORDER BY t.created_at DESC`).all();
-};
+    ORDER BY t.created_at DESC
+  `).all();
+}
 
 export function getTournamentById(db, id) {
+  const tid = Number(id);
+  if (!Number.isFinite(tid)) return null;
+
+  // 1) Tournoi (creator/winner sont déjà des usernames)
   const tournament = db.prepare(`
-    SELECT t.*, u.username AS creator_username, uw.username AS winner
+    SELECT
+      t.id,
+      t.name,
+      t.description,
+      t.maxPlayer,
+      t.difficulty,
+      t.status,
+      t.created_at,
+      t.creator AS creator_username,
+      t.winner  AS winner_username
     FROM tournaments t
-    JOIN users u ON u.id = t.creator_id
-    LEFT JOIN users uw ON uw.id = t.winner
-    WHERE t.id = ?`).get(id);
+    WHERE t.id = ?
+  `).get(tid);
 
   if (!tournament) return null;
 
+  // 2) Participants (déduits des games) -> username + id si existant
   const participants = db.prepare(`
-    SELECT DISTINCT u.id, u.username
-    FROM games g
-    JOIN users u ON u.id IN (g.player1_id, g.player2_id)
-    WHERE g.tournament_id = ?
-    ORDER BY u.username COLLATE NOCASE`).all(id);
+    WITH all_players(username) AS (
+      SELECT g.player1 FROM games g WHERE g.tournament_id = ?
+      UNION
+      SELECT g.player2 FROM games g WHERE g.tournament_id = ?
+    )
+    SELECT ap.username,
+           u.id AS id
+    FROM all_players ap
+    LEFT JOIN users u ON u.username = ap.username
+    WHERE ap.username IS NOT NULL
+    ORDER BY ap.username COLLATE NOCASE
+  `).all(tid, tid);
 
+  // 3) Matches du tournoi (usernames déjà dans la table)
   const games = db.prepare(`
-    SELECT g.*,
-           u1.username AS p1,
-           u2.username AS p2,
-           uw.username  AS winner
+    SELECT
+      g.id,
+      g.game_num,
+      g.tournament_id,
+      g.player1 AS p1,
+      g.player2 AS p2,
+      g.winner  AS winner,
+      g.started_at,
+      g.duration_sec,
+      g.p1_score,
+      g.p2_score
     FROM games g
-    JOIN users u1 ON u1.id = g.player1_id
-    JOIN users u2 ON u2.id = g.player2_id
-    LEFT JOIN users uw ON uw.id = g.winner_id
     WHERE g.tournament_id = ?
-    ORDER BY g.started_at ASC, g.id ASC`).all(id);
+    ORDER BY g.started_at ASC, g.id ASC
+  `).all(tid);
 
   return { ...tournament, participants, games };
-};
+}
 
 export function getTournamentsByStatus(db, status){
     return db.prepare(`
       SELECT t.*, u.username AS creator_username, uw.username AS winner
       FROM tournaments t
-      JOIN users u ON u.id = t.creator_id
+      JOIN users u ON u.id = t.creator
       LEFT JOIN users uw ON uw.id = t.winner
       WHERE t.status = ?
       ORDER BY t.created_at DESC`).all(status);
