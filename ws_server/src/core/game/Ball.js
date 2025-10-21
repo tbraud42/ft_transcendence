@@ -81,12 +81,12 @@ export class Ball {
 
         // scoring
         if (this.x + this.radius < 0) {
-            player2.score++;
+            player2.incrementScore()
             this._reset(1);
             return 1;
         }
         if (this.x - this.radius > this.width) {
-            player1.score++;
+            player1.incrementScore()
             this._reset(-1);
             return -1;
         }

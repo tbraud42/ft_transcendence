@@ -1,7 +1,7 @@
 import { SrvMessageType } from '../client/protocol.js';
 import {Ball} from "./Ball.js";
 
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 10;
 
 export class Room {
     constructor({ tournament, id, difficulty, tickRate = 60 }) {
@@ -168,7 +168,6 @@ export class Room {
         const score = this.ball.tick(this.p1, this.p2);
         const player = score === -1 ? this.p1 : score === 1 ? this.p2 : null;
         if (player) {
-            player.incrementScore();
             if (player.getScore() >= WINNING_SCORE) {
                 this.onWin();
             }
@@ -192,6 +191,17 @@ export class Room {
         this.winnerScore = winner.getScore();
         this.loserUsername = loser.getUsername();
         this.loserScore = loser.getScore();
+
+        console.log("Match ended:", this.winnerUsername, "defeated", this.loserUsername, "in", (this.totalTime / 1000).toFixed(2), "seconds");
+
+        console.log({
+            type: SrvMessageType.MATCH_END,
+            roomId: this.id,
+            winner: this.winnerUsername,
+            winner_score: this.winnerScore,
+            loser: this.loserUsername,
+            loser_score: this.loserScore,
+        })
 
         this.tournament._broadcast({
             type: SrvMessageType.MATCH_END,

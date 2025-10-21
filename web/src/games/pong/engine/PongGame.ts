@@ -22,11 +22,10 @@ export class PongGame {
     private player2: PlayerBase
     private animationFrameId?: number
     private ballActive = false
-    private gameEnded = false
     private winTextEl: HTMLDivElement
+    public gameEnded = false
 
-    private online = false
-    private lastState?: SrvState
+    public lastState?: SrvState
 
     constructor(
         private id: string,
@@ -37,19 +36,13 @@ export class PongGame {
         ballRadius: number = DEFAULT_BALL_RADIUS,
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement,
-        private ws?: WSClient
+        private online: boolean = false
     ) {
         this.canvas = canvas
         this.ctx = canvas.getContext('2d')!
         this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty, ballRadius)
         this.player1 = player1
         this.player2 = player2
-
-        if (ws) {
-            this.ws = ws
-            this.online = true
-            this.hookWebSocket(ws)
-        }
 
         this.winTextEl = document.createElement('div')
         this.winTextEl.className =
@@ -60,34 +53,6 @@ export class PongGame {
 
     getId(): string {
         return this.id
-    }
-
-    private hookWebSocket(ws: WSClient) {
-        if (!ws.ws) {
-            return;
-        }
-        ws.ws.onmessage = (ev) => {
-            let msg: ServerEvent | null = null
-            try {
-                msg = JSON.parse(ev.data)
-            } catch {
-                return
-            }
-            if (!msg) {
-                return
-            }
-
-            switch (msg.type) {
-            case SrvMessageType.MATCH_STATE: {
-                this.lastState = msg as SrvState;
-                if (!this.gameEnded) {
-                    this.update()
-                    this.draw()
-                }
-                break
-            }
-            }
-        }
     }
 
     start() {
@@ -115,7 +80,7 @@ export class PongGame {
         this.ballActive = false
     }
 
-    private update() {
+    public update() {
 
         let p1Score = this.player1.score;
         let p2Score = this.player2.score;
@@ -152,7 +117,7 @@ export class PongGame {
         this.ctx.setLineDash([])
     }
 
-    private draw() {
+    public draw() {
         this.ctx.fillStyle = 'black'
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
@@ -255,7 +220,7 @@ export class PongGame {
             ? new OnlinePlayer(false, canvas, names.me, ws)
             : new OnlinePlayer(false, canvas, names.opponent, ws)
 
-        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, ballRadius, scoreLeftEl, scoreRightEl, ws);
+        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, ballRadius, scoreLeftEl, scoreRightEl, true);
         game.online = true;
         return game;
     }

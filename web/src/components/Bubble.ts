@@ -18,7 +18,6 @@ export function setBubble(el: HTMLElement, label: string | null, v: ClientStatus
     setStatus(el, v)
 }
 
-//TODO: replace all if
 export function setStatus(el: HTMLElement, v: ClientStatus) {
     el.className = base();
 
