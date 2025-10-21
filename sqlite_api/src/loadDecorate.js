@@ -31,7 +31,6 @@ import {
   deleteTournament,
   insertStatGame,
   userExists,
-  tournamentExists,
   getStat,
   topWinRate,
   topLoseRate,
@@ -96,7 +95,6 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteTournament', deleteTournament);
   fastify.decorate('insertStatGame', insertStatGame);
   fastify.decorate('userExists', userExists);
-  fastify.decorate('tournamentExists', tournamentExists);
   fastify.decorate('getStat', getStat);
   fastify.decorate('topWinRate', topWinRate);
   fastify.decorate('topLoseRate', topLoseRate);

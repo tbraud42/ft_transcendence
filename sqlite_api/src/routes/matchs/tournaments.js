@@ -7,7 +7,6 @@
 // | `GET`    | `/tournaments/playing`    | View playing tournaments (status=1)    | Authenticated    |
 // | `GET`    | `/tournaments/finished`   | View finished tournaments (status=2)   | Authenticated    |
 // | `POST`   | `/tournaments`            | Create a tournament                    | Authenticated    |
-// | `PATCH`  | `/tournaments/:id`        | Edit tournament (name, desc, diff)     | Admin, creator   |
 // | `POST`   | `/tournaments/state/:id`  | Advance or set state                   | Admin, creator   |
 // | `POST`   | `/tournaments/result/:id` | Insert games, optionally set winner    | Admin, creator   |
 // | `DELETE` | `/tournaments/:id`        | Delete a tournament                    | Admin, creator   |
@@ -16,7 +15,7 @@ export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getAllTournaments(fastify.db);
     if (!tournament || tournament.length === 0) {
-      return reply.code(404).send({ error: 'no tournament available' });
+      return reply.send({});
     }
     reply.send(tournament);
   });
@@ -30,80 +29,56 @@ export default async function (fastify, options) {
 
   fastify.get('/waitting', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 0);
-    if (!tournament || tournament.length === 0) return reply.code(404).send({ error: 'no tournament available' });
+    if (!tournament || tournament.length === 0) return reply.send({});
     reply.send(tournament);
   });
 
   fastify.get('/playing', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 1);
-    if (!tournament || tournament.length === 0) return reply.code(404).send({ error: 'no tournament available' });
+    if (!tournament || tournament.length === 0) return reply.send({});
     reply.send(tournament);
   });
 
   fastify.get('/finished', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 2);
-    if (!tournament || tournament.length === 0) return reply.code(404).send({ error: 'no tournament available' });
+    if (!tournament || tournament.length === 0) return reply.send({});
     reply.send(tournament);
   });
 
   fastify.post('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const body = req.body ?? {};
+
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
-    const maxPlayer  = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
-    const creator = req.user.username;
-    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
+    const maxPlayer   = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
+    const creator     = String(req.user.username || '').trim();
+
+    const bad = (msg='Missing or invalid field') => reply.code(400).send({ error: msg });
 
     if (!name || name.length > 50) return bad();
     if (description && description.length > 255) return bad();
     if (!['easy','medium','hard'].includes(difficulty)) return bad();
-    if (maxPlayer != 2 && maxPlayer != 4 && maxPlayer != 8) return bad();
+    if (!Number.isInteger(maxPlayer) || ![2,4,8].includes(maxPlayer)) return bad('Invalid maxPlayer');
+    if (!creator) return bad('Invalid creator');
 
-    const data = {
-      name,
-      description,
-      difficulty,
-      maxPlayer,
-      creator,
-    };
+    const data = { name, description, difficulty, maxPlayer, creator };
+
+    if (fastify.getTournamentByName(fastify.db, name))
+        return reply.code(409).send({ error: 'Tournament name already taken' });
 
     const tournament = await fastify.createTournament(fastify.db, data);
-    reply.send(tournament);
-  });
-
-  fastify.patch('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const id = Number(req.params.id);
-
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.username);
-    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
-
-    const body = req.body ?? {};
-    const name        = typeof body.name === 'string' ? body.name.trim() : '';
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-    const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
-    const maxPlayer  = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
-    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
-
-    if (!name || name.length > 50) return bad();
-    if (description && description.length > 255) return bad();
-    if (!['easy','medium','hard'].includes(difficulty)) return bad();
-    if (maxPlayer != 2 && maxPlayer != 4 && maxPlayer != 8) return bad();
-
-    const tournament = await fastify.updateTournament(fastify.db, id, { name, description, difficulty, maxPlayer});
-    if (!tournament || tournament.changes === 0) return reply.code(404).send({ error: 'tournament not found' });
-
-    reply.send({ success: true });
+    return reply.send(tournament);
   });
 
   fastify.post('/result/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const isAdmin = fastify.isAdmin(fastify.db, req.user.id);
-    if (!isAdmin) return reply.code(403).send({ error: 'Access denied' });
-
     const tid = Number(req.params.id);
     if (!Number.isFinite(tid)) return reply.code(400).send({ error: 'Invalid tournament id' });
 
-    if (!await fastify.tournamentExists(fastify.db, tid)) {
+    const allowed = await fastify.isAdminOrCreator(fastify.db, tid, req.user.username);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
+
+    if (!await fastify.getTournamentById(fastify.db, tid)) {
       return reply.code(404).send({ error: 'Tournament not found' });
     }
 
