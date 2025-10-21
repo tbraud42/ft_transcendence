@@ -1,6 +1,6 @@
 import { ClientStatus, MatchStatus } from './protocol';
 
-export { ClientStatus as ClientStatus, MatchStatus as MatchStatus };
+export { ClientStatus as ClientStatus};
 
 export type MatchStatus = typeof MatchStatus;
 

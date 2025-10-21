@@ -6,6 +6,7 @@ import {createOverlayCard} from "../../components/overlayCard";
 import {navigateTo} from "../../utils/router";
 import {createPongCanvas} from "../../pages/pongPlay";
 import {PongGame} from "../../games/pong/engine/PongGame";
+import i18n from "../../utils/lang/i18n";
 
 export class WSClient {
     public ws: WebSocket | null = null
@@ -83,17 +84,19 @@ export class WSClient {
                 const me = msg.clients[0].username === getUsername() ? msg.clients[0] : msg.clients[1]
                 const opponent = msg.clients[0].username !== getUsername() ? msg.clients[0] : msg.clients[1]
 
+                this.canvas.height = 480
+                this.canvas.width = 640
+
                 this.currentGame = PongGame.createOnline(
                     msg.roomId,
                     this.canvas,
-                    this, me.slot,
+                    this,
+                    me.slot,
                     { me: me.username, opponent: opponent.username },
                     msg.difficulty,
                     scoreLeft,
                     scoreRight
                 );
-                this.currentGame.start()
-                this.currentGame.startBall()
                 break
             }
             case SrvMessageType.MATCH_END: {
@@ -102,7 +105,7 @@ export class WSClient {
             case SrvMessageType.PLAYER_KICK: {
                 const overlay = createOverlayCard({
                     title: "Kick",
-                    text: "You have been kicked from the lobby.",
+                    text: i18n.t('pong_lobby_kicked'),
                     onClose: () => navigateTo('/home')
                 })
                 this.host.appendChild(overlay.element)

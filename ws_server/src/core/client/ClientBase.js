@@ -1,28 +1,35 @@
 export class ClientBase {
     constructor(id, username) {
-        this.auth = false
-        this.id = id
-        this.username = username
-        this.connected = true
-        this.ready = false
-        this.bot = true;
+        this.auth = false;
+        this.id = id;
+        this.username = username;
+        this.connected = true;
+        this.ready = false;
+        this.bot = false;
 
-        // session state
-        this.tournament = null
-        this.room = null
+        // session
+        this.tournament = null;
+        this.room = null;
 
-        // game status
+        // inputs/state for game
         this.up = false;
         this.down = false;
         this.y = 0;
         this.score = 0;
+
+        // paddle params (filled on attachToRoom)
+        this.speed = 6;
+        this.padWidth = 10;
+        this.padHeight = 100;
     }
 
-    send(msg) {}
+    send(_msg) {}
 
     getUsername() {
-        return this.username;
+        return this.username; 
     }
+
+    /* ---------- tournament lifecycle ---------- */
 
     attachToTournament(tournament) {
         this.tournament = tournament;
@@ -34,25 +41,36 @@ export class ClientBase {
     }
 
     detachTournament() {
-        this.tournament = null
+        this.tournament = null;
         this.setReady(false);
         this.detachRoom();
     }
 
+    /* ---------- room lifecycle ---------- */
+
     attachToRoom(room) {
         if (!this.tournament) {
-            return
+            return;
         }
-        this.room = room
+        this.room = room;
+
+        // sync paddle/arena params from room
+        this.padWidth  = room.PAD_W ?? this.padWidth;
+        this.padHeight = room.PAD_H ?? this.padHeight;
+        this.speed     = room.PAD_SPEED ?? this.speed;
+
+        // center vertically
+        this.y = Math.max(0, Math.min((room.H - this.padHeight) / 2, room.H - this.padHeight));
     }
 
     detachRoom() {
-        this.room = null
+        this.room = null; 
+    }
+    getRoom() {
+        return this.room; 
     }
 
-    getRoom() {
-        return this.room
-    }
+    /* ---------- connection/ready ---------- */
 
     onDisconnect() {
         this.ready = false;
@@ -63,41 +81,73 @@ export class ClientBase {
     }
 
     isAuthenticated() {
-        return !!this.auth;
+        return !!this.auth; 
     }
-
     isConnected() {
-        return !!this.connected;
+        return !!this.connected; 
     }
-
     isReady() {
-        return !!this.ready;
+        return !!this.ready; 
     }
 
     setReady(ready) {
-        this.ready = ready;
+        this.ready = !!ready;
         if (this.tournament) {
             this.tournament.broadcastSnapshot();
         }
         if (this.room) {
-            this.room.checkStart();
+            this.room.checkStart?.();
         }
     }
 
     isBot() {
-        return !!this.bot;
+        return !!this.bot; 
     }
 
-    tick(ball) {
-        if (!this.room) {
+    /* ---------- helpers ---------- */
+
+    getY() {
+        return this.y; 
+    }
+    getScore() {
+        return this.score; 
+    }
+    getSpeed() {
+        return this.speed; 
+    }
+    getPadWidth() {
+        return this.padWidth; 
+    }
+    getPadHeight() {
+        return this.padHeight; 
+    }
+
+    setInput(up, down) {
+        // simple input latch; server calls this from input handler
+        this.up = !!up;
+        this.down = !!down;
+    }
+
+    /**
+     * Move paddle according to input flags. Call every tick.
+     * @param _ball (unused for now)
+     */
+    tick(_ball) {
+        const r = this.room;
+        if (!r) {
             return;
         }
-        if (this.up && this.y < this.room.H) {
-            this.y += 1;
+
+        // up -> decrease y ; down -> increase y
+        let dy = 0;
+        if (this.up && !this.down) {
+            dy = -this.speed;
+        } else if (this.down && !this.up) {
+            dy = this.speed;
         }
-        if (this.down && this.y > 0) {
-            this.y -= 1;
-        }
-        console.log(this.y)
+
+        // clamp inside arena
+        const maxY = (r.H ?? 0) - this.padHeight;
+        this.y = Math.max(0, Math.min(maxY, this.y + dy));
     }
 }
