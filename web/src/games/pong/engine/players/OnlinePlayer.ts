@@ -50,10 +50,10 @@ export class OnlinePlayer extends PlayerBase {
                 }
             } else {
                 if (e.key === 'ArrowDown') {
-                    this.moveUp = true;
+                    this.moveDown = true;
                 }
                 if (e.key === 'ArrowUp') {
-                    this.moveDown = true;
+                    this.moveUp = true;
                 }
             }
             this.sendIfChanged();
@@ -68,10 +68,10 @@ export class OnlinePlayer extends PlayerBase {
                 }
             } else {
                 if (e.key === 'ArrowDown') {
-                    this.moveUp = false;
+                    this.moveDown = false;
                 }
                 if (e.key === 'ArrowUp') {
-                    this.moveDown = false;
+                    this.moveUp = false;
                 }
             }
             this.sendIfChanged();
