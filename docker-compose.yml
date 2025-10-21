@@ -78,10 +78,8 @@ services:
       - "3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      API_URL: api.${DOMAIN_NAME}
+      API_URL: sqlite_api:3000
     restart: unless-stopped
-    extra_hosts:
-      - "api.${DOMAIN_NAME}:host-gateway"
     networks:
       - backend
 
