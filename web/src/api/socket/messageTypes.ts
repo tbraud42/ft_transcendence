@@ -72,7 +72,9 @@ export type SrvEnd = {
     type: typeof SrvMessageType.MATCH_END;
     roomId: string;
     winner: string;
-    score?: Record<string, number> | null;
+    winner_score?: Record<string, number> | null;
+    loser: string;
+    loser_score?: Record<string, number> | null;
 };
 
 export type SrvEliminated = {

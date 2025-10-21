@@ -1,4 +1,4 @@
-import { PongGame } from '../games/pong/engine/PongGame'
+import {DEFAULT_BALL_RADIUS, PongGame} from '../games/pong/engine/PongGame'
 import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { GameMode, secondPlayerName, selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
@@ -9,7 +9,6 @@ import { env } from '../utils/env'
 import {navigateTo} from "../utils/router";
 
 let currentGame: PongGame | null = null
-const PONG_WS_URL = env.PONG_WS_URL
 
 export function createPongCanvas(): HTMLCanvasElement { //TODO: use the same canvas as online
     const canvas = document.createElement('canvas')
@@ -65,7 +64,7 @@ export function renderPongPlay(roomId: string): HTMLElement {
     if (mode === GameMode.AI) {
         const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
         const p2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty)
-        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
+        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, DEFAULT_BALL_RADIUS, scoreLeft, scoreRight)
         currentGame = game
         game.start()
         launchCountdown(countdown, () => {
@@ -79,7 +78,7 @@ export function renderPongPlay(roomId: string): HTMLElement {
     if (mode === GameMode.LOCAL) {
         const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
         const p2 = new LocalPlayer(false, canvas, secondPlayerName || i18n.t('pong_opponent'))
-        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
+        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, DEFAULT_BALL_RADIUS, scoreLeft, scoreRight)
         currentGame = game
         game.start()
         launchCountdown(countdown, () => {

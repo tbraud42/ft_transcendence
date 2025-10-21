@@ -5,7 +5,7 @@ import {CliMessageType, SrvMessageType} from "./protocol";
 import {createOverlayCard} from "../../components/overlayCard";
 import {navigateTo} from "../../utils/router";
 import {createPongCanvas} from "../../pages/pongPlay";
-import {PongGame} from "../../games/pong/engine/PongGame";
+import {DEFAULT_BALL_RADIUS, PongGame} from "../../games/pong/engine/PongGame";
 import i18n from "../../utils/lang/i18n";
 
 export class WSClient {
@@ -50,21 +50,22 @@ export class WSClient {
             switch (msg.type) {
             case SrvMessageType.SNAPSHOT: {
                 this.latestSnapshot = msg as SrvSnapshot
+                console.log(msg as SrvSnapshot)
                 renderBracket(this.host, this.latestSnapshot, {
                     myUsername: getUsername(),
                     isOwner: msg.creator === getUsername(),
                     onAddBot: (addr) => {
                         if (!this.latestSnapshot) {
                             return;
-                        } this.send({ type: CliMessageType.ADD_BOT, addr }) 
+                        } this.send({ type: CliMessageType.ADD_BOT, addr })
                     },
                     onRemove: (addr) => {
                         if (!this.latestSnapshot) {
                             return;
-                        } this.send({ type: CliMessageType.REMOVE, addr }) 
+                        } this.send({ type: CliMessageType.REMOVE, addr })
                     },
                     onReady: (_addr) => {
-                        const ready = !this.isClientReady(getUsername()); this.send({ type: CliMessageType.READY, ready }) 
+                        const ready = !this.isClientReady(getUsername()); this.send({ type: CliMessageType.READY, ready })
                     },
                     isReady: (username, _addr) => this.isClientReady(username)
                 })
@@ -94,12 +95,18 @@ export class WSClient {
                     me.slot,
                     { me: me.username, opponent: opponent.username },
                     msg.difficulty,
+                    DEFAULT_BALL_RADIUS,
                     scoreLeft,
                     scoreRight
                 );
                 break
             }
             case SrvMessageType.MATCH_END: {
+                console.log(msg)
+                if (msg.roomId && this.currentGame && this.currentGame.getId() === msg.roomId) {
+                    this.currentGame.stop();
+                    this.currentGame = null
+                }
                 break
             }
             case SrvMessageType.PLAYER_KICK: {

@@ -12,6 +12,8 @@ import {navigateTo} from "../../../utils/router";
 import {ServerEvent, SrvState} from "../../../api/socket/messageTypes";
 import {SrvMessageType} from "../../../api/socket/protocol";
 
+export const DEFAULT_BALL_RADIUS = 8
+
 export class PongGame {
     private canvas: HTMLCanvasElement
     private ctx: CanvasRenderingContext2D
@@ -32,13 +34,14 @@ export class PongGame {
         player1: PlayerBase,
         player2: PlayerBase,
         difficulty: Difficulty,
+        ballRadius: number = DEFAULT_BALL_RADIUS,
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement,
         private ws?: WSClient
     ) {
         this.canvas = canvas
         this.ctx = canvas.getContext('2d')!
-        this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty)
+        this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty, ballRadius)
         this.player1 = player1
         this.player2 = player2
 
@@ -76,7 +79,6 @@ export class PongGame {
 
             switch (msg.type) {
             case SrvMessageType.MATCH_STATE: {
-                console.log(msg)
                 this.lastState = msg as SrvState;
                 if (!this.gameEnded) {
                     this.update()
@@ -162,7 +164,7 @@ export class PongGame {
         if (this.online) {
             const s = this.lastState
             if (s) {
-                const r = s.ball.radius / 2
+                const r = s.ball.radius
                 this.ctx.fillStyle = 'white'
                 this.ctx.beginPath()
                 this.ctx.arc(s.ball.x, s.ball.y, r, 0, Math.PI * 2)
@@ -219,7 +221,7 @@ export class PongGame {
     ) {
         const p1 = new LocalPlayer(true, canvas, names.left)
         const p2 = new LocalPlayer(false, canvas, names.right)
-        return new PongGame("local", canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
+        return new PongGame("local", canvas, p1, p2, difficulty, DEFAULT_BALL_RADIUS, scoreLeftEl, scoreRightEl)
     }
 
     static createLocalVsAi(
@@ -231,7 +233,7 @@ export class PongGame {
     ) {
         const p1 = new LocalPlayer(true, canvas, nameLeft)
         const p2 = new AiPlayer(false, canvas, 'AI', difficulty)
-        return new PongGame("local", canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
+        return new PongGame("local", canvas, p1, p2, difficulty, DEFAULT_BALL_RADIUS, scoreLeftEl, scoreRightEl)
     }
 
     static createOnline(
@@ -241,6 +243,7 @@ export class PongGame {
         mySlot: 0 | 1,
         names: { me: string; opponent: string },
         difficulty: Difficulty,
+        ballRadius: number = DEFAULT_BALL_RADIUS,
         scoreLeftEl?: HTMLElement,
         scoreRightEl?: HTMLElement
     ) {
@@ -252,7 +255,7 @@ export class PongGame {
             ? new OnlinePlayer(false, canvas, names.me, ws)
             : new OnlinePlayer(false, canvas, names.opponent, ws)
 
-        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, scoreLeftEl, scoreRightEl, ws);
+        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, ballRadius, scoreLeftEl, scoreRightEl, ws);
         game.online = true;
         return game;
     }

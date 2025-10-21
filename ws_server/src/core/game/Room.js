@@ -1,6 +1,8 @@
 import { SrvMessageType } from '../client/protocol.js';
 import {Ball} from "./Ball.js";
 
+const WINNING_SCORE = 1;
+
 export class Room {
     constructor({ tournament, id, difficulty, tickRate = 60 }) {
         this.tournament = tournament;
@@ -14,6 +16,14 @@ export class Room {
         this.tickRate = tickRate;
         this.loop = null;
         this.started = false; // broadcasting started
+        this.startTime = 0;
+        this.totalTime = 0;
+        this.ended = false;
+        this.winnerUsername = null;
+        this.winnerScore = 0;
+        this.loserUsername = null;
+        this.loserScore = 0;
+
 
         // world
         this.W = 640;
@@ -22,7 +32,7 @@ export class Room {
         this.PAD_H = 100;
         this.PAD_SPEED = 5;
 
-        this.ball = new Ball(this.W / 2, this.H / 2, 16, this.W, this.H);
+        this.ball = new Ball(this.W / 2, this.H / 2, 8, this.W, this.H);
 
         // minimal state; keys will be usernames
         this.state = {
@@ -134,6 +144,7 @@ export class Room {
 
         const intervalMs = Math.max(16, Math.round(1000 / this.tickRate));
         this.started = true;
+        this.startTime = Date.now();
         this.loop = setInterval(() => {
             try {
                 this._tick();
@@ -148,13 +159,50 @@ export class Room {
     }
 
     _tick() {
+        if (!this.started) {
+            return;
+        }
         this.state.tick += 1;
-        this.ball.tick(this.p1, this.p2);
         this.p1.tick(this.ball);
         this.p2.tick(this.ball);
-        // no physics; just time passing so clients can draw the court
-        // update player pos depending on up or down
-        // update ball movement
+        const score = this.ball.tick(this.p1, this.p2);
+        const player = score === -1 ? this.p1 : score === 1 ? this.p2 : null;
+        if (player) {
+            player.incrementScore();
+            if (player.getScore() >= WINNING_SCORE) {
+                this.onWin();
+            }
+        }
+
+        //TODO: process scoring
+        //TODO: timer?
+    }
+
+    onWin() {
+        this.started = false;
+        this.ended = false;
+        this.totalTime = Date.now() - this.startTime;
+        clearInterval(this.loop);
+        this.loop = null;
+
+        const winner = this.p1.getScore() > this.p2.getScore() ? this.p1 : this.p2;
+        const loser = winner === this.p1 ? this.p2 : this.p1;
+
+        this.winnerUsername = winner.getUsername();
+        this.winnerScore = winner.getScore();
+        this.loserUsername = loser.getUsername();
+        this.loserScore = loser.getScore();
+
+        this.tournament._broadcast({
+            type: SrvMessageType.MATCH_END,
+            roomId: this.id,
+            winner: this.winnerUsername,
+            winner_score: this.winnerScore,
+            loser: this.loserUsername,
+            loser_score: this.loserScore,
+        });
+        this.p1.detachRoom();
+        this.p2.detachRoom();
     }
 
     _publicState() {

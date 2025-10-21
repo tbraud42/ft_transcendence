@@ -64,10 +64,14 @@ export class ClientBase {
     }
 
     detachRoom() {
-        this.room = null; 
+        if (!this.room) {
+            return;
+        }
+        this.room.removePlayer(this.getUsername());
+        this.room = null;
     }
     getRoom() {
-        return this.room; 
+        return this.room;
     }
 
     /* ---------- connection/ready ---------- */
@@ -111,6 +115,9 @@ export class ClientBase {
     }
     getScore() {
         return this.score; 
+    }
+    incrementScore() {
+        this.score += 1;
     }
     getSpeed() {
         return this.speed; 

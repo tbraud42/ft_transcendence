@@ -131,7 +131,11 @@ export class Tournament {
                     round,
                     p1: room.p1 ? (room.p1.getUsername?.() || room.p1.username) : null,
                     p2: room.p2 ? (room.p2.getUsername?.() || room.p2.username) : null,
-                    status: room.started ? MatchStatus.RUNNING : MatchStatus.WAITING
+                    status: room.started ? MatchStatus.RUNNING : room.ended ? MatchStatus.FINISHED : MatchStatus.WAITING,
+                    winner: room.ended ? (room.winner || null) : null,
+                    winnerScore: room.ended ? (room.winnerScore || 0) : 0,
+                    loser: room.ended ? (room.loser || null) : null,
+                    loserScore: room.ended ? (room.loserScore || 0) : 0
                 });
             }
         }
