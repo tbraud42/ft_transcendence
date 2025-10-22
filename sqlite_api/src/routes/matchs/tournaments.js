@@ -2,13 +2,13 @@
 // | Method   | Route                     | Description                            | Access           |
 // | -------- | ------------------------- | -------------------------------------- | ---------------- |
 // | `GET`    | `/tournaments`            | View all tournaments                   | Authenticated    |
-// | `GET`    | `/tournaments/:id`        | View a specific tournament (+games)    | Authenticated    |
+// | `GET`    | `/tournaments/:id`        | View a specific tournament             | Authenticated    |
 // | `GET`    | `/tournaments/waitting`   | View waiting tournaments (status=0)    | Authenticated    |
 // | `GET`    | `/tournaments/playing`    | View playing tournaments (status=1)    | Authenticated    |
 // | `GET`    | `/tournaments/finished`   | View finished tournaments (status=2)   | Authenticated    |
 // | `POST`   | `/tournaments`            | Create a tournament                    | Authenticated    |
 // | `POST`   | `/tournaments/state/:id`  | Advance or set state                   | Admin, creator   |
-// | `POST`   | `/tournaments/result/:id` | Insert games, optionally set winner    | Admin, creator   |
+// | `POST`   | `/tournaments/result/:id` | Insert games, set winner               | Admin, creator   |
 // | `DELETE` | `/tournaments/:id`        | Delete a tournament                    | Admin, creator   |
 
 export default async function (fastify, options) {
@@ -69,6 +69,21 @@ export default async function (fastify, options) {
 
     const tournament = await fastify.createTournament(fastify.db, data);
     return reply.send(tournament);
+  });
+
+  fastify.post('/state/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
+    const tid = Number(req.params.id);
+    if (!Number.isFinite(tid)) return reply.code(400).send({ error: 'Invalid tournament id' });
+
+    const allowed = await fastify.isAdminOrCreator(fastify.db, tid, req.user.username);
+    if (!allowed) return reply.code(403).send({ error: 'Access denied' });
+
+    if (!await fastify.getTournamentById(fastify.db, tid)) {
+      return reply.code(404).send({ error: 'Tournament not found' });
+    }
+
+    fastify.changeTournamentStatus(fastify.db, tid);
+    return reply.send({ success: true });
   });
 
   fastify.post('/result/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
