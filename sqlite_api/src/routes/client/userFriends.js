@@ -8,21 +8,25 @@
 export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friends = fastify.listFriends(fastify.db, req.user.id);
-    return reply.send(friends);
+    return reply.send({ error: false, code: '', info: { friends } });
   });
 
   fastify.post('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friendId = Number(req.params.id);
     const friend = fastify.addFriend(fastify.db, req.user.id, friendId);
-    return reply.send(friend);
+    return reply.send({ error: false, code: '', info: { friend } });
   });
 
   fastify.delete('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friendId = Number(req.params.id);
     const removed = fastify.removeFriend(fastify.db, req.user.id, friendId);
     if (!removed) {
-      return reply.code(404).send({ error: 'Not friends' });
+      return reply.code(404).send({ error: true, code: 'USER_NOT_FRIENDS', info: 'Not friends' });
     }
-    return reply.send({ success: true });
+    return reply.send({ error: false, code: '', info: 'friend delete' });
   });
 }
+
+// | Error                | Code                                  |
+// | -------------------- | ------------------------------------- |
+// | Not friends          | `USER_NOT_FRIENDS`                    |

@@ -11,11 +11,11 @@ export default async function (fastify, options) {
   fastify.post('/setup', {preHandler: [fastify.auth]}, async (req, reply) => {
 
     if (fastify.usernameEndsWith42(req.user.username)) {
-      return reply.code(403).send({ error: '2FA not allowed for 42 users' });
+      return reply.code(403).send({ error: true, code: 'TFA_NOT_ALLOWED_42' , info: '2FA not allowed for 42 users' } );
     }
 
     if (req.user.is_twofa_enabled) {
-      return reply.code(403).send({ error: '2FA already enabled' });
+      return reply.code(403).send({ error: true, code: 'TFA_ALREADY_ENABLED', info: '2FA already enabled' });
     }
 
     const secret = speakeasy.generateSecret({
@@ -26,12 +26,12 @@ export default async function (fastify, options) {
 
     const qrDataUrl = await qrcode.toDataURL(secret.otpauth_url);
 
-    return reply.send({ qrCode: qrDataUrl });
+    return reply.send({ error: false, code: '', info: { qrCode: qrDataUrl } });
   });
 
   fastify.post('/verify', {preHandler: [fastify.auth2faPending]}, async (req, reply) => {
     if (req.user.twofa !== false) {
-      return reply.code(400).send({ error: '2FA already verified' });
+      return reply.code(400).send({ error: true, code: 'TFA_ALREADY_VERIFIED', info: '2FA already verified' });
     }
 
     const isValid = speakeasy.totp.verify({
@@ -49,9 +49,16 @@ export default async function (fastify, options) {
           role: req.user.role
         }, true, '12h');
 
-      return reply.send({ token: fullToken });
+      return reply.send({ error: false, code: '', info: { token: fullToken } });
     } else {
-      return reply.code(401).send({ error: 'Invalid 2FA code' });
+      return reply.code(401).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
     }
   });
 }
+
+// | Error                       | Code                    |
+// | --------------------------- | ----------------------- |
+// | 2FA not allowed for 42 user | `TFA_NOT_ALLOWED_42`    |
+// | 2FA already enabled         | `TFA_ALREADY_ENABLED`   |
+// | 2FA already verified        | `TFA_ALREADY_VERIFIED`  |
+// | Invalid 2FA code            | `TFA_INVALID_CODE`      |

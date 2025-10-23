@@ -55,8 +55,7 @@ CREATE TABLE IF NOT EXISTS tournaments (
   difficulty   VARCHAR(15) NOT NULL CHECK (difficulty IN ('easy','medium','hard')),
   status       INTEGER NOT NULL DEFAULT 0 CHECK (status IN (0,1,2)), -- 0=waiting,1=playing,2=finished
   created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (creator) REFERENCES users(username) ON DELETE SET NULL,
-  FOREIGN KEY (winner)  REFERENCES users(username) ON DELETE SET NULL
+  FOREIGN KEY (creator) REFERENCES users(username) ON DELETE SET NULL
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS uq_tournaments_name_nocase
@@ -79,10 +78,7 @@ CREATE TABLE IF NOT EXISTS games (
   p2_score      INTEGER CHECK (p2_score IS NULL OR p2_score >= 0),
   CHECK (player1 IS NULL OR player2 IS NULL OR player1 <> player2),
   CHECK (winner IS NULL OR winner IN (player1, player2)),
-  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
-  FOREIGN KEY (player1)       REFERENCES users(username) ON DELETE SET NULL,
-  FOREIGN KEY (player2)       REFERENCES users(username) ON DELETE SET NULL,
-  FOREIGN KEY (winner)        REFERENCES users(username) ON DELETE SET NULL
+  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_games_tournament ON games(tournament_id);

@@ -6,9 +6,6 @@
 export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const user = fastify.showUserById(fastify.db, req.user.id);
-    return reply.send({
-      status: 'authenticated',
-      user: fastify.mapUserForSelfOrAdmin(user)
-    });
+    return reply.send({ error: false, code: '', info: { status: 'authenticated', user: fastify.mapUserForSelfOrAdmin(user)}});
   });
 }

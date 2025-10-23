@@ -122,18 +122,18 @@ export function deleteTournament(db, id){
     return db.prepare(`DELETE FROM tournaments WHERE id = ?`).run(id);
 };
 
-export function insertStatGame(db, tournamentId, gamesInput) {
+export function insertStatGame(fastify, tournamentId, gamesInput) {
   const tid = Number(tournamentId);
   if (!Number.isFinite(tid)) throw new Error('INVALID_TOURNAMENT');
 
-  const getMaxNum = db.prepare(`SELECT COALESCE(MAX(game_num), 0) AS maxn FROM games WHERE tournament_id = ?`);
+  const getMaxNum = fastify.db.prepare(`SELECT COALESCE(MAX(game_num), 0) AS maxn FROM games WHERE tournament_id = ?`);
 
-  const insGame = db.prepare(`INSERT INTO games (game_num, tournament_id, player1, player2, winner, started_at, duration_sec, p1_score, p2_score)
+  const insGame = fastify.db.prepare(`INSERT INTO games (game_num, tournament_id, player1, player2, winner, started_at, duration_sec, p1_score, p2_score)
     VALUES (?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)`);
 
-  const updUserByName = db.prepare(`UPDATE users SET total_games = total_games + 1, total_seconds = total_seconds + ? WHERE username = ?`);
+  const updUserByName = fastify.db.prepare(`UPDATE users SET total_games = total_games + 1, total_seconds = total_seconds + ? WHERE username = ?`);
 
-  const tx = db.transaction((rows) => {
+  const tx = fastify.db.transaction((rows) => {
     let inserted = 0;
     for (const g of rows) {
       const game_num = Number(g.game_num);
@@ -147,8 +147,10 @@ export function insertStatGame(db, tournamentId, gamesInput) {
 
       insGame.run(game_num, tid, p1, p2, winner, started, dur, s1, s2);
 
-      updUserByName.run(dur, p1);
-      updUserByName.run(dur, p2);
+      if (fastify.showUserByUsername(fastify.db, p1))
+        updUserByName.run(dur, p1);
+      if (fastify.showUserByUsername(fastify.db, p2))
+        updUserByName.run(dur, p2);
 
       inserted++;
     }

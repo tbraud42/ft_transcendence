@@ -12,39 +12,42 @@
 export default async function (fastify, opts) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const admin = fastify.isAdmin(fastify.db, req.user.id);
-    if (!admin) return reply.code(403).send({ error: 'Access denied' });
+    if (!admin) return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
 
-    return reply.send({
+    return reply.send({ error: true, code: '', info: {
       request: fastify.apiStat.request,
       login: fastify.apiStat.login,
       signup: fastify.apiStat.signup
-    });
+    }});
   });
 
   fastify.get('/dashboard/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
 
-    return reply.send(fastify.getStat(fastify.db, id));
+    return reply.send({ error: false, code: '', info: fastify.getStat(fastify.db, id) });
   });
 
   fastify.get('/dashboard/perWin', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send(fastify.topWinRate(fastify.db));
+    return reply.send({ error: false, code: '', info: fastify.topWinRate(fastify.db) });
   });
 
   fastify.get('/dashboard/perLose', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send(fastify.topLoseRate(fastify.db));
+    return reply.send({ error: false, code: '', info: fastify.topLoseRate(fastify.db) });
   });
 
   fastify.get('/dashboard/perTime', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send(fastify.topTotalPlayTime(fastify.db));
+    return reply.send({ error: false, code: '', info: fastify.topTotalPlayTime(fastify.db) });
   });
 
   fastify.get('/dashboard/perCreat', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send(fastify.topTournamentsCreated(fastify.db));
+    return reply.send({ error: false, code: '', info: fastify.topTournamentsCreated(fastify.db) });
   });
 
   fastify.get('/dashboard/perTWin', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send(fastify.topTournamentsWon(fastify.db));
+    return reply.send({ error: false, code: '', info: fastify.topTournamentsWon(fastify.db) });
   });
 }
 
+// | Error                       | Code                    |
+// | --------------------------- | ----------------------- |
+// | Access denied               | `AUTH_ACCESS_DENIED`    |
