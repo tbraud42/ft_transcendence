@@ -35,7 +35,7 @@ export class Room {
         this.PAD_W = 10;
         this.PAD_H = 100;
         this.PAD_SPEED = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8
-        const ballSpeed = difficulty === 'easy' ? 6 : difficulty === 'hard' ? 10 : 8;
+        const ballSpeed = difficulty === 'easy' ? 4 : difficulty === 'hard' ? 8 : 6;
 
         this.ball = new Ball(this.W / 2, this.H / 2, 8, this.W, this.H, ballSpeed);
 
@@ -47,19 +47,6 @@ export class Room {
 
         // Tracks a username that forfeited mid-match (decided in onEnd)
         this._forfeitBy = null;
-    }
-
-    /**
-     * Get player by absolute position: 1 -> p1, 2 -> p2, else null.
-     */
-    getPlayerByPosition(pos) {
-        if (pos === 1) {
-            return this.p1;
-        }
-        if (pos === 2) {
-            return this.p2;
-        }
-        return null;
     }
 
     /**
