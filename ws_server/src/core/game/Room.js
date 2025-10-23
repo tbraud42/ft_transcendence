@@ -1,7 +1,7 @@
 import { SrvMessageType } from '../client/protocol.js';
 import { Ball } from './Ball.js';
 
-const WINNING_SCORE = 1;
+const WINNING_SCORE = 5;
 
 export class Room {
     /**
@@ -43,6 +43,9 @@ export class Room {
             score: {},
             paddles: {},
         };
+
+        // Tracks a username that forfeited mid-match (decided in onEnd)
+        this._forfeitBy = null;
     }
 
     /**
@@ -73,7 +76,7 @@ export class Room {
 
     /**
      * Remove a player from the room by username; if the match is running,
-     * the leaver forfeits (loser) and the remaining player wins.
+     * mark a forfeit and finish via onEnd().
      */
     removePlayer(username) {
         const leavingP1 = this.p1 && username === this.p1.getUsername();
@@ -91,8 +94,8 @@ export class Room {
                 clearInterval(this.loop);
                 this.loop = null;
             }
-            console.log("YEY: " * username)
-            this.onEnd()
+            this._forfeitBy = username;
+            this.onEnd();
             return;
         }
 
@@ -226,10 +229,22 @@ export class Room {
         if (!this.started) {
             return;
         }
+        if (!this.p1 || !this.p2) {
+            return;
+        }
 
-        this.state.tick += 1;
+        if (this.state.tick % this.tickRate === 0) {
+            if (this.p1.isBot()) {
+                this.p1.process(this.ball);
+            }
+            if (this.p2.isBot()) {
+                this.p2.process(this.ball);
+            }
+        }
+
         this.p1.tick(this.ball);
         this.p2.tick(this.ball);
+        this.state.tick += 1;
 
         const scored = this.ball.tick(this.p1, this.p2);
         const scorer = scored === -1 ? this.p1 : scored === 1 ? this.p2 : null;
@@ -240,10 +255,9 @@ export class Room {
     }
 
     /**
-     * Finalize the match, declare winner/loser, notify clients, and inform tournament.
+     * Finalize the match, declare winner/loser (forfeit-aware), notify clients, and inform tournament.
      */
     onEnd() {
-        console.log(this.id)
         this.started = false;
         this.ended = true;
         this.totalTime = Date.now() - this.startTime;
@@ -253,14 +267,48 @@ export class Room {
             this.loop = null;
         }
 
-        const winner = this.p1.getScore() > this.p2.getScore() ? this.p1 : this.p2;
-        const loser = winner === this.p1 ? this.p2 : this.p1;
+        let winner = null;
+        let loser = null;
 
-        this.winnerUsername = winner.getUsername();
-        this.winnerScore = winner.getScore();
-        winner.setScore(0);
-        this.loserUsername = loser.getUsername();
-        this.loserScore = loser.getScore();
+        const p1 = this.p1;
+        const p2 = this.p2;
+
+        if (this._forfeitBy && p1 && p2) {
+            if (this._forfeitBy === p1.getUsername()) {
+                winner = p2; loser = p1;
+            } else if (this._forfeitBy === p2.getUsername()) {
+                winner = p1; loser = p2;
+            }
+        }
+
+        if (!winner || !loser) {
+            if (p1 && !p2) {
+                winner = p1; loser = null; 
+            } else if (!p1 && p2) {
+                winner = p2; loser = null; 
+            } else if (p1 && p2) {
+                if (p1.getScore() > p2.getScore()) {
+                    winner = p1; loser = p2; 
+                } else if (p2.getScore() > p1.getScore()) {
+                    winner = p2; loser = p1; 
+                } else {
+                    winner = p1; loser = p2;
+                }
+            }
+        }
+
+        const winnerUsername = winner?.getUsername?.() ?? null;
+        const winnerScore = winner?.getScore?.() ?? 0;
+        const loserUsername = loser?.getUsername?.() ?? (this._forfeitBy ?? null);
+        const loserScore = loser?.getScore?.() ?? 0;
+
+        this.winnerUsername = winnerUsername;
+        this.winnerScore = winnerScore;
+        if (winner?.setScore) {
+            winner.setScore(0);
+        }
+        this.loserUsername = loserUsername;
+        this.loserScore = loserScore;
 
         this.tournament._broadcast({
             type: SrvMessageType.MATCH_END,
@@ -271,18 +319,26 @@ export class Room {
             loser_score: this.loserScore,
         });
 
-        this.p1.detachRoom();
-        this.p2.detachRoom();
+        try {
+            this.p1?.detachRoom?.(); 
+        } catch {}
+        try {
+            this.p2?.detachRoom?.(); 
+        } catch {}
 
-        this.tournament.onRoomEnd(this, winner, loser);
+        this._forfeitBy = null;
+
+        if (winner && (loser || this.loserUsername)) {
+            this.tournament.onRoomEnd(this, winner, loser ?? winner);
+        }
     }
 
     /**
      * Build the public, serializable state sent to both clients each tick.
      */
     _publicState() {
-        const u1 = this.p1.getUsername();
-        const u2 = this.p2.getUsername();
+        const u1 = this.p1?.getUsername?.() ?? '';
+        const u2 = this.p2?.getUsername?.() ?? '';
 
         return {
             type: SrvMessageType.MATCH_STATE,
@@ -291,22 +347,22 @@ export class Room {
             players: [
                 {
                     username: u1,
-                    score: this.p1.getScore(),
-                    y: this.p1.getY(),
+                    score: this.p1?.getScore?.() ?? 0,
+                    y: this.p1?.getY?.() ?? 0,
                     pad: {
-                        width: this.p1.getPadWidth(),
-                        height: this.p1.getPadHeight(),
-                        speed: this.p1.getSpeed(),
+                        width: this.p1?.getPadWidth?.() ?? this.PAD_W,
+                        height: this.p1?.getPadHeight?.() ?? this.PAD_H,
+                        speed: this.p1?.getSpeed?.() ?? this.PAD_SPEED,
                     },
                 },
                 {
                     username: u2,
-                    score: this.p2.getScore(),
-                    y: this.p2.getY(),
+                    score: this.p2?.getScore?.() ?? 0,
+                    y: this.p2?.getY?.() ?? 0,
                     pad: {
-                        width: this.p2.getPadWidth(),
-                        height: this.p2.getPadHeight(),
-                        speed: this.p2.getSpeed(),
+                        width: this.p2?.getPadWidth?.() ?? this.PAD_W,
+                        height: this.p2?.getPadHeight?.() ?? this.PAD_H,
+                        speed: this.p2?.getSpeed?.() ?? this.PAD_SPEED,
                     },
                 },
             ],
@@ -323,7 +379,7 @@ export class Room {
      * Send a message to both players if present.
      */
     _broadcast(msg) {
-        this.p1?.send(msg);
-        this.p2?.send(msg);
+        this.p1?.send?.(msg);
+        this.p2?.send?.(msg);
     }
 }

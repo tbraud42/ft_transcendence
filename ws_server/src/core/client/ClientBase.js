@@ -123,6 +123,9 @@ export class ClientBase {
         if (this.tournament) {
             this.tournament.broadcastSnapshot();
         }
+        if (this.room && this.room.started) {
+            this.room.removePlayer(this.getUsername());
+        }
     }
 
     /**
