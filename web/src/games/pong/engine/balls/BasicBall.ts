@@ -1,108 +1,110 @@
 import { BallBase } from './BallBase'
 import { PlayerBase } from '../players/PlayerBase'
-import { Difficulty } from "../../pongState";
 
 export class BasicBall extends BallBase {
-    constructor(startX: number, startY: number, difficulty: Difficulty, radius: number = 8) {
-        const speed = difficulty === Difficulty.EASY ? 4.5 : difficulty === Difficulty.HARD ? 6.5 : 5.5
-        super(startX, startY, speed, radius)
+    private baseSpeed: number
+
+    constructor(startX: number, startY: number, baseSpeed: number = 8, radius: number = 8) {
+        super(startX, startY, baseSpeed, radius)
+        this.baseSpeed = baseSpeed
+
+        const angle = (Math.random() * Math.PI) / 3 - Math.PI / 6
+        const dir = Math.random() < 0.5 ? -1 : 1
+
+        this.vx = Math.cos(angle) * this.baseSpeed * dir
+        this.vy = Math.sin(angle) * this.baseSpeed
+        this.speed = Math.hypot(this.vx, this.vy)
     }
 
-    update(canvas: HTMLCanvasElement, player1: PlayerBase, player2: PlayerBase) {
+    update(canvas: HTMLCanvasElement, player1: PlayerBase, player2: PlayerBase): void {
         this.x += this.vx
         this.y += this.vy
 
-        // Vertical collision
         if (this.y - this.radius < 0 || this.y + this.radius > canvas.height) {
-            this.vy *= -1
+            this.vy = -this.vy
             this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y))
         }
 
-        // Collision with left paddle
-        const leftPaddleX = 0
-        const leftPaddleY = player1.y
-        if (
-            this.x - this.radius <= leftPaddleX + player1.width &&
-            this.x > leftPaddleX &&
-            this.y > leftPaddleY &&
-            this.y < leftPaddleY + player1.height
-        ) {
-            this.x = leftPaddleX + player1.width + this.radius
-            this.vx *= -1
+        const p1x = 0
+        const p1y = player1.y
+        const p1w = player1.width
+        const p1h = player1.height
 
-            const offset = this.y - (leftPaddleY + player1.height / 2)
-            const paddleVelocity = player1.moveUp ? -player1.speed : player1.moveDown ? player1.speed : 0
+        const hitLeft =
+            this.vx < 0 &&
+            this.x - this.radius <= p1x + p1w &&
+            this.x >= p1x &&
+            this.y + this.radius >= p1y &&
+            this.y - this.radius <= p1y + p1h
 
-            this.vy += offset * 0.08 + paddleVelocity * 0.3
-            this.vx *= 1.02
+        if (hitLeft) {
+            this.x = p1x + p1w + this.radius
+            this.vx = Math.abs(this.vx)
+
+            const hit = (this.y - (p1y + p1h / 2)) / (p1h / 2)
+            this.vy = hit * this.speed * 0.8
+            this._accelerate()
         }
 
-        // Collision with right paddle
-        const rightPaddleX = canvas.width - player2.width
-        const rightPaddleY = player2.y
-        if (
-            this.x + this.radius >= rightPaddleX &&
-            this.x < rightPaddleX + player2.width &&
-            this.y > rightPaddleY &&
-            this.y < rightPaddleY + player2.height
-        ) {
-            this.x = rightPaddleX - this.radius
-            this.vx *= -1
+        const p2w = player2.width
+        const p2h = player2.height
+        const p2x = canvas.width - p2w
+        const p2y = player2.y
 
-            const offset = this.y - (rightPaddleY + player2.height / 2)
-            const paddleVelocity = player2.moveUp ? -player2.speed : player2.moveDown ? player2.speed : 0
+        const hitRight =
+            this.vx > 0 &&
+            this.x + this.radius >= p2x &&
+            this.x <= p2x + p2w &&
+            this.y + this.radius >= p2y &&
+            this.y - this.radius <= p2y + p2h
 
-            this.vy += offset * 0.08 + paddleVelocity * 0.3
-            this.vx *= 1.02
-        }
+        if (hitRight) {
+            this.x = p2x - this.radius
+            this.vx = -Math.abs(this.vx)
 
-        // Friction and minimum speed
-        const friction = 0.999
-        const minSpeed = this.speed - 1
-
-        this.vx *= friction
-        this.vy *= friction
-
-        if (Math.abs(this.vx) < minSpeed) {
-            this.vx = minSpeed * Math.sign(this.vx)
-        }
-        if (Math.abs(this.vy) < minSpeed) {
-            this.vy = minSpeed * Math.sign(this.vy)
+            const hit = (this.y - (p2y + p2h / 2)) / (p2h / 2)
+            this.vy = hit * this.speed * 0.8
+            this._accelerate()
         }
     }
 
-    /**
-     * Check if the ball crossed the left/right boundaries.
-     * If so, increment the opponent score, reset the ball to center, and serve towards the scorer.
-     * Returns true if a point was scored.
-     */
     checkScore(player1: PlayerBase, player2: PlayerBase, canvas: HTMLCanvasElement): boolean {
-        // Right player scores if ball exits left
         if (this.x + this.radius < 0) {
             player2.score = (player2.score ?? 0) + 1
-            this.x = canvas.width / 2
-            this.y = canvas.height / 2
-            const minAngleDeg = 15
-            const maxAngleDeg = 45
-            const angleDeg = minAngleDeg + Math.random() * (maxAngleDeg - minAngleDeg)
-            const angleRad = angleDeg * (Math.PI / 180)
-            this.vx = Math.abs(this.speed * Math.cos(angleRad))
-            this.vy = (Math.random() < 0.5 ? -1 : 1) * this.speed * Math.sin(angleRad)
+            this._reset(+1, canvas)
             return true
         }
-        // Left player scores if ball exits right
+
         if (this.x - this.radius > canvas.width) {
             player1.score = (player1.score ?? 0) + 1
-            this.x = canvas.width / 2
-            this.y = canvas.height / 2
-            const minAngleDeg = 15
-            const maxAngleDeg = 45
-            const angleDeg = minAngleDeg + Math.random() * (maxAngleDeg - minAngleDeg)
-            const angleRad = angleDeg * (Math.PI / 180)
-            this.vx = -Math.abs(this.speed * Math.cos(angleRad))
-            this.vy = (Math.random() < 0.5 ? -1 : 1) * this.speed * Math.sin(angleRad)
+            this._reset(-1, canvas)
             return true
         }
+
         return false
     }
+
+    private _accelerate(): void {
+        const factor = 1.05
+        this.vx *= factor
+        this.vy *= factor
+        this.speed = Math.hypot(this.vx, this.vy)
+    }
+
+    private _reset(dir: 1 | -1, canvas: HTMLCanvasElement): void {
+        this.x = canvas.width / 2
+        this.y = canvas.height / 2
+
+        const angle = (Math.random() * Math.PI) / 3 - Math.PI / 6
+        this.vx = this.baseSpeed * Math.cos(angle) * dir
+        this.vy = this.baseSpeed * Math.sin(angle)
+
+        this.speed = this.baseSpeed
+    }
+
+    public getX(): number { return this.x }
+    public getY(): number { return this.y }
+    public getRadius(): number { return this.radius }
+    public getVelocity(): { vx: number; vy: number } { return { vx: this.vx, vy: this.vy } }
+
 }

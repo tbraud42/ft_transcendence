@@ -34,9 +34,10 @@ export class Room {
         this.H = 480;
         this.PAD_W = 10;
         this.PAD_H = 100;
-        this.PAD_SPEED = 5;
+        this.PAD_SPEED = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8
+        const ballSpeed = difficulty === 'easy' ? 6 : difficulty === 'hard' ? 10 : 8;
 
-        this.ball = new Ball(this.W / 2, this.H / 2, 8, this.W, this.H);
+        this.ball = new Ball(this.W / 2, this.H / 2, 8, this.W, this.H, ballSpeed);
 
         this.state = {
             tick: 0,

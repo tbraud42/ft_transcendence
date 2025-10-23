@@ -1,45 +1,35 @@
 export class Ball {
-    constructor(x, y, radius, width, height) {
+    constructor(x, y, radius, width, height, speed = 8) {
         this.x = x;
         this.y = y;
         this.radius = radius;
         this.width = width;
         this.height = height;
 
-        this.vx = 4 * (Math.random() < 0.5 ? -1 : 1);
-        this.vy = 2 * (Math.random() < 0.5 ? -1 : 1);
+        this.baseSpeed = speed;
+
+        const angle = (Math.random() * Math.PI) / 3 - Math.PI / 6;
+        const dir = Math.random() < 0.5 ? -1 : 1;
+
+        this.vx = Math.cos(angle) * this.baseSpeed * dir;
+        this.vy = Math.sin(angle) * this.baseSpeed;
         this.speed = Math.hypot(this.vx, this.vy);
     }
 
-    getX() {
-        return this.x; 
-    }
-    getY() {
-        return this.y; 
-    }
-    getRadius() {
-        return this.radius; 
-    }
-    getVelocity() {
-        return { vx: this.vx, vy: this.vy }; 
-    }
+    getX() { return this.x; }
+    getY() { return this.y; }
+    getRadius() { return this.radius; }
+    getVelocity() { return { vx: this.vx, vy: this.vy }; }
 
-    /**
-     * @param player1 {ClientBase}
-     * @param player2 {ClientBase}
-     * @returns {number|null} 1 if right scores, -1 if left scores, null otherwise
-     */
     tick(player1, player2) {
         this.x += this.vx;
         this.y += this.vy;
 
-        // walls
         if (this.y - this.radius < 0 || this.y + this.radius > this.height) {
             this.vy = -this.vy;
             this.y = Math.max(this.radius, Math.min(this.height - this.radius, this.y));
         }
 
-        // left paddle (x = 0)
         const p1x = 0;
         const p1y = player1.y;
         const p1w = player1.padWidth;
@@ -54,12 +44,12 @@ export class Ball {
         ) {
             this.x = p1x + p1w + this.radius;
             this.vx = Math.abs(this.vx);
+
             const hit = (this.y - (p1y + p1h / 2)) / (p1h / 2);
             this.vy = hit * this.speed * 0.8;
             this._accelerate();
         }
 
-        // right paddle (x = width - p2w)
         const p2w = player2.padWidth;
         const p2h = player2.padHeight;
         const p2x = this.width - p2w;
@@ -74,19 +64,19 @@ export class Ball {
         ) {
             this.x = p2x - this.radius;
             this.vx = -Math.abs(this.vx);
+
             const hit = (this.y - (p2y + p2h / 2)) / (p2h / 2);
             this.vy = hit * this.speed * 0.8;
             this._accelerate();
         }
 
-        // scoring
         if (this.x + this.radius < 0) {
-            player2.incrementScore()
+            player2.incrementScore();
             this._reset(1);
             return 1;
         }
         if (this.x - this.radius > this.width) {
-            player1.incrementScore()
+            player1.incrementScore();
             this._reset(-1);
             return -1;
         }
@@ -95,29 +85,20 @@ export class Ball {
     }
 
     _accelerate() {
-        const k = 1.05;
-        this.vx *= k;
-        this.vy *= k;
+        const factor = 1.05;
+        this.vx *= factor;
+        this.vy *= factor;
         this.speed = Math.hypot(this.vx, this.vy);
     }
 
     _reset(dir) {
         this.x = this.width / 2;
         this.y = this.height / 2;
-        const angle = (Math.random() * Math.PI) / 3 - Math.PI / 6;
-        const speed = 4;
-        this.vx = speed * dir;
-        this.vy = speed * Math.sin(angle);
-        this.speed = speed;
-    }
 
-    setX(x) {
-        this.x = x; 
-    }
-    setY(y) {
-        this.y = y; 
-    }
-    setVelocity(vx, vy) {
-        this.vx = vx; this.vy = vy; this.speed = Math.hypot(vx, vy); 
+        const angle = (Math.random() * Math.PI) / 3 - Math.PI / 6;
+        this.vx = this.baseSpeed * Math.cos(angle) * dir;
+        this.vy = this.baseSpeed * Math.sin(angle);
+
+        this.speed = this.baseSpeed;
     }
 }
