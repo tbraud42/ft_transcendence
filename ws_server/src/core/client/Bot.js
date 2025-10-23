@@ -5,5 +5,6 @@ export class Bot extends ClientBase {
         super(null, username);
         this.interval = null
         this.currentState = null
+        this.bot = true;
     }
 }

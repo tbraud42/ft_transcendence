@@ -16,8 +16,8 @@ export const DEFAULT_BALL_RADIUS = 8
 
 export class PongGame {
     private canvas: HTMLCanvasElement
-    private ctx: CanvasRenderingContext2D
-    private ball: BallBase
+    public ctx: CanvasRenderingContext2D
+    public ball: BallBase
     private player1: PlayerBase
     private player2: PlayerBase
     private animationFrameId?: number

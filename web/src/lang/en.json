@@ -91,5 +91,6 @@
   "pong_game_over_you_win_title": "You win!",
   "pong_game_over_you_lose_title": "You lose... ez",
   "pong_game_over_text": "Final score: {{playerScore}} - {{opponentScore}}",
-  "pong_winner_announce": "{{player}} wins!"
+  "pong_winner_announce": "{{player}} wins!",
+  "pong_lobby_full": "The tournament is full."
 }

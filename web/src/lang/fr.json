@@ -91,5 +91,6 @@
   "pong_game_over_you_win_title": "Vous avez gagné !",
   "pong_game_over_you_lose_title": "Vous avez perdu... cheh",
   "pong_game_over_text": "Score final : {{playerScore}} - {{opponentScore}}",
-  "pong_winner_announce": "{{player}} gagne !"
+  "pong_winner_announce": "{{player}} gagne !",
+  "pong_lobby_full": "Le tournoi est plein."
 }

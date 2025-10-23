@@ -1,4 +1,5 @@
 import { getTournamentManager } from '../game/GamesManager.js'
+import {SrvMessageType} from "../client/protocol.js";
 
 export default async function handleJoin(msg, socket) {
     const client = socket.__client
@@ -14,5 +15,7 @@ export default async function handleJoin(msg, socket) {
     const tournamentManager = getTournamentManager()
     const tournament = await tournamentManager.getOrCreate(client.token, { id, name, maxPlayers, creator: { id: client.id, username: client.getUsername() } })
 
-    client.attachToTournament(tournament)
+    if (!client.attachToTournament(tournament)) {
+        client.send({ type: SrvMessageType.GAME_FULL, tournamentId: tournament.id });
+    }
 }
