@@ -3,6 +3,5 @@ export default function handleInput(msg, socket) {
     if (!client?.auth || !client.tournament) {
         return;
     }
-    client.up = !!msg.up;
-    client.down = !!msg.down;
+    client.setInput(!!msg.up, !!msg.down);
 }

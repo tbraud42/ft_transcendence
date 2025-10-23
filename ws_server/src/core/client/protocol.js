@@ -31,6 +31,7 @@ export const SrvMessageType = Object.freeze({
     PLAYER_READY: 9,
     PLAYER_ELIMINATED: 10,
     PLAYER_KICK: 11,
+    GAME_FULL: 12,
 });
 
 export const CliMessageType = Object.freeze({

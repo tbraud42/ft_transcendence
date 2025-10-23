@@ -11,15 +11,15 @@ export default function handleAddBot(msg, socket) {
         return;
     }
 
-    const a = msg?.addr;
-    if (!a || (a.side !== 'left' && a.side !== 'right')) {
+    const roomIdx = msg?.roomId;
+    if (typeof roomIdx !== 'string' || roomIdx.length === 0) {
         return;
     }
-    if (a.pos !== 'top' && a.pos !== 'bottom') {
+
+    const slot = msg?.slot;
+    if (slot !== 'p1' && slot !== 'p2') {
         return;
     }
-    if (typeof a.pair !== 'number' || a.pair < 0) {
-        return;
-    }
-    t.addBotAt(a);
+
+    t.addBotAt(roomIdx, slot);
 }

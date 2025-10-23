@@ -12,19 +12,29 @@ import {navigateTo} from "../../../utils/router";
 import {ServerEvent, SrvState} from "../../../api/socket/messageTypes";
 import {SrvMessageType} from "../../../api/socket/protocol";
 
+export const DEFAULT_BALL_RADIUS = 8
+const WINNING_SCORE = 5;
+
 export class PongGame {
+    public static globalTick: number = 0;
+
     private canvas: HTMLCanvasElement
-    private ctx: CanvasRenderingContext2D
-    private ball: BallBase
+    public ctx: CanvasRenderingContext2D
+    public ball: BallBase
     private player1: PlayerBase
     private player2: PlayerBase
-    private animationFrameId?: number
-    private ballActive = false
-    private gameEnded = false
-    private winTextEl: HTMLDivElement
 
-    private online = false
-    private lastState?: SrvState
+    private animationFrameId?: number
+
+    private static readonly TICK_RATE = 60
+    private static readonly TICK_MS = 1000 / PongGame.TICK_RATE
+    private tickIntervalId?: number
+
+    private ballActive = false
+    private winTextEl: HTMLDivElement
+    public gameEnded = false
+
+    public lastState?: SrvState
 
     constructor(
         private id: string,
@@ -32,21 +42,20 @@ export class PongGame {
         player1: PlayerBase,
         player2: PlayerBase,
         difficulty: Difficulty,
+        ballRadius: number = DEFAULT_BALL_RADIUS,
         private scoreLeftEl?: HTMLElement,
         private scoreRightEl?: HTMLElement,
-        private ws?: WSClient
+        private online: boolean = false
     ) {
         this.canvas = canvas
         this.ctx = canvas.getContext('2d')!
-        this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, difficulty)
+        const ballSpeed = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8
+        this.ball = new BasicBall(canvas.width / 2, canvas.height / 2, ballSpeed, ballRadius)
+        const padSpeed = difficulty === 'easy' ? 4 : difficulty === 'medium' ? 6 : 8
+        player1.speed = padSpeed
+        player2.speed = padSpeed
         this.player1 = player1
         this.player2 = player2
-
-        if (ws) {
-            this.ws = ws
-            this.online = true
-            this.hookWebSocket(ws)
-        }
 
         this.winTextEl = document.createElement('div')
         this.winTextEl.className =
@@ -55,78 +64,57 @@ export class PongGame {
         canvas.parentElement?.appendChild(this.winTextEl)
     }
 
-    getId(): string {
-        return this.id
-    }
-
-    private hookWebSocket(ws: WSClient) {
-        if (!ws.ws) {
-            return;
-        }
-        ws.ws.onmessage = (ev) => {
-            let msg: ServerEvent | null = null
-            try {
-                msg = JSON.parse(ev.data)
-            } catch {
-                return
-            }
-            if (!msg) {
-                return
-            }
-
-            switch (msg.type) {
-            case SrvMessageType.MATCH_STATE: {
-                this.lastState = msg as SrvState;
-                if (!this.gameEnded) {
-                    this.update()
-                    this.draw()
-                }
-                break
-            }
-            }
-        }
-    }
-
     start() {
-        if (this.online) {
-            return;
-        }
-        const loop = () => {
+        if (this.online) return;
+
+        if (this.tickIntervalId !== undefined) clearInterval(this.tickIntervalId)
+        if (this.animationFrameId !== undefined) cancelAnimationFrame(this.animationFrameId)
+
+        this.tickIntervalId = window.setInterval(() => {
             if (!this.gameEnded) {
                 this.update()
+            }
+        }, PongGame.TICK_MS)
+
+        const render = () => {
+            if (!this.gameEnded) {
                 this.draw()
-                this.animationFrameId = requestAnimationFrame(loop)
+                this.animationFrameId = requestAnimationFrame(render)
             }
         }
-        loop()
+        render()
     }
 
-    startBall() {
-        this.ballActive = true
-    }
+    public update() {
+        PongGame.globalTick++
 
-    stop() {
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId)
+        let p1Score = this.player1.score;
+        let p2Score = this.player2.score;
+
+        if (this.online && this.lastState) {
+            this.player1.setRemoteY(this.lastState.players[0].y);
+            this.player2.setRemoteY(this.lastState.players[1].y);
+            p1Score = this.lastState.players[0].score;
+            p2Score = this.lastState.players[1].score;
         }
-        this.ballActive = false
-    }
 
-    private update() {
-
-        if (this.online) {
-            if (this.lastState) {
-                this.player1.setRemoteY(this.lastState.players[0].y);
-                this.player2.setRemoteY(this.lastState.players[1].y);
-                this.updateScore(this.lastState.players[0].score, this.lastState.players[1].score)
+        if (PongGame.globalTick % 60 === 0) {
+            if (this.player1 instanceof AiPlayer) {
+                this.player1.process(this.ball)
             }
-            return
+            if (this.player2 instanceof AiPlayer) {
+                this.player2.process(this.ball)
+            }
         }
-
         this.player1.update(this.ball)
         this.player2.update(this.ball)
 
-        this.updateScore(this.player1.score, this.player2.score)
+        if (this.player2 instanceof AiPlayer && PongGame.globalTick % 60 === 0) {
+            this.player2.process(this.ball)
+        }
+
+        this.updateScore(p1Score, p2Score)
+
         if (this.ballActive) {
             this.ball.update(this.canvas, this.player1, this.player2)
             const winner = this.ball.checkScore(this.player1, this.player2, this.canvas)
@@ -134,6 +122,26 @@ export class PongGame {
                 this.handleGameEndIfAny()
             }
         }
+    }
+
+    getId(): string {
+        return this.id
+    }
+
+    startBall() {
+        this.ballActive = true
+    }
+
+    stop() {
+        if (this.animationFrameId !== undefined) {
+            cancelAnimationFrame(this.animationFrameId)
+            this.animationFrameId = undefined
+        }
+        if (this.tickIntervalId !== undefined) {
+            clearInterval(this.tickIntervalId)
+            this.tickIntervalId = undefined
+        }
+        this.ballActive = false
     }
 
     private drawNet() {
@@ -147,7 +155,7 @@ export class PongGame {
         this.ctx.setLineDash([])
     }
 
-    private draw() {
+    public draw() {
         this.ctx.fillStyle = 'black'
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
 
@@ -159,7 +167,7 @@ export class PongGame {
         if (this.online) {
             const s = this.lastState
             if (s) {
-                const r = s.ball.radius / 2
+                const r = s.ball.radius
                 this.ctx.fillStyle = 'white'
                 this.ctx.beginPath()
                 this.ctx.arc(s.ball.x, s.ball.y, r, 0, Math.PI * 2)
@@ -180,10 +188,9 @@ export class PongGame {
     }
 
     private handleGameEndIfAny() {
-        const target = 11
         const left = (this.player1 as PlayerBase).score || 0
         const right = (this.player2 as PlayerBase).score || 0
-        if (left >= target || right >= target) {
+        if (left >= WINNING_SCORE || right >= WINNING_SCORE) {
             const username = getUsername() || i18n.t('pong_you')
             const opponent = secondPlayerName || i18n.t('pong_opponent')
             const winner = left > right ? (this.player1.isLeft ? username : opponent) : (this.player2.isLeft ? username : opponent)
@@ -206,31 +213,6 @@ export class PongGame {
         }, 3000)
     }
 
-    // Helpers pour simplifier l’instanciation selon le mode
-    static createLocalVsLocal(
-        canvas: HTMLCanvasElement,
-        difficulty: Difficulty,
-        names: { left: string; right: string },
-        scoreLeftEl?: HTMLElement,
-        scoreRightEl?: HTMLElement
-    ) {
-        const p1 = new LocalPlayer(true, canvas, names.left)
-        const p2 = new LocalPlayer(false, canvas, names.right)
-        return new PongGame("local", canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
-    }
-
-    static createLocalVsAi(
-        canvas: HTMLCanvasElement,
-        difficulty: Difficulty,
-        nameLeft: string,
-        scoreLeftEl?: HTMLElement,
-        scoreRightEl?: HTMLElement
-    ) {
-        const p1 = new LocalPlayer(true, canvas, nameLeft)
-        const p2 = new AiPlayer(false, canvas, 'AI', difficulty)
-        return new PongGame("local", canvas, p1, p2, difficulty, scoreLeftEl, scoreRightEl)
-    }
-
     static createOnline(
         id: string,
         canvas: HTMLCanvasElement,
@@ -238,6 +220,7 @@ export class PongGame {
         mySlot: 0 | 1,
         names: { me: string; opponent: string },
         difficulty: Difficulty,
+        ballRadius: number = DEFAULT_BALL_RADIUS,
         scoreLeftEl?: HTMLElement,
         scoreRightEl?: HTMLElement
     ) {
@@ -249,7 +232,7 @@ export class PongGame {
             ? new OnlinePlayer(false, canvas, names.me, ws)
             : new OnlinePlayer(false, canvas, names.opponent, ws)
 
-        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, scoreLeftEl, scoreRightEl, ws);
+        const game =  new PongGame(id, canvas, pLeft, pRight, difficulty, ballRadius, scoreLeftEl, scoreRightEl, true);
         game.online = true;
         return game;
     }

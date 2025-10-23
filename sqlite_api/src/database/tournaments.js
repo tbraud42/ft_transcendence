@@ -2,68 +2,109 @@
 
 export function getAllTournaments(db) {
   return db.prepare(`
-    SELECT t.*, u.username AS creator_username, uw.username AS winner
+    SELECT
+      t.id,
+      t.name,
+      t.description,
+      t.maxPlayer,
+      t.difficulty,
+      t.status,
+      t.created_at,
+      t.creator     AS creator_username,
+      t.winner      AS winner_username
     FROM tournaments t
-    JOIN users u ON u.id = t.creator_id
-    LEFT JOIN users uw ON uw.id = t.winner
-    ORDER BY t.created_at DESC`).all();
+    ORDER BY t.created_at DESC
+  `).all();
 };
 
 export function getTournamentById(db, id) {
+  const tid = Number(id);
+  if (!Number.isFinite(tid)) return null;
+
   const tournament = db.prepare(`
-    SELECT t.*, u.username AS creator_username, uw.username AS winner
+    SELECT
+      t.id,
+      t.name,
+      t.description,
+      t.maxPlayer,
+      t.difficulty,
+      t.status,
+      t.created_at,
+      t.creator AS creator_username,
+      t.winner  AS winner_username
     FROM tournaments t
-    JOIN users u ON u.id = t.creator_id
-    LEFT JOIN users uw ON uw.id = t.winner
-    WHERE t.id = ?`).get(id);
+    WHERE t.id = ?
+  `).get(tid);
 
   if (!tournament) return null;
 
   const participants = db.prepare(`
-    SELECT DISTINCT u.id, u.username
-    FROM games g
-    JOIN users u ON u.id IN (g.player1_id, g.player2_id)
-    WHERE g.tournament_id = ?
-    ORDER BY u.username COLLATE NOCASE`).all(id);
+    WITH all_players(username) AS (
+      SELECT g.player1 FROM games g WHERE g.tournament_id = ?
+      UNION
+      SELECT g.player2 FROM games g WHERE g.tournament_id = ?
+    )
+    SELECT ap.username,
+           u.id AS id
+    FROM all_players ap
+    LEFT JOIN users u ON u.username = ap.username
+    WHERE ap.username IS NOT NULL
+    ORDER BY ap.username COLLATE NOCASE
+    `).all(tid, tid);
 
   const games = db.prepare(`
-    SELECT g.*,
-           u1.username AS p1,
-           u2.username AS p2,
-           uw.username  AS winner
+    SELECT
+      g.id,
+      g.game_num,
+      g.tournament_id,
+      g.player1 AS p1,
+      g.player2 AS p2,
+      g.winner  AS winner,
+      g.started_at,
+      g.duration_sec,
+      g.p1_score,
+      g.p2_score
     FROM games g
-    JOIN users u1 ON u1.id = g.player1_id
-    JOIN users u2 ON u2.id = g.player2_id
-    LEFT JOIN users uw ON uw.id = g.winner_id
     WHERE g.tournament_id = ?
-    ORDER BY g.started_at ASC, g.id ASC`).all(id);
+    ORDER BY g.started_at ASC, g.id ASC
+    `).all(tid);
 
   return { ...tournament, participants, games };
 };
 
-export function getTournamentsByStatus(db, status){
-    return db.prepare(`
-      SELECT t.*, u.username AS creator_username, uw.username AS winner
-      FROM tournaments t
-      JOIN users u ON u.id = t.creator_id
-      LEFT JOIN users uw ON uw.id = t.winner
-      WHERE t.status = ?
-      ORDER BY t.created_at DESC`).all(status);
-  };
+export function getTournamentsByStatus(db, status) {
+  const st = Number(status);
+
+  return db.prepare(`
+    SELECT
+      t.id,
+      t.name,
+      t.description,
+      t.maxPlayer,
+      t.difficulty,
+      t.status,
+      t.created_at,
+      t.creator AS creator_username,
+      t.winner  AS winner_username
+    FROM tournaments t
+    WHERE t.status = ?
+    ORDER BY t.created_at DESC
+    `).all(st);
+};
 
 export function getTournamentByName(db, name){
     return db.prepare(`SELECT * FROM tournaments WHERE name = ? COLLATE NOCASE`).get(name);
-  };
+};
 
 export function createTournament(db, { name, description, difficulty, maxPlayer, creator}){
     const info = db.prepare(`INSERT INTO tournaments (name, description, creator, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, 0)`).run(name, description || null, creator, difficulty, maxPlayer);
     return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);
-  };
+};
 
 export function updateTournament(db, id, { name, description, difficulty, maxPlayer}){
     const info = db.prepare(`UPDATE tournaments SET name = ?, description = ?, difficulty = ?, maxPlayer = ? WHERE id = ?`);
     return info.run(name, description || null, difficulty, maxPlayer, id);
-  };
+};
 
 export function changeTournamentStatus(db, id, nextStatus = null){
     const current = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(id);
@@ -71,28 +112,28 @@ export function changeTournamentStatus(db, id, nextStatus = null){
     const newStatus = nextStatus ?? (current.status === 0 ? 1 : current.status === 1 ? 2 : 2);
     const row = db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(newStatus, id);
     return row || null;
-  };
+};
 
 export function setTournamentWinner(db, id, winnerUser){
     return db.prepare(`UPDATE tournaments SET winner = ?, status = 2 WHERE id = ? RETURNING id, status, winner`).get(winnerUser, id);
-  };
+};
 
 export function deleteTournament(db, id){
     return db.prepare(`DELETE FROM tournaments WHERE id = ?`).run(id);
-  };
+};
 
-export function insertStatGame(db, tournamentId, gamesInput) {
+export function insertStatGame(fastify, tournamentId, gamesInput) {
   const tid = Number(tournamentId);
   if (!Number.isFinite(tid)) throw new Error('INVALID_TOURNAMENT');
 
-  const getMaxNum = db.prepare(`SELECT COALESCE(MAX(game_num), 0) AS maxn FROM games WHERE tournament_id = ?`);
+  const getMaxNum = fastify.db.prepare(`SELECT COALESCE(MAX(game_num), 0) AS maxn FROM games WHERE tournament_id = ?`);
 
-  const insGame = db.prepare(`INSERT INTO games (game_num, tournament_id, player1, player2, winner, started_at, duration_sec, p1_score, p2_score)
+  const insGame = fastify.db.prepare(`INSERT INTO games (game_num, tournament_id, player1, player2, winner, started_at, duration_sec, p1_score, p2_score)
     VALUES (?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)`);
 
-  const updUserByName = db.prepare(`UPDATE users SET total_games = total_games + 1, total_seconds = total_seconds + ? WHERE username = ?`);
+  const updUserByName = fastify.db.prepare(`UPDATE users SET total_games = total_games + 1, total_seconds = total_seconds + ? WHERE username = ?`);
 
-  const tx = db.transaction((rows) => {
+  const tx = fastify.db.transaction((rows) => {
     let inserted = 0;
     for (const g of rows) {
       const game_num = Number(g.game_num);
@@ -106,8 +147,10 @@ export function insertStatGame(db, tournamentId, gamesInput) {
 
       insGame.run(game_num, tid, p1, p2, winner, started, dur, s1, s2);
 
-      updUserByName.run(dur, p1);
-      updUserByName.run(dur, p2);
+      if (fastify.showUserByUsername(fastify.db, p1))
+        updUserByName.run(dur, p1);
+      if (fastify.showUserByUsername(fastify.db, p2))
+        updUserByName.run(dur, p2);
 
       inserted++;
     }
@@ -116,7 +159,7 @@ export function insertStatGame(db, tournamentId, gamesInput) {
   });
 
   return tx(gamesInput);
-}
+};
 
 export function listUserMatches(db, userId) {
   const uid = Number(userId);
@@ -138,21 +181,14 @@ export function listUserMatches(db, userId) {
     ORDER BY g.started_at DESC, g.id DESC`).all(uid, uid);
 
   return result;
-}
+};
 
 export function userExists(db, id) {
   const tid = Number(id);
   if (!Number.isFinite(tid)) return false;
   const result = db.prepare(`SELECT 1 FROM users WHERE id = ?`).get(id);
   return !!result;
-}
-
-export function tournamentExists(db, id) {
-  const tid = Number(id);
-  if (!Number.isFinite(tid)) return false;
-  const result = db.prepare(`SELECT 1 AS ok FROM tournaments WHERE id = ?`).get(tid);
-  return !!result;
-}
+};
 
 // --------- Stats ---------
 
@@ -185,11 +221,11 @@ export function getStat(db, id) {
     FROM users u
     LEFT JOIN p ON p.username = u.username
     WHERE u.id = ?
-    GROUP BY u.id, u.username, u.total_games, u.total_seconds
-  `;
+    GROUP BY u.id, u.username, u.total_games, u.total_seconds`;
+
   const row = db.prepare(sql).get(uid);
   return row || null;
-}
+};
 
 export function topWinRate(db, limit = 10, minGames = 1) {
   const sql = `
@@ -219,10 +255,10 @@ export function topWinRate(db, limit = 10, minGames = 1) {
     WHERE u.total_games >= ?
     GROUP BY u.id, u.username, u.total_games, u.total_seconds
     ORDER BY winRate DESC, games DESC, wins DESC
-    LIMIT ?
-  `;
+    LIMIT ?`;
+
   return db.prepare(sql).all(minGames, limit);
-}
+};
 
 export function topLoseRate(db, limit = 10, minGames = 1) {
   const sql = `
@@ -252,10 +288,10 @@ export function topLoseRate(db, limit = 10, minGames = 1) {
     WHERE u.total_games >= ?
     GROUP BY u.id, u.username, u.total_games, u.total_seconds
     ORDER BY winRate ASC, games DESC
-    LIMIT ?
-  `;
+    LIMIT ?`;
+
   return db.prepare(sql).all(minGames, limit);
-}
+};
 
 export function topTotalPlayTime(db, limit = 10, minGames = 1) {
   const sql = `
@@ -285,10 +321,10 @@ export function topTotalPlayTime(db, limit = 10, minGames = 1) {
     WHERE u.total_games >= ?
     GROUP BY u.id, u.username, u.total_games, u.total_seconds
     ORDER BY time DESC, games DESC
-    LIMIT ?
-  `;
+    LIMIT ?`;
+
   return db.prepare(sql).all(minGames, limit);
-}
+};
 
 export function topTournamentsCreated(db, limit = 10) {
   const sql = `
@@ -305,12 +341,12 @@ export function topTournamentsCreated(db, limit = 10) {
     FROM users u
     WHERE created_count > 0
     ORDER BY created_count DESC, u.username COLLATE NOCASE
-    LIMIT ?
-  `;
-  return db.prepare(sql).all(limit);
-}
+    LIMIT ?`;
 
-export function topTournamentsWon(db, limit = 20) { // a tester
+  return db.prepare(sql).all(limit);
+};
+
+export function topTournamentsWon(db, limit = 20) {
   const sql = `
     SELECT
       u.id           AS userId,
@@ -324,8 +360,8 @@ export function topTournamentsWon(db, limit = 20) { // a tester
     FROM users u
     WHERE won_count > 0
     ORDER BY won_count DESC, u.username COLLATE NOCASE
-    LIMIT ?
-  `;
+    LIMIT ?`;
+
   return db.prepare(sql).all(limit);
 }
 
@@ -347,8 +383,7 @@ export function listUserRecentMatches(db, userId, limit = 20) {
       g.p1_score,
       g.p2_score,
       g.winner      AS winner_username,
-      -- si tu veux aussi g.game_num, dé-commente la ligne suivante:
-      -- g.game_num   AS game_num,
+      g.game_num   AS game_num,
 
       CASE WHEN g.player1 = ? THEN g.player2 ELSE g.player1 END AS opponent_username,
       CASE WHEN g.player1 = ? THEN g.p1_score ELSE g.p2_score END AS your_score,
@@ -357,8 +392,7 @@ export function listUserRecentMatches(db, userId, limit = 20) {
     FROM games g
     WHERE g.player1 = ? OR g.player2 = ?
     ORDER BY g.started_at DESC, g.id DESC
-    LIMIT ?
-  `;
+    LIMIT ?`;
 
   return db.prepare(sql).all(uname, uname, uname, uname, uname, uname, lim);
 }
@@ -391,5 +425,5 @@ export function validateGameRow(row) {
     ok: errors.length === 0,
     errors,
     normalized: { game_num, p1, p2, s1, s2, dur, startedAt, winner: winnerUsername }
-  };
+};
 }

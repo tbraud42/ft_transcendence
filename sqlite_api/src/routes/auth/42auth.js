@@ -38,10 +38,10 @@ export default async function (fastify) {
     const state = typeof q.state === 'string' ? q.state.trim() : '';
 
     if (!code || code.length > 2048 ) {
-      return reply.code(400).send({ error: 'Invalid code' });
+      return reply.code(400).send({ error: true, code: 'INVALID_CODE', info: 'Invalid code' });
     }
     if (!state || state.length > 256 || !stateStore.has(state)) {
-      return reply.code(400).send({ error: 'Invalid state' });
+      return reply.code(400).send({ error: true, code: 'INVALID_STATE', info: 'Invalid state' });
     }
     stateStore.delete(state);
 
@@ -61,7 +61,7 @@ export default async function (fastify) {
 
     if (!tokenRes.ok) {
       const detail = await tokenRes.text();
-      return reply.code(502).send({ error: 'Token exchange failed', detail });
+      return reply.code(502).send({ error: true, code: 'TOKEN_EXCHANGE_FAILED', info: 'Token exchange failed',detail });
     }
 
     const tokens = await tokenRes.json();
@@ -72,7 +72,7 @@ export default async function (fastify) {
 
     if (!meRes.ok) {
       const detail = await meRes.text();
-      return reply.code(502).send({ error: 'Profile fetch failed', detail });
+      return reply.code(502).send({ error: true, code: 'PROFILE_FETCH_FAILED', info: 'Profile fetch failed',detail });
     }
 
     const ftUser = await meRes.json();
@@ -96,6 +96,13 @@ export default async function (fastify) {
       role: user.role
     }, true, '12h');
 
-    return reply.send({ token, user: { id: user.id, username: user.username } });
+    return reply.send({ error: false, code: '', info: { token, user: { id: user.id, username: user.username } } });
   });
 }
+
+// | Error                       | Code                    |
+// | --------------------------- | ----------------------- |
+// | Invalid code                | `INVALID_CODE`          |
+// | Invalid state               | `INVALID_STATE`         |
+// | Token exchange failed       | `TOKEN_EXCHANGE_FAILED` |
+// | Profile fetch failed        | `PROFILE_FETCH_FAILED`  |

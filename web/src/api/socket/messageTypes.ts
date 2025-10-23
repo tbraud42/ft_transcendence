@@ -72,7 +72,9 @@ export type SrvEnd = {
     type: typeof SrvMessageType.MATCH_END;
     roomId: string;
     winner: string;
-    score?: Record<string, number> | null;
+    winner_score?: Record<string, number> | null;
+    loser: string;
+    loser_score?: Record<string, number> | null;
 };
 
 export type SrvEliminated = {
@@ -99,6 +101,11 @@ export type SrvError = {
     error: string;
 };
 
+export type SrvFull = {
+    type: typeof SrvMessageType.GAME_FULL;
+    tournamentId: number;
+}
+
 export type ServerEvent =
     | SrvSnapshot
     | SrvPlayerJoined
@@ -111,15 +118,16 @@ export type ServerEvent =
     | SrvEliminated
     | SrvKick
     | SrvWinner
-    | SrvError;
+    | SrvError
+    | SrvFull;
 
 // ----- Client -> Serveur
 export type CliAuth = { type: typeof CliMessageType.AUTH; token: string };
 export type CliJoin = { type: typeof CliMessageType.JOIN; tournamentId: number };
 export type CliReady = { type: typeof CliMessageType.READY, ready: boolean };
 export type CliInput = { type: typeof CliMessageType.INPUT; roomId: string, up: boolean; down: boolean };
-export type CliAddBot = { type: typeof CliMessageType.ADD_BOT; addr: LeafAddress };
-export type CliRemove = { type: typeof CliMessageType.REMOVE; addr: LeafAddress };
+export type CliAddBot = { type: typeof CliMessageType.ADD_BOT; roomId: string; slot: 'p1' | 'p2' };
+export type CliRemove = { type: typeof CliMessageType.REMOVE; username: string };
 export type CliSnapshot = { type: typeof CliMessageType.SNAPSHOT; tournamentId: number };
 
 export type ClientEvent = CliAuth | CliJoin | CliReady | CliInput | CliAddBot | CliRemove | CliSnapshot;

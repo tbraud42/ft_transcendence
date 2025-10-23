@@ -1,17 +1,15 @@
-import { PongGame } from '../games/pong/engine/PongGame'
+import { DEFAULT_BALL_RADIUS, PongGame } from '../games/pong/engine/PongGame'
 import i18n from '../utils/lang/i18n'
 import { createButton } from '../components/button'
 import { GameMode, secondPlayerName, selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
 import { LocalPlayer } from '../games/pong/engine/players/LocalPlayer'
 import { getUsername } from '../utils/storage'
 import { AiPlayer } from '../games/pong/engine/players/AiPlayer'
-import { env } from '../utils/env'
-import {navigateTo} from "../utils/router";
+import { navigateTo } from '../utils/router'
 
 let currentGame: PongGame | null = null
-const PONG_WS_URL = env.PONG_WS_URL
 
-export function createPongCanvas(): HTMLCanvasElement { //TODO: use the same canvas as online
+export function createPongCanvas(): HTMLCanvasElement { // TODO: use the same canvas as online
     const canvas = document.createElement('canvas')
     canvas.width = 640
     canvas.height = 480
@@ -27,11 +25,28 @@ export function renderPongPlay(roomId: string): HTMLElement {
         currentGame = null
     }
 
+    let timerInterval: ReturnType<typeof setInterval>
+
+    function startTimer(display: HTMLElement) {
+        const startTime = Date.now()
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000)
+            const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0')
+            const seconds = String(elapsed % 60).padStart(2, '0')
+            display.textContent = `${minutes}:${seconds}`
+        }, 1000)
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval)
+    }
+
     const container = document.createElement('div')
     container.className = 'relative flex items-center justify-center min-h-screen w-full text-white overflow-hidden'
 
     const canvas = createPongCanvas()
     canvas.classList.add('rounded-2xl', 'shadow-xl', 'border', 'border-white/20')
+
     const canvasWrapper = document.createElement('div')
     canvasWrapper.className = 'relative flex items-center justify-center p-4'
     canvasWrapper.appendChild(canvas)
@@ -55,9 +70,8 @@ export function renderPongPlay(roomId: string): HTMLElement {
     const timerDisplay = document.createElement('div')
     timerDisplay.className = 'absolute top-4 right-4 text-white text-xl font-mono z-10 pointer-events-none'
     timerDisplay.textContent = '00:00'
-    container.appendChild(timerDisplay)
 
-    container.append(exitBtn, canvasWrapper, countdown, scoreOverlay)
+    container.append(exitBtn, canvasWrapper, countdown, scoreOverlay, timerDisplay)
 
     const mode = selectedGameMode
     let game: PongGame
@@ -65,50 +79,39 @@ export function renderPongPlay(roomId: string): HTMLElement {
     if (mode === GameMode.AI) {
         const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
         const p2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty)
-        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
+
+        game = new PongGame('local', canvas, p1, p2, selectedDifficulty, DEFAULT_BALL_RADIUS, scoreLeft, scoreRight)
         currentGame = game
         game.start()
+
         launchCountdown(countdown, () => {
             countdown.remove()
             game.startBall()
-            startTimer()
+            startTimer(timerDisplay)
         })
+
         return container
     }
 
     if (mode === GameMode.LOCAL) {
         const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
         const p2 = new LocalPlayer(false, canvas, secondPlayerName || i18n.t('pong_opponent'))
-        game = new PongGame("local", canvas, p1, p2, selectedDifficulty, scoreLeft, scoreRight)
+
+        game = new PongGame('local', canvas, p1, p2, selectedDifficulty, DEFAULT_BALL_RADIUS, scoreLeft, scoreRight)
         currentGame = game
         game.start()
+
         launchCountdown(countdown, () => {
             countdown.remove()
             game.startBall()
-            startTimer()
+            startTimer(timerDisplay)
         })
+
         return container
     }
 
-    //TODO: support local games in tournament.ts?
+    // TODO: support local games in tournament.ts?
     return container
-
-    let startTime = Date.now()
-    let timerInterval: ReturnType<typeof setInterval>
-
-    function startTimer() {
-        startTime = Date.now()
-        timerInterval = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000)
-            const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0')
-            const seconds = String(elapsed % 60).padStart(2, '0')
-            timerDisplay.textContent = `${minutes}:${seconds}`
-        }, 1000)
-    }
-
-    function stopTimer() {
-        clearInterval(timerInterval)
-    }
 }
 
 function createExitButton(onConfirm: () => void): HTMLButtonElement {

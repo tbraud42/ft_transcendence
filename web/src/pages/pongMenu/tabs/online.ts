@@ -27,7 +27,7 @@ export function renderOnlineTab(): HTMLElement {
     container.appendChild(roomList)
 
     fetchTournaments().then((tournaments) => {
-        if (tournaments.length === 0) {
+        if (Object.keys(tournaments).length === 0) {
             lobbiesStatus.textContent = i18n.t('pong_online_no_lobbies')
             return
         }

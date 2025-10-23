@@ -54,6 +54,7 @@ const start = async () => {
           cb(null, true)
         } else {
           const allowedOrigins = [
+            `https://localhost`,
             `https://${process.env.DOMAIN}`,
             `https://www.${process.env.DOMAIN}`
           ]

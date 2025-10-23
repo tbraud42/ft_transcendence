@@ -29,7 +29,7 @@
   "login_or": "ou",
   "login_error_failed": "Échec de la connexion. Veuillez vérifier vos informations.",
   "login_error_empty": "Veuillez remplir tous les champs.",
-  "login_error_user_not_found": "Utilisateur non trouvé.",
+  "login_error_user_not_found": "Utilisateur introuvable.",
   "signup_error_mismatch": "Les mots de passe ne correspondent pas.",
   "signup_error_username_taken": "Nom d’utilisateur est déjà pris.",
   "2fa_title": "Authentification à deux facteurs",
@@ -68,6 +68,7 @@
   "pong_online_create_public": "Créer une partie",
   "pong_online_name": "Nom de la partie",
   "pong_online_error_create": "Échec de la création de la partie. Veuillez réessayer.",
+  "pong_online_error_fetch": "Échec du chargement des parties. Veuillez réessayer.",
   "pong_local_2p_name": "Nom du joueur 2",
   "pong_local_2p_error_name": "Veuillez entrer un nom pour le joueur 2.",
   "pong_local_2p": "Démarrer",
@@ -86,5 +87,10 @@
   "pong_lobby_starting": "La partie est pleine. Démarrage…",
   "pong_lobby_disconnected": "Déconnecté. Rafraîchissez la page pour réessayer.",
   "pong_lobby_network_error": "Erreur réseau.",
-  "pong_winner_announce": "{{player}} gagne !"
+  "pong_lobby_kicked": "Vous avez été expulsé de la partie.",
+  "pong_game_over_you_win_title": "Vous avez gagné !",
+  "pong_game_over_you_lose_title": "Vous avez perdu... cheh",
+  "pong_game_over_text": "Score final : {{playerScore}} - {{opponentScore}}",
+  "pong_winner_announce": "{{player}} gagne !",
+  "pong_lobby_full": "Le tournoi est plein."
 }

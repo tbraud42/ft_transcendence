@@ -26,12 +26,13 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        VITE_DOMAIN: ${DOMAIN_NAME}
+        VITE_API_URL: api.${DOMAIN_NAME}
+        VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
+        VITE_NODE_ENV: production
     image: ft_transcendence-web:prod
     hostname: web
-    environment:
-      VITE_DOMAIN: ${DOMAIN_NAME}
-      VITE_API_URL: api.${DOMAIN_NAME}
-      VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
     expose:
       - "80"
     networks:
@@ -77,10 +78,8 @@ services:
       - "3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      API_URL: api.${DOMAIN_NAME}
+      API_URL: sqlite_api:3000
     restart: unless-stopped
-    extra_hosts:
-      - "api.${DOMAIN_NAME}:host-gateway"
     networks:
       - backend
 

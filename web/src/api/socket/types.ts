@@ -1,6 +1,6 @@
 import { ClientStatus, MatchStatus } from './protocol';
 
-export { ClientStatus as ClientStatus, MatchStatus as MatchStatus };
+export { ClientStatus as ClientStatus};
 
 export type MatchStatus = typeof MatchStatus;
 
@@ -18,7 +18,9 @@ export type Match = {
     p2: string | null;
     status: MatchStatus;
     winner?: string | null;
-    score?: Record<string, number> | null;
+    winnerScore?: number;
+    loser?: string | null;
+    loserScore?: number;
 };
 
 export type LeafAddress = {
@@ -30,8 +32,8 @@ export type LeafAddress = {
 export type RenderOptions = {
     myUsername?: string;
     isOwner?: boolean;
-    onAddBot?: (addr: LeafAddress) => void;
-    onRemove?: (remover: LeafAddress) => void;
+    onAddBot?: (roomId: string, slot: 'p1' | 'p2') => void;
+    onRemove?: (username: string) => void;
     onReady?: (addr: LeafAddress) => void;
     isReady?: (username: string, addr: LeafAddress) => boolean;
 };

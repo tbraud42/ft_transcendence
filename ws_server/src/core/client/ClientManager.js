@@ -15,6 +15,9 @@ export class ClientManager {
         let client
         if (this.clients.has(id)) {
             client = this.clients.get(id);
+            if (client.socket) {
+                client.socket.close();
+            }
             client.socket = socket;
             client.connected = true;
             client.username = username;
