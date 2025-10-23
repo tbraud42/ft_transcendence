@@ -52,6 +52,7 @@ export class ClientBase {
             return false;
         }
         return true;
+
     }
 
     /**
@@ -78,7 +79,9 @@ export class ClientBase {
      * Attach to a room, reset readiness, sync paddle params, and center vertically.
      */
     attachToRoom(room) {
-        if (!this.tournament) return;
+        if (!this.tournament) {
+            return;
+        }
         this.room = room;
         this.ready = false;
 
@@ -95,7 +98,9 @@ export class ClientBase {
      * Detach from the current room and inform the room.
      */
     detachRoom() {
-        if (!this.room) return;
+        if (!this.room) {
+            return;
+        }
         this.room.removePlayer(this.getUsername());
         this.room = null;
     }
@@ -226,7 +231,9 @@ export class ClientBase {
      */
     tick(_ball) {
         const r = this.room;
-        if (!r) return;
+        if (!r) {
+            return;
+        }
 
         let dy = 0;
         if (this.up && !this.down) {

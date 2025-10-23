@@ -49,8 +49,12 @@ export class Room {
      * Get player by absolute position: 1 -> p1, 2 -> p2, else null.
      */
     getPlayerByPosition(pos) {
-        if (pos === 1) return this.p1;
-        if (pos === 2) return this.p2;
+        if (pos === 1) {
+            return this.p1;
+        }
+        if (pos === 2) {
+            return this.p2;
+        }
         return null;
     }
 
@@ -58,27 +62,47 @@ export class Room {
      * Get player instance by username, or null if not present.
      */
     getPlayerByUsername(username) {
-        if (this.p1?.getUsername() === username) return this.p1;
-        if (this.p2?.getUsername() === username) return this.p2;
+        if (this.p1?.getUsername() === username) {
+            return this.p1;
+        }
+        if (this.p2?.getUsername() === username) {
+            return this.p2;
+        }
         return null;
     }
 
     /**
-     * Remove a player from the room by username; stop countdown/loop as needed.
+     * Remove a player from the room by username; if the match is running,
+     * the leaver forfeits (loser) and the remaining player wins.
      */
     removePlayer(username) {
-        if (!this.ended) {
-            if (this.p1 && username === this.p1.getUsername()) {
-                this.p1 = null;
-            }
-            if (this.p2 && username === this.p2.getUsername()) {
-                this.p2 = null;
-            }
-        }
+        const leavingP1 = this.p1 && username === this.p1.getUsername();
+        const leavingP2 = this.p2 && username === this.p2.getUsername();
+        const leaver = leavingP1 ? this.p1 : leavingP2 ? this.p2 : null;
+        const stayer = leavingP1 ? this.p2 : leavingP2 ? this.p1 : null;
 
         if (this.countdownTimer) {
             clearTimeout(this.countdownTimer);
             this.countdownTimer = null;
+        }
+
+        if (this.started && !this.ended && leaver && stayer) {
+            if (this.loop) {
+                clearInterval(this.loop);
+                this.loop = null;
+            }
+            console.log("YEY: " * username)
+            this.onEnd()
+            return;
+        }
+
+        if (!this.ended) {
+            if (leavingP1) {
+                this.p1 = null;
+            }
+            if (leavingP2) {
+                this.p2 = null;
+            }
         }
 
         if (this.loop && (!this.p1 || !this.p2)) {
@@ -100,7 +124,9 @@ export class Room {
      * Cancels countdown if readiness changes.
      */
     checkStart() {
-        if (!this.p1 || !this.p2) return false;
+        if (!this.p1 || !this.p2) {
+            return false;
+        }
 
         if (this.p1.isReady() && this.p2.isReady()) {
             this._broadcast({
@@ -113,7 +139,9 @@ export class Room {
                 difficulty: this.difficulty,
             });
 
-            if (this.countdownTimer) clearTimeout(this.countdownTimer);
+            if (this.countdownTimer) {
+                clearTimeout(this.countdownTimer);
+            }
             this.countdownTimer = setTimeout(() => {
                 this.countdownTimer = null;
                 if (this.p1 && this.p2 && this.p1.isReady() && this.p2.isReady()) {
@@ -136,7 +164,9 @@ export class Room {
      */
     applyInput(username, up, down) {
         const player = this.getPlayerByUsername(username);
-        if (!player) return;
+        if (!player) {
+            return;
+        }
         player.up = up;
         player.down = down;
     }
@@ -166,8 +196,12 @@ export class Room {
      * Broadcasts state on each tick; stops on error or teardown.
      */
     _startBroadcast() {
-        if (this.started) return;
-        if (!this.p1 || !this.p2) return;
+        if (this.started) {
+            return;
+        }
+        if (!this.p1 || !this.p2) {
+            return;
+        }
 
         const intervalMs = Math.max(16, Math.round(1000 / this.tickRate));
         this.started = true;
@@ -189,7 +223,9 @@ export class Room {
      * Advance game state (players and ball). End if a player reaches WINNING_SCORE.
      */
     _tick() {
-        if (!this.started) return;
+        if (!this.started) {
+            return;
+        }
 
         this.state.tick += 1;
         this.p1.tick(this.ball);
@@ -207,6 +243,7 @@ export class Room {
      * Finalize the match, declare winner/loser, notify clients, and inform tournament.
      */
     onEnd() {
+        console.log(this.id)
         this.started = false;
         this.ended = true;
         this.totalTime = Date.now() - this.startTime;

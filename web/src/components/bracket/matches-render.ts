@@ -21,7 +21,9 @@ function groupByRound(snap: SrvSnapshot): Map<number, Match[]> {
 
     for (const m of matches) {
         const r = m.round ?? 1;
-        if (!by.has(r)) by.set(r, []);
+        if (!by.has(r)) {
+            by.set(r, []);
+        }
         by.get(r)!.push(m);
     }
     return by;
@@ -31,11 +33,19 @@ function groupByRound(snap: SrvSnapshot): Map<number, Match[]> {
  * Derive a bubble status from a label and the players map.
  */
 function statusFor(label: string | null, players: Map<string, Player>): ClientStatus {
-    if (!label) return ClientStatus.EMPTY;
+    if (!label) {
+        return ClientStatus.EMPTY;
+    }
     const p = players.get(label);
-    if (!p) return ClientStatus.EMPTY;
-    if (p.isReady) return ClientStatus.READY;
-    if (p.connected) return ClientStatus.CONNECTED;
+    if (!p) {
+        return ClientStatus.EMPTY;
+    }
+    if (p.isReady) {
+        return ClientStatus.READY;
+    }
+    if (p.connected) {
+        return ClientStatus.CONNECTED;
+    }
     return ClientStatus.OFFLINE;
 }
 
@@ -43,7 +53,9 @@ function statusFor(label: string | null, players: Map<string, Player>): ClientSt
  * Format a label with optional score, or fallback dash.
  */
 function fmtLabel(name: string | null | undefined, score?: number | null) {
-    if (!name) return '—';
+    if (!name) {
+        return '—';
+    }
     return typeof score === 'number' ? `${name} (${score})` : name;
 }
 
@@ -114,14 +126,18 @@ function decorateLeaf(
     // Local ready override
     if (!finished && label && opts.myUsername && label === opts.myUsername) {
         const readyLocal = !!opts.isReady?.(opts.myUsername, { side, pair: pairIdx, pos: posName });
-        if (readyLocal) v = ClientStatus.READY;
+        if (readyLocal) {
+            v = ClientStatus.READY;
+        }
     }
 
     setBubble(el, fmtLabel(label, score), v);
 
     // Actions for round 1
     el.querySelectorAll('button[data-b]').forEach(b => b.remove());
-    if (finished) return;
+    if (finished) {
+        return;
+    }
 
     const addr: LeafAddress = { side, pair: pairIdx, pos: posName };
     const isOwner = !!opts.isOwner || (!!snap.creator && opts.myUsername === snap.creator);
@@ -224,7 +240,9 @@ function decorateUpperNode(
     players: Map<string, Player>,
     score?: number | null
 ) {
-    if (!label) return;
+    if (!label) {
+        return;
+    }
     if (finished) {
         const isWinner = !!winnerName && label === winnerName;
         setBubble(
@@ -235,7 +253,9 @@ function decorateUpperNode(
         return;
     }
     let v = statusFor(label, players);
-    if (label === myUsername && readyLocal) v = ClientStatus.READY;
+    if (label === myUsername && readyLocal) {
+        v = ClientStatus.READY;
+    }
     setBubble(el, fmtLabel(label), v);
 }
 
@@ -244,10 +264,14 @@ function decorateUpperNode(
  */
 function addReadyIfMine(el: HTMLElement, label: string | null, opts: RenderOptions, addr: LeafAddress) {
     el.querySelectorAll('button[data-b]').forEach(b => b.remove());
-    if (!label || !opts.myUsername || label !== opts.myUsername) return;
+    if (!label || !opts.myUsername || label !== opts.myUsername) {
+        return;
+    }
     const readyLocal = !!opts.isReady?.(opts.myUsername, addr);
     const b = button(readyLocal ? 'Ready ✅' : 'Ready', readyClass(readyLocal));
-    b.onclick = e => { e.stopPropagation(); opts.onReady?.(addr); };
+    b.onclick = e => {
+        e.stopPropagation(); opts.onReady?.(addr); 
+    };
     b.dataset.b = 'ready';
     mount(el, b);
 }
@@ -270,7 +294,9 @@ function fillUpperRounds(
     if (totalRounds === 1) {
         const r1 = grouped.get(1) || [];
         const fm = r1[0];
-        if (fm?.winner) setBubble(finalBox, fmtLabel(fm.winner, fm.winnerScore), ClientStatus.WINNER);
+        if (fm?.winner) {
+            setBubble(finalBox, fmtLabel(fm.winner, fm.winnerScore), ClientStatus.WINNER);
+        }
         return;
     }
 
@@ -286,7 +312,9 @@ function fillUpperRounds(
                     ? (fm.winner === fm.p1 ? fm.winnerScore : fm.loser === fm.p1 ? fm.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(L[1][0], fm.p1, finished, fm.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(L[1][0], fm.p1, opts, { side: 'left', pair: 0, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(L[1][0], fm.p1, opts, { side: 'left', pair: 0, pos: 'top' });
+                }
             }
             if (R[1]?.[0] && fm.p2) {
                 const finished = fm.status === MatchStatus.FINISHED;
@@ -295,9 +323,13 @@ function fillUpperRounds(
                     ? (fm.winner === fm.p2 ? fm.winnerScore : fm.loser === fm.p2 ? fm.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(R[1][0], fm.p2, finished, fm.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(R[1][0], fm.p2, opts, { side: 'right', pair: 0, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(R[1][0], fm.p2, opts, { side: 'right', pair: 0, pos: 'top' });
+                }
             }
-            if (fm.winner) setBubble(finalBox, fmtLabel(fm.winner, fm.winnerScore), ClientStatus.WINNER);
+            if (fm.winner) {
+                setBubble(finalBox, fmtLabel(fm.winner, fm.winnerScore), ClientStatus.WINNER);
+            }
         }
         return;
     }
@@ -320,7 +352,9 @@ function fillUpperRounds(
                         : semiLeft.loser === semiLeft.p1 ? semiLeft.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(L[1][0], semiLeft.p1, finished, semiLeft.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(L[1][0], semiLeft.p1, opts, { side: 'left', pair: 0, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(L[1][0], semiLeft.p1, opts, { side: 'left', pair: 0, pos: 'top' });
+                }
             }
             if (L[1]?.[1] && semiLeft.p2) {
                 const finished = semiLeft.status === MatchStatus.FINISHED;
@@ -330,7 +364,9 @@ function fillUpperRounds(
                         : semiLeft.loser === semiLeft.p2 ? semiLeft.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(L[1][1], semiLeft.p2, finished, semiLeft.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(L[1][1], semiLeft.p2, opts, { side: 'left', pair: 1, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(L[1][1], semiLeft.p2, opts, { side: 'left', pair: 1, pos: 'top' });
+                }
             }
         }
 
@@ -344,7 +380,9 @@ function fillUpperRounds(
                         : semiRight.loser === semiRight.p1 ? semiRight.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(R[1][0], semiRight.p1, finished, semiRight.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(R[1][0], semiRight.p1, opts, { side: 'right', pair: 0, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(R[1][0], semiRight.p1, opts, { side: 'right', pair: 0, pos: 'top' });
+                }
             }
             if (R[1]?.[1] && semiRight.p2) {
                 const finished = semiRight.status === MatchStatus.FINISHED;
@@ -354,7 +392,9 @@ function fillUpperRounds(
                         : semiRight.loser === semiRight.p2 ? semiRight.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(R[1][1], semiRight.p2, finished, semiRight.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(R[1][1], semiRight.p2, opts, { side: 'right', pair: 1, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(R[1][1], semiRight.p2, opts, { side: 'right', pair: 1, pos: 'top' });
+                }
             }
         }
 
@@ -369,7 +409,9 @@ function fillUpperRounds(
                         : finalMatch.loser === finalMatch.p1 ? finalMatch.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(L[2][0], finalMatch.p1, finished, finalMatch.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(L[2][0], finalMatch.p1, opts, { side: 'left', pair: 0, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(L[2][0], finalMatch.p1, opts, { side: 'left', pair: 0, pos: 'top' });
+                }
             }
             // right side = final.p2
             if (R[2]?.[0] && finalMatch.p2) {
@@ -380,7 +422,9 @@ function fillUpperRounds(
                         : finalMatch.loser === finalMatch.p2 ? finalMatch.loserScore : undefined)
                     : undefined;
                 decorateUpperNode(R[2][0], finalMatch.p2, finished, finalMatch.winner, opts.myUsername, readyLocal, players, score);
-                if (!finished) addReadyIfMine(R[2][0], finalMatch.p2, opts, { side: 'right', pair: 0, pos: 'top' });
+                if (!finished) {
+                    addReadyIfMine(R[2][0], finalMatch.p2, opts, { side: 'right', pair: 0, pos: 'top' });
+                }
             }
 
             // winner box

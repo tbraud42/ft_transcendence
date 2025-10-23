@@ -14,6 +14,9 @@ export class WSClient {
     private host: HTMLElement;
     private canvas: HTMLCanvasElement;
     private canvasWrapper: HTMLElement;
+    private scoreLeft: HTMLElement;
+    private scoreRight: HTMLElement;
+    private timerDisplay: HTMLElement;
     private latestSnapshot: SrvSnapshot | null = null;
     public currentGame: PongGame | null = null;
     public ingame = false;
@@ -34,6 +37,18 @@ export class WSClient {
         this.canvasWrapper = document.createElement('div');
         this.canvasWrapper.className = 'relative flex items-center justify-center p-4';
         this.canvasWrapper.appendChild(this.canvas);
+
+        const scoreOverlay = createScoreOverlay();
+        this.scoreLeft  = scoreOverlay.children[0] as HTMLDivElement;
+        this.scoreRight = scoreOverlay.children[1] as HTMLDivElement;
+
+        this.canvasWrapper.appendChild(scoreOverlay);
+
+        this.timerDisplay = document.createElement('div');
+        this.timerDisplay.className = 'absolute top-4 right-4 text-white text-xl font-mono z-10 pointer-events-none';
+        this.timerDisplay.textContent = '00:00';
+
+        this.canvasWrapper.appendChild(this.timerDisplay);
     }
 
     /**
@@ -43,7 +58,9 @@ export class WSClient {
         this.ws = new WebSocket(url);
         this.ws.onopen = () => {
             onOpen?.();
-            for (const m of this.queued) this.send(m);
+            for (const m of this.queued) {
+                this.send(m);
+            }
             this.queued = [];
         };
         this.hookEvents();
@@ -53,135 +70,139 @@ export class WSClient {
      * Attach WebSocket event handlers (message routing by server event type).
      */
     hookEvents() {
-        if (!this.ws) return;
+        if (!this.ws) {
+            return;
+        }
         this.ws.onmessage = (ev) => {
             let msg: ServerEvent | null = null;
-            try { msg = JSON.parse(ev.data); } catch { return; }
-            if (!msg) return;
+            try {
+                msg = JSON.parse(ev.data); 
+            } catch {
+                return; 
+            }
+            if (!msg) {
+                return;
+            }
 
             switch (msg.type) {
-                case SrvMessageType.SNAPSHOT: {
-                    this.latestSnapshot = msg as SrvSnapshot;
-                    console.log(msg);
-                    if (this.ingame) {
-                        return;
-                    }
-                    this.renderTree();
+            case SrvMessageType.SNAPSHOT: {
+                this.latestSnapshot = msg as SrvSnapshot;
+                console.log(msg);
+                if (this.ingame) {
+                    return;
+                }
+                this.renderTree();
+                break;
+            }
+
+            case SrvMessageType.PLAYER_READY: {
+                // implicit update via server snapshot
+                break;
+            }
+
+            case SrvMessageType.MATCH_START: {
+                this.host.innerHTML = '';
+                this.host.appendChild(this.canvasWrapper);
+                this.ingame = true;
+
+                const me  = msg.clients[0].username === getUsername() ? msg.clients[0] : msg.clients[1];
+                const opp = msg.clients[0].username !== getUsername() ? msg.clients[0] : msg.clients[1];
+
+                this.canvas.height = 480;
+                this.canvas.width  = 640;
+
+                this.currentGame = PongGame.createOnline(
+                    msg.roomId,
+                    this.canvas,
+                    this,
+                    me.slot,
+                    { me: me.username, opponent: opp.username },
+                    msg.difficulty,
+                    DEFAULT_BALL_RADIUS,
+                    this.scoreLeft,
+                    this.scoreRight
+                );
+
+                const countdown = document.createElement('div');
+                countdown.className = 'absolute inset-0 flex items-center justify-center text-white text-6xl font-extrabold pointer-events-none transition-all z-10 opacity-0';
+                this.canvasWrapper.appendChild(countdown);
+
+                this.currentGame.draw();
+                this.currentGame.ball.draw(this.currentGame.ctx);
+
+                this.renderLockedUntil = performance.now() + 3000;
+                this.launchCountdown(countdown, () => {
+                    countdown.remove();
+                    this.startMatchTimer(this.timerDisplay);
+                });
+
+                break;
+            }
+
+            case SrvMessageType.MATCH_STATE: {
+                if (!this.currentGame || this.currentGame.getId() !== (msg as any).roomId) {
                     break;
                 }
-
-                case SrvMessageType.PLAYER_READY: {
-                    // implicit update via server snapshot
+                if (performance.now() < this.renderLockedUntil) {
                     break;
                 }
-
-                case SrvMessageType.MATCH_START: {
-                    this.host.innerHTML = '';
-                    this.host.appendChild(this.canvasWrapper);
-                    this.ingame = true;
-
-                    const scoreOverlay = createScoreOverlay();
-                    const scoreLeft  = scoreOverlay.children[0] as HTMLDivElement;
-                    const scoreRight = scoreOverlay.children[1] as HTMLDivElement;
-
-                    const me  = msg.clients[0].username === getUsername() ? msg.clients[0] : msg.clients[1];
-                    const opp = msg.clients[0].username !== getUsername() ? msg.clients[0] : msg.clients[1];
-
-                    this.canvas.height = 480;
-                    this.canvas.width  = 640;
-
-                    this.currentGame = PongGame.createOnline(
-                        msg.roomId,
-                        this.canvas,
-                        this,
-                        me.slot,
-                        { me: me.username, opponent: opp.username },
-                        msg.difficulty,
-                        DEFAULT_BALL_RADIUS,
-                        scoreLeft,
-                        scoreRight
-                    );
-
-                    const countdown = document.createElement('div');
-                    countdown.className = 'absolute inset-0 flex items-center justify-center text-white text-6xl font-extrabold pointer-events-none transition-all z-10 opacity-0';
-                    this.canvasWrapper.appendChild(countdown);
-
-                    const timerDisplay = document.createElement('div');
-                    timerDisplay.className = 'absolute top-4 right-4 text-white text-xl font-mono z-10 pointer-events-none';
-                    timerDisplay.textContent = '00:00';
-
+                this.currentGame.lastState = msg as SrvState;
+                if (!this.currentGame.gameEnded) {
+                    this.currentGame.update();
                     this.currentGame.draw();
-                    this.currentGame.ball.draw(this.currentGame.ctx);
+                }
+                break;
+            }
 
-                    this.renderLockedUntil = performance.now() + 3000;
-                    this.launchCountdown(countdown, () => {
-                        countdown.remove();
-                        this.startMatchTimer(timerDisplay);
-                    });
-
-                    this.canvasWrapper.appendChild(scoreOverlay);
-                    this.canvasWrapper.appendChild(timerDisplay);
-                    break;
+            case SrvMessageType.MATCH_END: {
+                if (!msg.roomId || !this.currentGame || this.currentGame.getId() !== msg.roomId) {
+                    return;
                 }
 
-                case SrvMessageType.MATCH_STATE: {
-                    if (!this.currentGame || this.currentGame.getId() !== (msg as any).roomId) break;
-                    if (performance.now() < this.renderLockedUntil) break;
-                    this.currentGame.lastState = msg as SrvState;
-                    if (!this.currentGame.gameEnded) {
-                        this.currentGame.update();
-                        this.currentGame.draw();
-                    }
-                    break;
-                }
+                this.currentGame.stop();
+                this.currentGame = null;
+                this.stopMatchTimer();
 
-                case SrvMessageType.MATCH_END: {
-                    if (msg.roomId && this.currentGame && this.currentGame.getId() === msg.roomId) {
-                        this.currentGame.stop();
-                        this.currentGame = null;
-                    }
-                    this.stopMatchTimer();
-
-                    const title =
+                const title =
                         msg.winner === getUsername()
                             ? i18n.t('pong_game_over_you_win_title')
                             : i18n.t('pong_game_over_you_lose_title');
 
-                    const myScore       = msg.winner === getUsername() ? msg.winner_score : msg.loser_score;
-                    const opponentScore = msg.winner === getUsername() ? msg.loser_score  : msg.winner_score;
+                const myScore       = msg.winner === getUsername() ? msg.winner_score : msg.loser_score;
+                const opponentScore = msg.winner === getUsername() ? msg.loser_score  : msg.winner_score;
 
-                    const overlay = createOverlayCard({
-                        title,
-                        text: i18n.t('pong_game_over_text', { playerScore: myScore, opponentScore }),
-                        onClose: () => {
-                            this.ingame = false;
-                            this.renderTree();
-                        }
-                    });
-                    this.host.appendChild(overlay.element);
-                    break;
-                }
+                const overlay = createOverlayCard({
+                    title,
+                    text: i18n.t('pong_game_over_text', { playerScore: myScore, opponentScore }),
+                    onClose: () => {
+                        this.ingame = false;
+                        this.renderTree();
+                    }
+                });
+                this.host.appendChild(overlay.element);
+                break;
+            }
 
-                case SrvMessageType.PLAYER_KICK: {
-                    const overlay = createOverlayCard({
-                        title: 'Kick',
-                        text: i18n.t('pong_lobby_kicked'),
-                        onClose: () => navigateTo('/home')
-                    });
-                    this.host.appendChild(overlay.element);
-                    break;
-                }
+            case SrvMessageType.PLAYER_KICK: {
+                const overlay = createOverlayCard({
+                    title: 'Kick',
+                    text: i18n.t('pong_lobby_kicked'),
+                    onClose: () => navigateTo('/home')
+                });
+                this.host.appendChild(overlay.element);
+                break;
+            }
 
-                case SrvMessageType.GAME_FULL: {
-                    const overlay = createOverlayCard({
-                        title: i18n.t('pong_lobby_full'),
-                        onClose: () => navigateTo('/home')
-                    });
-                    this.host.appendChild(overlay.element);
-                    break;
-                }
+            case SrvMessageType.GAME_FULL: {
+                const overlay = createOverlayCard({
+                    title: i18n.t('pong_lobby_full'),
+                    onClose: () => navigateTo('/home')
+                });
+                this.host.appendChild(overlay.element);
+                break;
+            }
 
-                default: break;
+            default: break;
             }
         };
     }
@@ -254,7 +275,9 @@ export class WSClient {
      * Close the socket if present (ignore errors).
      */
     close() {
-        try { this.ws?.close(); } catch {}
+        try {
+            this.ws?.close(); 
+        } catch {}
     }
 
     /**
@@ -262,7 +285,9 @@ export class WSClient {
      */
     isClientReady(username: string): boolean {
         for (const p of this.latestSnapshot?.players || []) {
-            if (p.username === username) return p.isReady;
+            if (p.username === username) {
+                return p.isReady;
+            }
         }
         return false;
     }
@@ -288,6 +313,7 @@ export class WSClient {
         if (this.timerInterval) {
             clearInterval(this.timerInterval);
             this.timerInterval = undefined;
+            this.timerDisplay.textContent = '00:00';
         }
     }
 }

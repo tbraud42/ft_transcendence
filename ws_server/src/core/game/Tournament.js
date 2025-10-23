@@ -55,13 +55,19 @@ export class Tournament {
      * No-op if tournament is full or room/slot is invalid.
      */
     addBotAt(roomId, slot) {
-        if (this.participants.size >= this.maxPlayers) return;
+        if (this.participants.size >= this.maxPlayers) {
+            return;
+        }
 
         const info = parseRoomId(roomId);
-        if (!info) return;
+        if (!info) {
+            return;
+        }
 
         const room = this.getRoom(info.round, info.index);
-        if (!room) return;
+        if (!room) {
+            return;
+        }
 
         const setPlayer = slot === 'p1' ? room.setPlayer1.bind(room) : room.setPlayer2.bind(room);
 
@@ -85,7 +91,9 @@ export class Tournament {
      */
     remove(username) {
         const client = this.getPlayerByUsername(username);
-        if (!client) return;
+        if (!client) {
+            return;
+        }
 
         client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
         client.detachTournament();
@@ -201,7 +209,9 @@ export class Tournament {
      */
     _assignNextFreeSlot(client) {
         const round1 = this.rooms.get(1);
-        if (!round1) return false;
+        if (!round1) {
+            return false;
+        }
 
         for (const [i, room] of round1) {
             if (!room.p1) {
@@ -236,12 +246,16 @@ export class Tournament {
         const nextRound = currentRound + 1;
 
         const matchesInCurrentRound = this.maxPlayers >> currentRound;
-        if (matchesInCurrentRound <= 0) return false;
+        if (matchesInCurrentRound <= 0) {
+            return false;
+        }
 
         const nextMatchIndex = Math.floor((pos.match - 1) / 2) + 1;
 
         const nextRoom = this.getRoom(nextRound, nextMatchIndex);
-        if (!nextRoom) return false;
+        if (!nextRoom) {
+            return false;
+        }
 
         const nextSlot = (pos.match % 2 === 1) ? 'p1' : 'p2';
         const setPlayer = nextSlot === 'p1'
@@ -278,7 +292,9 @@ export class Tournament {
      */
     _broadcast(msg) {
         for (const client of this.participants.values()) {
-            if (client.getTournament()?.getId() !== this.id) continue;
+            if (client.getTournament()?.getId() !== this.id) {
+                continue;
+            }
             try {
                 client.send?.(msg);
             } catch {}
@@ -294,7 +310,9 @@ export class Tournament {
  */
 function leafIndex(client) {
     const pos = client?.position;
-    if (!pos || pos.round !== 1) return 1e9;
+    if (!pos || pos.round !== 1) {
+        return 1e9;
+    }
     const base = (pos.match - 1) * 2;
     const offset = pos.slot === 'p1' ? 0 : 1;
     return base + offset;
@@ -306,6 +324,8 @@ function leafIndex(client) {
  */
 export function parseRoomId(id) {
     const m = String(id || '').match(/^.+-r(\d+)-(\d+)$/);
-    if (!m) return null;
+    if (!m) {
+        return null;
+    }
     return { round: Number(m[1]), index: Number(m[2]) };
 }
