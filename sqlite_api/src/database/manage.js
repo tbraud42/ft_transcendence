@@ -1,4 +1,5 @@
 // database/manage.js
+
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 
@@ -39,7 +40,7 @@ export function showUserById(db, id) {
   return user || null;
 }
 
-export async function updateUser(db, id, password) {
+export async function updateUserPass(db, id, password) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) throw new Error('Invalid user id');
   if (typeof password !== 'string' || password.length === 0) {
@@ -47,7 +48,17 @@ export async function updateUser(db, id, password) {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const info = db.prepare(`UPDATE users SET password_hash = ?, last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`).run(hashedPassword, uid);
+  const info = db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(hashedPassword, uid);
+
+  if (info.changes === 0) throw new Error('User not found');
+  return { success: true, id: uid };
+}
+
+export async function updateUserAvatar(db, id, avatar) {
+  const uid = Number(id);
+  if (!Number.isFinite(uid)) throw new Error('Invalid user id');
+
+  const info = db.prepare(`UPDATE users SET avatar = ? WHERE id = ?`).run(avatar, uid);
 
   if (info.changes === 0) throw new Error('User not found');
   return { success: true, id: uid };
@@ -78,20 +89,26 @@ export async function deleteUser(db, id) {
 export function isAdmin(db, userId) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return false;
+
   const row = db.prepare('SELECT role FROM users WHERE id = ?').get(uid);
   return row?.role?.toLowerCase() === 'admin';
 }
 
-export function isAdminOrCreator(fastify, tournamentId, userId) {
+export function isAdminOrCreator(db, tournamentId, username) {
   const tid = Number(tournamentId);
-  const uid = Number(userId);
-  if (!Number.isFinite(tid) || !Number.isFinite(uid)) return false;
 
-  const adminRow = fastify.db.prepare('SELECT role FROM users WHERE id = ?').get(uid);
-  if (adminRow?.role?.toLowerCase() === 'admin') return true;
+  const user = String(username || '').trim();
+  // const user = username;
 
-  const t = fastify.db.prepare('SELECT creator_id FROM tournaments WHERE id = ?').get(tid);
-  return !!t && Number(t.creator_id) === uid;
+  const result = db.prepare(`
+    SELECT u.role, t.creator
+    FROM users u
+    JOIN tournaments t ON t.id = ?
+    WHERE u.username = ?
+  `).get(tid, user);
+
+  if (!result) return false;
+  return result.role.toLowerCase() === 'admin' || result.creator === user;
 }
 
 export async function crontab(fastify) {
@@ -130,7 +147,7 @@ function normalizePair(a, b) {
   return x < y ? [x, y] : [y, x];
 }
 
-/* -------------------- AMIS -------------------- */
+/* -------------------- Friends -------------------- */
 
 export function addFriend(db, userA, userB) {
   const [u, f] = normalizePair(userA, userB);
@@ -156,21 +173,31 @@ export function removeFriend(db, userA, userB) {
   return info.changes > 0;
 }
 
-export function listFriends(db, userId) {
+export function listFriends(db, userId, minutes = 10) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return [];
 
   const sql = `
-    SELECT u.id, u.username, uf.created_at AS since
+    SELECT
+      u.id,
+      u.username,
+      uf.created_at AS since,
+      u.last_timestamp,
+      CASE
+        WHEN u.last_timestamp IS NULL THEN 0
+        WHEN u.last_timestamp >= datetime('now', ?) THEN 1
+        ELSE 0
+      END AS online,
+      CAST(strftime('%s','now') - strftime('%s', COALESCE(u.last_timestamp, '1970-01-01')) AS INTEGER) AS last_seen_seconds
     FROM user_friends uf
     JOIN users u ON u.id = CASE WHEN uf.user_id = ? THEN uf.friend_id ELSE uf.user_id END
     WHERE uf.user_id = ? OR uf.friend_id = ?
-    ORDER BY u.username COLLATE NOCASE
-  `;
-  return db.prepare(sql).all(uid, uid, uid);
+    ORDER BY u.username COLLATE NOCASE`;
+
+  return db.prepare(sql).all(`-${minutes} minutes`, uid, uid, uid);
 }
 
-/* -------------------- TOURNOIS : membres & stats -------------------- */
+/* -------------------- Tournaments -------------------- */
 
 export function listTournamentMembers(db, tournamentId) {
   const tid = Number(tournamentId);
@@ -180,8 +207,8 @@ export function listTournamentMembers(db, tournamentId) {
     FROM games g
     JOIN users u ON u.id IN (g.player1_id, g.player2_id)
     WHERE g.tournament_id = ?
-    ORDER BY u.username COLLATE NOCASE
-  `;
+    ORDER BY u.username COLLATE NOCASE`;
+
   return db.prepare(sql).all(tid);
 }
 
@@ -191,29 +218,37 @@ export function listTournamentMembersWithStats(db, tournamentId) {
 
   const sql = `
     WITH participants AS (
-      SELECT g.tournament_id, g.id AS game_id,
-             g.player1_id AS user_id,
-             CASE WHEN g.winner_id = g.player1_id THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner_id IS NOT NULL AND g.winner_id != g.player1_id THEN 1 ELSE 0 END AS loss,
-             g.duration_sec AS seconds
-      FROM games g WHERE g.tournament_id = ?
+      -- côté player1
+      SELECT
+        g.player1 AS username,
+        CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
+        CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss,
+        g.duration_sec AS seconds
+      FROM games g
+      WHERE g.tournament_id = ?
       UNION ALL
-      SELECT g.tournament_id, g.id,
-             g.player2_id,
-             CASE WHEN g.winner_id = g.player2_id THEN 1 ELSE 0 END,
-             CASE WHEN g.winner_id IS NOT NULL AND g.winner_id != g.player2_id THEN 1 ELSE 0 END,
-             g.duration_sec
-      FROM games g WHERE g.tournament_id = ?
+      -- côté player2
+      SELECT
+        g.player2 AS username,
+        CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
+        CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss,
+        g.duration_sec AS seconds
+      FROM games g
+      WHERE g.tournament_id = ?
     )
-    SELECT u.id, u.username,
-           SUM(win)   AS wins,
-           SUM(loss)  AS losses,
-           COUNT(*)   AS matches,
-           COALESCE(SUM(seconds), 0) AS seconds_total
+    SELECT
+      p.username,
+      u.id AS id,                                    -- null si l'utilisateur n'existe plus
+      SUM(p.win)                      AS wins,
+      SUM(p.loss)                     AS losses,
+      COUNT(*)                        AS matches,
+      COALESCE(SUM(COALESCE(p.seconds,0)), 0) AS seconds_total
     FROM participants p
-    JOIN users u ON u.id = p.user_id
-    GROUP BY u.id, u.username
-    ORDER BY wins DESC, losses ASC, u.username COLLATE NOCASE`;
+    LEFT JOIN users u ON u.username = p.username
+    WHERE p.username IS NOT NULL                     -- sécurité si NULL après suppression
+    GROUP BY p.username, u.id
+    ORDER BY wins DESC, losses ASC, p.username COLLATE NOCASE
+  `;
 
   return db.prepare(sql).all(tid, tid);
 }

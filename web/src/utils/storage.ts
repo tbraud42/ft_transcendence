@@ -1,4 +1,5 @@
 import {navigateTo} from "./router";
+import {refreshToken} from "../api/auth";
 
 export const USERNAME_KEY = 'username'
 export const TMP_TOKEN_KEY = 'tmpToken'
@@ -8,7 +9,7 @@ export const LANGUAGE_KEY = 'lang'
 export const THEME_KEY = 'theme'
 
 export function isLoggedIn(): boolean {
-    return !!getToken()
+    return !!getToken();
 }
 
 export function login(token: string, username: string): void {

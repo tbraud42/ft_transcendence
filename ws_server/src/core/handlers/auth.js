@@ -1,7 +1,9 @@
 import jwt from 'jsonwebtoken'
-import { Client } from '../client/Client.js'
+import {getClientManager} from "../game/GamesManager.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key'
+
+// { 0, token: '' }
 
 export default function handleAuth(msg, socket) {
     const token = msg?.token
@@ -38,11 +40,13 @@ export default function handleAuth(msg, socket) {
         return
     }
     if (!socket.__client) {
-        socket.__client = new Client(socket)
+        socket.__client = getClientManager().createClient(
+            socket,
+            true,
+            payload.id,
+            payload.username,
+            token
+        );
     }
-    socket.__client.auth = true
-    socket.__client.id = payload.id
-    socket.__client.username = payload.username
-    socket.__client.token = token
     socket.__client.send({ type: 'auth_ok', username: payload.username })
 }

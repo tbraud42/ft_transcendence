@@ -21,7 +21,6 @@ async function requestAuth(
     if (!username || !password) {
         return null
     }
-
     const url = `${API_URL}/auth/${endpoint}`
 
     const res = await fetch(url, {
@@ -31,19 +30,21 @@ async function requestAuth(
     })
 
     if (res.status === 429) {
-    let msg = 'Too many attempts. Please try again later.';
-    try {
-      const j = await res.json();
-      if (j?.message) msg = j.message;
-    } catch {}
-    alert(msg);
-    throw new Error(msg);
-  }
+        let msg = 'Too many attempts. Please try again later.';
+        try {
+            const j = await res.json();
+            if (j?.message) {
+                msg = j.message;
+            }
+        } catch {}
+        alert(msg);
+        throw new Error(msg);
+    }
 
     if (!res.ok) {
         const errText = await res.text().catch(() => '')
         console.error(`${endpoint} error:`, res.status, errText)
-        throw new Error(`Failed to ${endpoint}`)
+        throw new Error(i18n.t('login_error_user_not_found'));
     }
 
     const data = await res.json()
@@ -53,8 +54,6 @@ async function requestAuth(
     } else if (res.status === 404) {
         throw new Error(i18n.t('login_error_user_not_found'))
     }
-
-    console.log(res)
 
     if (!res.ok) {
         throw new Error(i18n.t('login_error_failed'))
@@ -131,12 +130,16 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
     });
 
     if (!res.ok) {
-        logout()
+        logout();
         return null;
     }
 
     const data = await res.json();
-    setToken(data.token)
+    if (!data?.token) {
+        logout();
+        return null;
+    }
+    setToken(data.token);
     return data.token || null;
 }
 

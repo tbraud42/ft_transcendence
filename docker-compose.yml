@@ -13,7 +13,6 @@ services:
     volumes:
       - ./nginx/data/logs:/var/log/nginx
       - ./nginx/data/certs:/etc/nginx/certs
-      - modsec-data:/var/cache/modsecurity
     depends_on:
       sqlite_api:
         condition: service_healthy
@@ -27,12 +26,13 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        VITE_DOMAIN: ${DOMAIN_NAME}
+        VITE_API_URL: api.${DOMAIN_NAME}
+        VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
+        VITE_NODE_ENV: production
     image: ft_transcendence-web:prod
     hostname: web
-    environment:
-      VITE_DOMAIN: ${DOMAIN_NAME}
-      VITE_API_URL: api.${DOMAIN_NAME}
-      VITE_PONG_WS_URL: pong.ws.${DOMAIN_NAME}
     expose:
       - "80"
     networks:
@@ -42,7 +42,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 3
-
 
   sqlite_api:
     build:
@@ -79,10 +78,8 @@ services:
       - "3000"
     environment:
       JWT_SECRET: ${JWT_SECRET}
-      PORT: 3000
+      API_URL: sqlite_api:3000
     restart: unless-stopped
-    extra_hosts:
-      - "api.dev.local:host-gateway"
     networks:
       - backend
 
@@ -100,11 +97,3 @@ networks:
     driver_opts:
       com.docker.network.bridge.name: "backend"
       com.docker.network.bridge.enable_icc: "true"
-
-volumes:
-  modsec-data:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-

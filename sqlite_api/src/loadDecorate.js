@@ -4,7 +4,8 @@ import {
   createUser,
   showUserByUsername,
   showUserById,
-  updateUser,
+  updateUserPass,
+  updateUserAvatar,
   deleteUser,
   isAdmin,
   isAdminOrCreator,
@@ -30,13 +31,14 @@ import {
   deleteTournament,
   insertStatGame,
   userExists,
-  tournamentExists,
   getStat,
   topWinRate,
   topLoseRate,
   topTotalPlayTime,
   topTournamentsCreated,
-  topTournamentsWon
+  topTournamentsWon,
+  listUserRecentMatches,
+  validateGameRow
 } from './database/tournaments.js';
 
 import {
@@ -65,16 +67,16 @@ export function loadDecorate(fastify) {
   fastify.decorate('isDev', isDev);
   fastify.decorate('showAllData', showAllData);
 
-  // --- Users  ---
+  // --- Users ---
   fastify.decorate('createUser', createUser);
   fastify.decorate('showUserByUsername', showUserByUsername);
   fastify.decorate('showUserById', showUserById);
-  fastify.decorate('updateUser', updateUser);
+  fastify.decorate('updateUserPass', updateUserPass);
+  fastify.decorate('updateUserAvatar', updateUserAvatar);
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
   fastify.decorate('updateTimeStamp', updateTimeStamp);
-
   fastify.decorate('addFriend', addFriend);
   fastify.decorate('removeFriend', removeFriend);
   fastify.decorate('listFriends', listFriends);
@@ -93,14 +95,15 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteTournament', deleteTournament);
   fastify.decorate('insertStatGame', insertStatGame);
   fastify.decorate('userExists', userExists);
-  fastify.decorate('tournamentExists', tournamentExists);
-
   fastify.decorate('getStat', getStat);
   fastify.decorate('topWinRate', topWinRate);
   fastify.decorate('topLoseRate', topLoseRate);
   fastify.decorate('topTotalPlayTime', topTotalPlayTime);
   fastify.decorate('topTournamentsCreated', topTournamentsCreated);
   fastify.decorate('topTournamentsWon', topTournamentsWon);
+  fastify.decorate('listUserRecentMatches', listUserRecentMatches);
+  fastify.decorate('validateGameRow', validateGameRow);
+
   // --- Security ---
   fastify.decorate('generateToken', generateToken);
   fastify.decorate('auth', authenticate(fastify));
@@ -110,31 +113,12 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
+
   // --- Stats ---
   fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
   fastify.addHook('onRequest', (req, reply, done) => { fastify.apiStat.request++; done(); });
 
-
-    let retryTask = null;
-
-    cron.schedule('0 0 0 * * *', () => {
-      try {
-        crontab(fastify)
-      } catch (err) {
-        console.error("overloading process fot crontab, setup to every 5 min", err);
-
-        retryTask = cron.schedule("*/5 * * * *", () => {
-          try {
-            crontab(fastify)
-            console.log("crontab successful");
-            retryTask.stop();
-            retryTask = null;
-          } catch (err2) {
-            console.error("crontab fail", err2);
-          }
-        });
-      }
-    }, { timezone: 'Europe/Paris' });
+  cron.schedule('0 0 0 * * *', () => { crontab(fastify) }, { timezone: 'Europe/Paris' });
 
   fastify.register(rateLimit, {
     max: 100,

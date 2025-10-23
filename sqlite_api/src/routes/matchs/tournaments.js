@@ -2,169 +2,174 @@
 // | Method   | Route                     | Description                            | Access           |
 // | -------- | ------------------------- | -------------------------------------- | ---------------- |
 // | `GET`    | `/tournaments`            | View all tournaments                   | Authenticated    |
-// | `GET`    | `/tournaments/:id`        | View a specific tournament (+games)    | Authenticated    |
+// | `GET`    | `/tournaments/:id`        | View a specific tournament             | Authenticated    |
 // | `GET`    | `/tournaments/waitting`   | View waiting tournaments (status=0)    | Authenticated    |
 // | `GET`    | `/tournaments/playing`    | View playing tournaments (status=1)    | Authenticated    |
 // | `GET`    | `/tournaments/finished`   | View finished tournaments (status=2)   | Authenticated    |
 // | `POST`   | `/tournaments`            | Create a tournament                    | Authenticated    |
-// | `PATCH`  | `/tournaments/:id`        | Edit tournament (name, desc, diff)     | Admin, creator   |
 // | `POST`   | `/tournaments/state/:id`  | Advance or set state                   | Admin, creator   |
-// | `POST`   | `/tournaments/result/:id` | Insert games, optionally set winner    | Admin, creator   |
+// | `POST`   | `/tournaments/result/:id` | Insert games, set winner               | Admin, creator   |
 // | `DELETE` | `/tournaments/:id`        | Delete a tournament                    | Admin, creator   |
 
 export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getAllTournaments(fastify.db);
     if (!tournament || tournament.length === 0) {
-      return reply.code(404).send({ error: 'no tournaments yet' });
+      return reply.send({ error: false, code: '', info: {} });
     }
-    reply.send(tournament);
+    reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
     const tournament = await fastify.getTournamentById(fastify.db, id);
-    if (!tournament) return reply.code(404).send({ error: 'tournament not found' });
-    reply.send(tournament);
+    if (!tournament) return reply.code(404).send({ error: true, code: 'TOURNAMENT_NOT_FOUND', info: 'tournament not found' });
+    reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/waitting', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 0);
-    if (!tournament || tournament.length === 0) return reply.code(404).send({ error: 'no tournament available' });
-    reply.send(tournament);
+    if (!tournament || tournament.length === 0) return reply.send({ error: false, code: '', info: {} });
+    reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/playing', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 1);
-    if (!tournament || tournament.length === 0) return reply.code(404).send({ error: 'no tournament available' });
-    reply.send(tournament);
+    if (!tournament || tournament.length === 0) return reply.send({ error: false, code: '', info: {} });
+    reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/finished', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 2);
-    if (!tournament || tournament.length === 0) return reply.code(404).send({ error: 'no tournament available' });
-    reply.send(tournament);
+    if (!tournament || tournament.length === 0) return reply.send({ error: false, code: '', info: {} });
+    reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.post('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const body = req.body ?? {};
+
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
+    const maxPlayer   = body.maxPlayer === undefined ? 2 : Number(body.maxPlayer);
+    const creator     = String(req.user.username || '').trim();
 
-    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
+    const bad = (msg='Missing or invalid field') => reply.code(400).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: msg });
+
     if (!name || name.length > 50) return bad();
     if (description && description.length > 255) return bad();
     if (!['easy','medium','hard'].includes(difficulty)) return bad();
+    if (!Number.isInteger(maxPlayer) || ![2,4,8].includes(maxPlayer)) return bad('Invalid maxPlayer');
+    if (!creator) return bad('Invalid creator');
 
-    const exists = await fastify.getTournamentByName(fastify.db, name);
-    if (exists) return reply.code(400).send({ error: 'Name already taken' });
+    const data = { name, description, difficulty, maxPlayer, creator };
 
-    const data = {
-      name,
-      description,
-      difficulty,
-      creator_id: req.user.id,
-    };
+    if (fastify.getTournamentByName(fastify.db, name))
+        return reply.code(409).send({ error: true, code: 'TOURNAMENT_NAME_ALREADY_TAKEN', info: 'Tournament name already taken' });
 
     const tournament = await fastify.createTournament(fastify.db, data);
-    reply.send(tournament);
-  });
-
-  fastify.patch('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const id = Number(req.params.id);
-
-    const allowed = await fastify.isAdminOrCreator(id, req.user.id);// ne marche pas
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
-
-    const body = req.body ?? {};
-    const name        = typeof body.name === 'string' ? body.name.trim() : '';
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-    const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
-    const bad = () => reply.code(400).send({ error: 'Missing or invalid field' });
-
-    if (!name || name.length > 50) return bad();
-    if (description && description.length > 255) return bad();
-    if (!['easy','medium','hard'].includes(difficulty)) return bad();
-
-    const tournament = await fastify.updateTournament(fastify.db, id, { name, description, difficulty });
-    if (!tournament || tournament.changes === 0) return reply.code(404).send({ error: 'Not found' });
-    reply.send({ success: true });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.post('/state/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const id = Number(req.params.id);
+    const tid = Number(req.params.id);
+    if (!Number.isFinite(tid)) return reply.code(400).send({ error: true, code: 'TOURNAMENT_INVALID_ID', info: 'Invalid tournament id' });
 
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
+    const allowed = await fastify.isAdminOrCreator(fastify.db, tid, req.user.username);
+    if (!allowed) return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
 
-    const next = typeof req.body?.status === 'number' ? req.body.status : null;
-    if (next !== null && ![0,1,2].includes(next)) {
-      return reply.code(400).send({ error: 'Invalid status' });
+    if (!await fastify.getTournamentById(fastify.db, tid)) {
+      return reply.code(404).send({ error: true, code: 'TOURNAMENT_NOT_FOUND', info: 'Tournament not found' });
     }
 
-    const result = await fastify.changeTournamentStatus(fastify.db, id, next);
-    if (!result) return reply.code(404).send({ error: 'Not found' });
-
-    return reply.send({ id: result.id, status: result.status });
+    const info = fastify.changeTournamentStatus(fastify.db, tid);
+    return reply.send({ error: false, code: '', info: { info } });
   });
 
+
   fastify.post('/result/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const id = Number(req.params.id);
-    const bad = (m='Missing or invalid field') => reply.code(400).send({ error: m });
+    const tid = Number(req.params.id);
+    if (!Number.isFinite(tid)) return reply.code(400).send({ error: true, code: 'TOURNAMENT_INVALID_ID', info: 'Invalid tournament id' });
 
-    if (!Number.isFinite(id)) return bad();
+    const allowed = await fastify.isAdminOrCreator(fastify.db, tid, req.user.username);
+    if (!allowed) return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
 
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
+    const tournament = await fastify.getTournamentById(fastify.db, tid);
+    if (!tournament) {
+      return reply.code(404).send({ error: true, code: 'TOURNAMENT_NOT_FOUND', info: 'Tournament not found' });
+    }
 
-    if (!await fastify.tournamentExists(fastify.db, id)) return reply.code(404).send({ error: 'Not found' });
-
-    const body = req.body ?? {};
+    const body  = req.body ?? {};
     const games = Array.isArray(body.games) ? body.games : [];
+    const tourWinnerUsername =
+      typeof body?.winner === 'string' ? body.winner.trim()
+      : typeof body?.winner_username === 'string' ? body.winner_username.trim()
+      : undefined;
 
-    if (games.length === 0 && body.winner_id === undefined) {
-      return bad('Provide games and/or winner_id');
+    if (games.length === 0 && tourWinnerUsername === undefined) {
+      return reply.code(400).send({ error: true, code: 'TOURNAMENT_MISSING_GAMES_OR_WINNER', info: 'Provide games and/or winner' });
     }
 
+    const preparedRows = [];
     for (const g of games) {
-      const p1 = Number(g?.player1_id);
-      const p2 = Number(g?.player2_id);
-      const s1 = Number(g?.p1_score);
-      const s2 = Number(g?.p2_score);
-      const dur = Number(g?.duration_sec);
-      if (![p1,p2,s1,s2,dur].every(Number.isFinite) || dur < 0) return bad();
-      if (!await fastify.userExists(fastify.db, p1) || !await fastify.userExists(fastify.db, p2)) return bad('Unknown user in games');
+      const row = {
+        game_num: g.game_num,
+        p1: g.p1,
+        p2: g.p2,
+        winner: g.winner,
+        started_at: g.started_at,
+        duration_sec: g.duration_sec,
+        p1_score: g.p1_score,
+        p2_score: g.p2_score,
+      };
+
+      const { ok, errors, normalized } = fastify.validateGameRow(row);
+      if (!ok) return reply.code(400).send({ error: true, code: 'TOURNAMENT_INVALID_GAME_ROW', info: `Invalid game row: ${errors.join(', ')}` });
+
+      preparedRows.push({
+        game_num: normalized.game_num,
+        player1: normalized.p1,
+        player2: normalized.p2,
+        p1_score: normalized.s1,
+        p2_score: normalized.s2,
+        duration_sec: normalized.dur,
+        started_at: normalized.startedAt,
+        winner: normalized.winner,
+      });
     }
 
-    if (games.length > 0) {
-      try {
-        await fastify.insertStatGame(fastify.db, id, games);
-      } catch (e) {
-        if (e.message === 'INVALID_GAME_ROW') return bad();
-        throw e;
-      }
+    await fastify.insertStatGame(fastify, tid, preparedRows);
+
+    if (tourWinnerUsername !== undefined) {
+      const u = fastify.showUserByUsername(fastify.db, tourWinnerUsername);
+      if (!u) return reply.code(400).send({ error: true, code: 'TOURNAMENT_INVALID_WINNER', info: 'Invalid tournament winner' });
+
+      const done = await fastify.setTournamentWinner(fastify.db, tid, tourWinnerUsername);
+      return reply.send({ error: false, code: '', info: { tournament } });
     }
 
-    if (body.winner_id !== undefined) {
-      const winnerId = Number(body.winner_id);
-      if (!Number.isFinite(winnerId) || !await fastify.userExists(fastify.db, winnerId)) return bad('Invalid winner_id');
-      const done = await fastify.setTournamentWinner(fastify.db, id, winnerId);
-      return reply.send({ id: done.id, status: done.status, winner_id: done.winner });
-    }
-
-    const t = await fastify.getTournamentById(fastify.db, id);
-    return reply.send({ id: t.id, status: t.status, winner_id: t.winner ?? null });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.delete('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
-    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.id);
-    if (allowed) return reply.code(403).send({ error: 'Access denied' });
+    const allowed = await fastify.isAdminOrCreator(fastify.db, id, req.user.username);
+    if (!allowed) return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
 
     const info = await fastify.deleteTournament(fastify.db, id);
-    if (!info || info.changes === 0) return reply.code(404).send({ error: 'Not found' });
+    if (!info || info.changes === 0) return reply.code(404).send({ error: true, code: 'TOURNAMENT_NOT_FOUND', info: 'Tournament not found' });
 
-    return reply.send({ success: true });
+    return reply.send({ error: false, code: '', info: { info } });
   });
 }
+
+// | Error                               | Code                                  |
+// | ----------------------------------- | ------------------------------------- |
+// | Tournament not found                | `TOURNAMENT_NOT_FOUND`                |
+// | Missing or invalid field            | `VALIDATION_MISSING_OR_INVALID_FIELD` |
+// | Tournament name already taken       | `TOURNAMENT_NAME_ALREADY_TAKEN`       |
+// | Invalid tournament id               | `TOURNAMENT_INVALID_ID`               |
+// | Access denied                       | `AUTH_ACCESS_DENIED`                  |
+// | Provide games and/or winner         | `TOURNAMENT_MISSING_GAMES_OR_WINNER`  |
+// | Invalid game row                    | `TOURNAMENT_INVALID_GAME_ROW`         |
+// | Invalid tournament winner           | `TOURNAMENT_INVALID_WINNER`           |

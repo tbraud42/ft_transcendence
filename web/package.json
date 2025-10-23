@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/inject-env.js",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -17,6 +18,7 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.4.5",
     "vite": "^5.2.8",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "dotenv": "^17.2.3"
   }
 }

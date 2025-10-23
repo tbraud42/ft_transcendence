@@ -20,16 +20,18 @@ export const MatchStatus = Object.freeze({
 
 export const SrvMessageType = Object.freeze({
     SNAPSHOT: 0,
-    STOPPED: 1,
-    ERROR: 2,
-    TOURNAMENT_WINNER: 3,
-    MATCH_ASSIGNED: 4,
-    MATCH_START: 5,
-    MATCH_STATE: 6,
+    ERROR: 1,
+    TOURNAMENT_WINNER: 2,
+    MATCH_ASSIGNED: 3,
+    MATCH_START: 4,
+    MATCH_STATE: 5,
+    MATCH_END: 6,
     PLAYER_JOINED: 7,
     PLAYER_LEFT: 8,
     PLAYER_READY: 9,
-    PLAYER_ELIMINATED: 10
+    PLAYER_ELIMINATED: 10,
+    PLAYER_KICK: 11,
+    GAME_FULL: 12
 });
 
 export const CliMessageType = Object.freeze({
@@ -38,6 +40,6 @@ export const CliMessageType = Object.freeze({
     READY: 2,
     INPUT: 3,
     ADD_BOT: 4,
-    REMOVE_BOT: 5,
+    REMOVE: 5,
     SNAPSHOT: 6
 });

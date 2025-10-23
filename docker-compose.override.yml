@@ -14,7 +14,10 @@ services:
       - ./web:/app
       - /app/node_modules
     environment:
-      - NODE_ENV=development
+      - VITE_DOMAIN=${DOMAIN_NAME}
+      - VITE_API_URL=api.${DOMAIN_NAME}
+      - VITE_PONG_WS_URL=pong.ws.${DOMAIN_NAME}
+      - VITE_NODE_ENV=development
     expose:
       - "5173"
     healthcheck:

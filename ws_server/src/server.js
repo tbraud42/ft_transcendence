@@ -1,8 +1,13 @@
 import { WebSocketServer } from 'ws'
 import { registerHandlers } from './core/handlers/index.js'
-import { getTournamentManager } from './core/game/GamesManager.js'
+import {env} from "./utils/env.js";
 
-const wss = new WebSocketServer({ port: process.env.PORT ? Number(process.env.PORT) : 3000 })
+const wss = new WebSocketServer({ port: 3000 })
+const NODE_ENV = env.NODE_ENV
+
+if (NODE_ENV === 'development') {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+}
 
 wss.on('connection', (socket) => {
     socket.isAlive = true
@@ -15,7 +20,8 @@ setInterval(() => {
         if (!client.isAlive) {
             try {
                 client.terminate() 
-            } catch {} ; continue 
+            } catch {}
+            continue;
         }
         client.isAlive = false
         try {
@@ -25,8 +31,5 @@ setInterval(() => {
 }, 15000)
 
 process.on('SIGINT', () => {
-    try {
-        getTournamentManager().shutdown() 
-    } catch {}
     process.exit(0)
 })

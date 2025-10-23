@@ -1,4 +1,4 @@
-export default function handleRemoveBot(msg, socket) {
+export default function handleRemove(msg, socket) {
     const t = socket.__client?.tournament;
     if (!t) {
         return;
@@ -11,16 +11,11 @@ export default function handleRemoveBot(msg, socket) {
         return;
     }
 
-    const a = msg?.addr;
-    if (!a || (a.side !== 'left' && a.side !== 'right')) {
-        return;
-    }
-    if (a.pos !== 'top' && a.pos !== 'bottom') {
-        return;
-    }
-    if (typeof a.pair !== 'number' || a.pair < 0) {
+    const username = msg?.username;
+
+    if (typeof username !== 'string' || username.length === 0) {
         return;
     }
 
-    t.removeBotAt(a);
+    t.remove(username);
 }

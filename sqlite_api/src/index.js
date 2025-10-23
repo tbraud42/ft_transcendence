@@ -2,7 +2,7 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// import fastify
+// import fastify module
 import Fastify from 'fastify';
 import cors from '@fastify/cors'
 
@@ -17,12 +17,10 @@ import loginRoute from './routes/auth/login.js';
 import refreshRoute from './routes/auth/refreshAuth.js';
 import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
+import friendRoutes from './routes/client/userFriends.js';
 import tournamentRoute from './routes/matchs/tournaments.js';
-import tournamentClientRoute from './routes/matchs/tournamentsClient.js';
 import pingRoutes from './routes/ping.js';
 import statRoutes from './routes/stat.js';
-
-import bcrypt from 'bcrypt'; // tmp pour clean database
 
 const start = async () => {
   let fastify;
@@ -41,8 +39,8 @@ const start = async () => {
   await fastify.register(loginRoute, { prefix: '/auth/login' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(userRoutes, { prefix: '/user' });
+  await fastify.register(friendRoutes, { prefix: '/user/friends' });
   await fastify.register(tournamentRoute, { prefix: '/tournaments' });
-  await fastify.register(tournamentClientRoute, { prefix: '/tournaments' });
   await fastify.register(pingRoutes, { prefix: '/ping' });
   await fastify.register(statRoutes, { prefix: '/stat' });
 
@@ -56,6 +54,7 @@ const start = async () => {
           cb(null, true)
         } else {
           const allowedOrigins = [
+            `https://localhost`,
             `https://${process.env.DOMAIN}`,
             `https://www.${process.env.DOMAIN}`
           ]
@@ -75,15 +74,6 @@ const start = async () => {
     })
 
     fastify.listen({ port: PORT, host: ADDRESS });
-    //------insert admin-------
-    // const username = 'sylvie';
-    // const password = 'supersecurepassword';
-    // const password_hash = await bcrypt.hash(password, 10);
-    // const insertUser = fastify.db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)');
-    // const result = insertUser.run(username, password_hash, 'admin'); // insert admin, tmp
-
-    // -----crontab-------------
-    // fastify.db.prepare(`UPDATE users SET last_timestamp = datetime('now', '-2 years') WHERE username = ?`).run("bob"); // tmp pour test crontab
 
     if (fastify.isDev()) {
       console.log(`----------show time !----------\n`);
