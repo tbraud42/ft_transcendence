@@ -18,5 +18,6 @@ export async function getTournamentFromApi(token, id) {
         } catch {}
         throw new Error(`tournament_fetch_failed ${res.status} ${text}`)
     }
-    return res.json()
+    const data = await res.json()
+    return data.info.tournament
 }

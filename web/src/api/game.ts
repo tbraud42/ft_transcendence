@@ -20,7 +20,8 @@ export async function fetchTournaments(): Promise<any[]> {
         throw new Error(`Failed to fetch tournaments: ${res.status} ${err}`)
     }
 
-    return res.json()
+    const data = await res.json()
+    return data.info.tournament
 }
 
 export async function createTournament(
