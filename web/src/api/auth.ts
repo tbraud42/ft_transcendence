@@ -1,14 +1,23 @@
-import {env} from '../utils/env'
+// api/auth.ts
+
+// FIX TO COMPILE
+// src/pages/home.ts
+// import {refreshToken} from "../api/auth"; -> import { refreshToken } from "../api/jwt";
+// src/pages/pongMenu/tabs/online.ts
+// import {createTournament, fetchTournaments} from '../../../api/game' -> import {createTournament, fetchTournaments} from '../../../api/methode';
+
+import { env } from '../utils/env'
 import {
-    getLastTokenRefresh,
-    getTmpToken,
     getToken,
-    isLoggedIn,
-    logout,
-    removeItem,
+    getLastTokenRefresh,
     setToken,
-    TMP_TOKEN_KEY
+    logout,
+    login,
+    getUsername,
+    setUsername,
+    isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
 } from "../utils/storage";
+import { refreshToken } from './jwt';
 import i18n from "../utils/lang/i18n";
 
 const API_URL = env.API_URL
@@ -109,40 +118,6 @@ export async function updatePassword(current: string, newPass: string) {
     }
 }
 
-/**
- * Refresh the JWT token if it is older than the given tolerance (default: 30 minute)
- * @param tolerance Time in milliseconds (1800000 = 30 minutes, 0 = always refresh)
- * @returns The new token or null if the refresh failed
- */
-export async function refreshToken(tolerance: number = 1800000): Promise<string | null> {
-    if (Date.now() - getLastTokenRefresh() < tolerance) {
-        return getToken();
-    }
-
-    const url = `${API_URL}/auth/refreshAuth`;
-
-    const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
-        },
-    });
-
-    if (!res.ok) {
-        logout();
-        return null;
-    }
-
-    const data = await res.json();
-    if (!data?.token) {
-        logout();
-        return null;
-    }
-    setToken(data.token);
-    return data.token || null;
-}
-
 export const apiSignup = (name: string, password: string) =>
     requestAuth('signup', name, password)
 
@@ -166,6 +141,7 @@ export async function api2faSetup(): Promise<{ qrCode: string, secret: string, o
     }
     return await res.json()
 }
+
 
 export async function twofaVerify(code: string): Promise<boolean> {
     if (!code) {
