@@ -48,12 +48,14 @@ export async function createTournament(
             'Authorization': `Bearer ${getToken()}`
         },
         body: JSON.stringify(body)
-    }).then(res => {
+    }).then(async res => {
         if (!res.ok) {
             const err = res.text().catch(() => '')
             throw new Error(`Failed to create tournament: ${res.status} ${err}`)
         }
-        return res.json()
+        const data = await res.json()
+        console.log(data.info)
+        return data.info.tournament
     })
 }
 

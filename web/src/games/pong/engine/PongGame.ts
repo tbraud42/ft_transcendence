@@ -180,10 +180,10 @@ export class PongGame {
 
     private updateScore(left: number, right: number) {
         if (this.scoreLeftEl) {
-            this.scoreLeftEl.textContent = String(left)
+            this.scoreLeftEl.innerHTML = `${this.player1.getName()}<br>${left}`;
         }
         if (this.scoreRightEl) {
-            this.scoreRightEl.textContent = String(right)
+            this.scoreRightEl.innerHTML = `${this.player2.getName()}<br>${right}`;
         }
     }
 

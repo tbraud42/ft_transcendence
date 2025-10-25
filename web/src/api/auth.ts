@@ -48,6 +48,8 @@ async function requestAuth(
     }
 
     const data = await res.json()
+    const info = data.info
+
 
     if (res.status === 401 && endpoint === 'signup') {
         throw new Error(i18n.t('signup_error_username_taken'))
@@ -59,11 +61,11 @@ async function requestAuth(
         throw new Error(i18n.t('login_error_failed'))
     }
 
-    if (data.twofa_required) {
-        return { token: data.tmp_token, twofa_required: true }
+    if (info.twofa_required) {
+        return { token: info.tmp_token, twofa_required: true }
     }
 
-    return { token: data.token, twofa_required: false }
+    return { token: info.token, twofa_required: false }
 }
 
 export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: number, username: string } } | null> {
