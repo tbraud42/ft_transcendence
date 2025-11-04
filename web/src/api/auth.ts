@@ -1,14 +1,23 @@
-import {env} from '../utils/env'
+// api/auth.ts
+
+// FIX TO COMPILE
+// src/pages/home.ts
+// import {refreshToken} from "../api/auth"; -> import { refreshToken } from "../api/jwt";
+// src/pages/pongMenu/tabs/online.ts
+// import {createTournament, fetchTournaments} from '../../../api/game' -> import {createTournament, fetchTournaments} from '../../../api/methode';
+
+import { env } from '../utils/env'
 import {
-    getLastTokenRefresh,
-    getTmpToken,
     getToken,
-    isLoggedIn,
-    logout,
-    removeItem,
+    getLastTokenRefresh,
     setToken,
-    TMP_TOKEN_KEY
+    logout,
+    login,
+    getUsername,
+    setUsername,
+    isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
 } from "../utils/storage";
+import { refreshToken } from './jwt';
 import i18n from "../utils/lang/i18n";
 
 const API_URL = env.API_URL
@@ -41,31 +50,46 @@ async function requestAuth(
         throw new Error(msg);
     }
 
-    if (!res.ok) {
-        const errText = await res.text().catch(() => '')
-        console.error(`${endpoint} error:`, res.status, errText)
-        throw new Error(i18n.t('login_error_user_not_found'));
-    }
+    // if (!res.ok) {
+    //     const errText = await res.text().catch(() => '')
+    //     console.error(`${endpoint} error:`, res.status, errText)
+    //     throw new Error(i18n.t('login_error_user_not_found'));
+    // }
 
     const data = await res.json()
     const info = data.info
 
 
-    if (res.status === 401 && endpoint === 'signup') {
-        throw new Error(i18n.t('signup_error_username_taken'))
-    } else if (res.status === 404) {
-        throw new Error(i18n.t('login_error_user_not_found'))
+    if (data.error === true || !res.ok) {
+        switch (data.code) {
+            case "VALIDATION_MISSING_OR_INVALID_FIELD": // singup | login
+                throw new Error(i18n.t(''));
+                break;
+            case "USERNAME_ALREADY_USED":               // singup
+                throw new Error(i18n.t(''));
+                break;
+            case "INVALID_USERNAME_SUFFIX_42":          // singup
+                throw new Error(i18n.t(''));
+                break;
+            case "INVALID_PASSWORD_POLICY":             // singup
+                throw new Error(i18n.t(''));
+                break;
+            case "USER_NOT_FOUND":                      // login
+                throw new Error(i18n.t('login_error_user_not_found'));
+                break;
+            case "AUTH_INVALID_PASSWORD":               // login
+                throw new Error(i18n.t(''));
+                break;
+            default:
+                throw new Error("login error : ${data.code}");
+        }
     }
 
-    if (!res.ok) {
-        throw new Error(i18n.t('login_error_failed'))
+    if (data.info.twofa_required) {
+        return { token: data.info.tmp_token, twofa_required: true }
     }
 
-    if (info.twofa_required) {
-        return { token: info.tmp_token, twofa_required: true }
-    }
-
-    return { token: info.token, twofa_required: false }
+    return { token: data.info.token, twofa_required: false }
 }
 
 export async function request42Auth(code: string, state: string): Promise<{ token: string, user: { id: number, username: string } } | null> {
@@ -79,11 +103,28 @@ export async function request42Auth(code: string, state: string): Promise<{ toke
         headers: { 'Content-Type': 'application/json' }
     })
 
-    if (!res.ok) {
-        return null;
+    const data = await res.json()
+
+    if (data.error === true || !res.ok) {
+        switch (data.code) {
+            case "INVALID_CODE":
+                throw new Error(i18n.t(''));
+                break;
+            case "INVALID_STATE":
+                throw new Error(i18n.t(''));
+                break;
+            case "TOKEN_EXCHANGE_FAILED":
+                throw new Error(i18n.t(''));
+                break;
+            case "PROFILE_FETCH_FAILED":
+                throw new Error(i18n.t(''));
+                break;
+            default:
+                throw new Error("login error : ${data.code}");
+        }
     }
 
-    return await res.json()
+    return await data
 }
 
 export async function updatePassword(current: string, newPass: string) {
@@ -103,46 +144,29 @@ export async function updatePassword(current: string, newPass: string) {
         }),
     });
 
-    if (!res.ok) {
-        if (res.status === 401) {
-            throw new Error('incorrect_password');
+    const data = await res.json()
+
+    if (data.error === true || !res.ok) {
+        switch (data.code) {
+            case "AUTH_42_PASSWORD_CHANGE_FORBIDDEN":
+                throw new Error(i18n.t(''));
+                break;
+            case "VALIDATION_MISSING_OR_INVALID_CREDENTIALS":
+                throw new Error(i18n.t(''));
+                break;
+            case "AUTH_ACCESS_DENIED":
+                throw new Error(i18n.t(''));
+                break;
+            case "PASSWORD_CHANGE_REQUIRED":
+                throw new Error(i18n.t(''));
+                break;
+            case "INVALID_PASSWORD_POLICY":
+                throw new Error(i18n.t(''));
+                break;
+            default:
+                throw new Error("mismatch ${data.code}");
         }
-        throw new Error('mismatch');
     }
-}
-
-/**
- * Refresh the JWT token if it is older than the given tolerance (default: 30 minute)
- * @param tolerance Time in milliseconds (1800000 = 30 minutes, 0 = always refresh)
- * @returns The new token or null if the refresh failed
- */
-export async function refreshToken(tolerance: number = 1800000): Promise<string | null> {
-    if (Date.now() - getLastTokenRefresh() < tolerance) {
-        return getToken();
-    }
-
-    const url = `${API_URL}/auth/refreshAuth`;
-
-    const res = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
-        },
-    });
-
-    if (!res.ok) {
-        logout();
-        return null;
-    }
-
-    const data = await res.json();
-    if (!data?.token) {
-        logout();
-        return null;
-    }
-    setToken(data.token);
-    return data.token || null;
 }
 
 export const apiSignup = (name: string, password: string) =>
@@ -163,11 +187,24 @@ export async function api2faSetup(): Promise<{ qrCode: string, secret: string, o
         body: JSON.stringify({}),
     })
 
-    if (!res.ok) {
-        return null
+    const data = await res.json()
+
+    if (data.error === true || !res.ok) {
+        switch (data.code) {
+            case "TFA_NOT_ALLOWED_42":
+                throw new Error(i18n.t(''));
+                break;
+            case "TFA_ALREADY_ENABLED":
+                throw new Error(i18n.t(''));
+                break;
+            default:
+                throw new Error("setup faild ${data.code}");
+        }
     }
-    return await res.json()
+
+    return await data
 }
+
 
 export async function twofaVerify(code: string): Promise<boolean> {
     if (!code) {
@@ -194,11 +231,21 @@ export async function twofaVerify(code: string): Promise<boolean> {
         body: JSON.stringify({ code: code }),
     })
 
-    if (!res.ok) {
-        return false
+    const data = await res.json()
+    if (data.error === true || !res.ok) {
+        return false // tmp pour le code
+        switch (data.code) {
+            case "TFA_ALREADY_VERIFIED":
+                throw new Error(i18n.t(''));
+                break;
+            case "TFA_INVALID_CODE":
+                throw new Error(i18n.t(''));
+                break;
+            default:
+                throw new Error("verify faild ${data.code}");
+        }
     }
 
-    const data = await res.json()
     if (data?.token) {
         if (isTmpToken) {
             removeItem(TMP_TOKEN_KEY)

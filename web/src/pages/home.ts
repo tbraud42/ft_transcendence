@@ -1,6 +1,6 @@
 import i18n from '../utils/lang/i18n'
 import { renderPongMenu } from './pongMenu'
-import {refreshToken} from "../api/auth";
+import {refreshToken} from "../api/jwt";
 type SortKey = 'username' | 'wins' | 'gamesPlayed' | 'totalScore' | 'winStreak' | 'bestStreak' | 'winRate' | 'avgScore'
 type SortOrder = 'asc' | 'desc'
 interface LeaderEntry { username: string; wins: number; gamesPlayed: number; totalScore: number; winStreak: number; bestStreak: number }
@@ -140,7 +140,7 @@ function renderLeaderboard(): HTMLElement {
             if (key === currentSortKey) {
                 currentOrder = currentOrder === 'desc' ? 'asc' : 'desc'
             } else {
-                currentSortKey = key; currentOrder = 'desc' 
+                currentSortKey = key; currentOrder = 'desc'
             }
             renderRows()
         })

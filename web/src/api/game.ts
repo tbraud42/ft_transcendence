@@ -1,6 +1,6 @@
 import { env } from '../utils/env'
 import { getToken } from "../utils/storage";
-import {refreshToken} from "./auth";
+import { refreshToken } from "./jwt";
 
 const API_URL = env.API_URL
 
