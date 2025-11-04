@@ -73,6 +73,7 @@ export default async function (fastify, options) {
 
   fastify.post('/state/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tid = Number(req.params.id);
+    const status = req.body.status === undefined ? 0 : Number(req.body.status);
     if (!Number.isFinite(tid)) return reply.code(400).send({ error: true, code: 'TOURNAMENT_INVALID_ID', info: 'Invalid tournament id' });
 
     if (!await fastify.getTournamentById(fastify.db, tid)) {
@@ -82,7 +83,7 @@ export default async function (fastify, options) {
     const allowed = await fastify.isAdminOrCreator(fastify.db, tid, req.user.username);
     if (!allowed) return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
 
-    const info = fastify.changeTournamentStatus(fastify.db, tid);
+    const info = fastify.changeTournamentStatus(fastify.db, tid, status);
     return reply.send({ error: false, code: '', info: { info } });
   });
 

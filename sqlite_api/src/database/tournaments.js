@@ -110,6 +110,7 @@ export function changeTournamentStatus(db, id, nextStatus = null){
     const current = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(id);
     if (!current) return null;
     const newStatus = nextStatus ?? (current.status === 0 ? 1 : current.status === 1 ? 2 : 2);
+    if (newStatus !== 0 && newStatus !== 1 && newStatus !== 2) return null;
     const row = db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(newStatus, id);
     return row || null;
 };
