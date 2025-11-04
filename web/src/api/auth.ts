@@ -57,6 +57,8 @@ async function requestAuth(
     // }
 
     const data = await res.json()
+    const info = data.info
+
 
     if (data.error === true || !res.ok) {
         switch (data.code) {
