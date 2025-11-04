@@ -22,7 +22,7 @@ function notLoggedIn(main: HTMLElement, mainPage: string, subPage: string): void
         const state = params.get('state')
 
         if (code && state) {
-            request42Auth(code, state)
+            request42Auth(code, state) // mettre try and catch
                 .then((res) => {
                     if (!res || !res.token || !res.user || !res.user.username) {
                         navigateTo('/login')
@@ -51,7 +51,7 @@ export function router(): void {
 
     if (currentCleanup) {
         try {
-            currentCleanup() 
+            currentCleanup()
         } catch {}
         currentCleanup = null
     }

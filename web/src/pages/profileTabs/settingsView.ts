@@ -1,7 +1,7 @@
 import i18n from '../../utils/lang/i18n';
 import { createInput } from '../../components/input';
 import { createButton } from '../../components/button';
-import { updatePassword } from '../../api/auth';
+import { changeUserPass } from '../../api/methode';
 
 export function renderSettingsView(): HTMLElement {
     const wrapper = document.createElement('div');
@@ -41,18 +41,18 @@ export function renderSettingsView(): HTMLElement {
             message.textContent = i18n.t('settings_error_mismatch');
             return;
         }
-
         try {
-            await updatePassword(current, newPass);
+            await changeUserPass(current, newPass);
             message.textContent = i18n.t('settings_success_update');
             newPasswordInput.value = '';
             confirmNewPasswordInput.value = '';
             currentPasswordInput.value = '';
-        } catch (err: any) {
-            if (err.message === 'incorrect_password') {
+        } catch (err) {
+            if (err === 'incorrect_password') {
                 message.textContent = i18n.t('settings_error_incorrect_password');
             } else {
-                message.textContent = i18n.t('settings_error_mismatch');
+                console.log(err)
+                message.textContent = String(err);
             }
         }
     };

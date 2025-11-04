@@ -41,7 +41,14 @@ export function render2faView(): HTMLElement {
 
     btnSetup.onclick = async () => {
         setToast(status, 'info', i18n.t('2fa_generating'))
-        const data = await api2faSetup()
+        let data
+        try {
+            data = await api2faSetup()
+        } catch (err) {
+            // errorMsg.textContent = (err as Error).message
+            setToast(status, 'error', i18n.t('2fa_error_invalid')) // test
+        }
+        // const data = await api2faSetup()
         if (!data) {
             setToast(status, 'success', i18n.t('2fa_already_enabled'))
             return
@@ -65,7 +72,14 @@ export function render2faView(): HTMLElement {
             return
         }
         setToast(status, 'info', i18n.t('2fa_verifying'))
-        const ok = await twofaVerify(code)
+        let ok
+        try {
+            ok = await twofaVerify(code)
+        } catch (err) {
+            // errorMsg.textContent = (err as Error).message
+            setToast(status, 'error', i18n.t('2fa_error_invalid')) // test
+        }
+        // const ok = await twofaVerify(code)
         if (ok) {
             setToast(status, 'success', i18n.t('2fa_success_enabled'))
             codeInput.value = ''

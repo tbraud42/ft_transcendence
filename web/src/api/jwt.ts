@@ -18,7 +18,7 @@ const API_URL = env.API_URL;
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
   await refreshToken();
 
-  const url = `https://${API_URL}${path}`;
+  const url = `${API_URL}${path}`;
   const method = init.method ?? 'GET';
   const hasBody = init.json !== undefined;
 

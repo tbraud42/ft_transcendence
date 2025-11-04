@@ -233,7 +233,6 @@ export async function twofaVerify(code: string): Promise<boolean> {
 
     const data = await res.json()
     if (data.error === true || !res.ok) {
-        return false // tmp pour le code
         switch (data.code) {
             case "TFA_ALREADY_VERIFIED":
                 throw new Error(i18n.t(''));
