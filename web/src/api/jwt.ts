@@ -31,12 +31,12 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
       ...(hasBody ? { 'Content-Type': 'application/json' } : {})}
   });
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    throw new Error(`${res.status} ${errText || res.statusText}`);
-  }
+//   if (!res.ok) {
+//     const errText = await res.text().catch(() => '');
+//     throw new Error(`${res.status} ${errText || res.statusText}`);
+//   }
 
-  if (res.status === 204) return undefined as unknown as T;
+//   if (res.status === 204) return undefined as unknown as T;
   return res.json() as Promise<T>;
 }
 

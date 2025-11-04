@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS user_friends (
   user_id    INTEGER NOT NULL,
   friend_id  INTEGER NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  CHECK (user_id < friend_id),
   PRIMARY KEY (user_id, friend_id),
   FOREIGN KEY (user_id)   REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE

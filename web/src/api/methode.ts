@@ -3,6 +3,7 @@
 import { apiFetch } from "./jwt"
 import { ApiInit, Tournament, TournamentPayload } from "./types";
 import { Difficulty } from "../games/pong/pongState";
+import i18n from "../utils/lang/i18n";
 
 // -------------- User ---------------
 // | Method   | Function                   | Description                                 |
@@ -16,34 +17,100 @@ import { Difficulty } from "../games/pong/pongState";
 
 // GET
 export function userMe() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/me');
+  return apiFetch<{ error: boolean, code: string, info: string }>('/user/me')
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "USER_NOT_FOUND":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+    });
 }
 
 // GET
 export function getUserInfo(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}');
+  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}')
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "USER_INVALID_ID":
+            throw new Error(i18n.t(''));
+          case "USER_NOT_FOUND":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+    });
 }
 
 // PATCH
 export function changeUserPass(oldPassword: string, newPassword: string) {
   return apiFetch<{ error: boolean, code: string, info: string }>('/user/pass', { method: 'PATCH',
-     json: { oldPassword: oldPassword, newPassword: newPassword } });
+    json: { oldPassword: oldPassword, newPassword: newPassword } })
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "AUTH_42_PASSWORD_CHANGE_FORBIDDEN":
+            throw new Error(i18n.t(''));
+          case "VALIDATION_MISSING_OR_INVALID_CREDENTIALS":
+            throw new Error(i18n.t(''));
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+          case "PASSWORD_CHANGE_REQUIRED":
+            throw new Error(i18n.t(''));
+          case "INVALID_PASSWORD_POLICY":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+    });
 }
 
 // PATCH
 export function changeUserAvatar(newAvatar: string) {
   return apiFetch<{ error: boolean, code: string, info: string }>('/user/avatar', { method: 'PATCH',
-     json: {newAvatar: newAvatar}});
+    json: {newAvatar: newAvatar}})
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "VALIDATION_MISSING_OR_INVALID_AVATAR":
+            throw new Error(i18n.t(''));
+          case "AVATAR_TOO_LARGE":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+    });
 }
 
 // DELETE
 export function deleteUser(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}', { method: 'DELETE' });
+  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}', { method: 'DELETE' })
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // GET
 export function userTournament(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}/tournaments');
+  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}/tournaments')
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // -------------- Friend ---------------
@@ -63,12 +130,36 @@ export function getFriend(id: number) {
 
 // POST
 export function addFriend(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('`/user/friends/${id}', { method: 'POST'});
+  return apiFetch<{ error: boolean, code: string, info: string }>('`/user/friends/${id}', { method: 'POST'})
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "USER_INVALID_ID":
+            throw new Error(i18n.t(''));
+          case "USER_ALREADY_FRIEND":
+            throw new Error(i18n.t(''));
+          case "MAX_FRIEND_LIMIT":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // DELETE
 export function deleteFirend(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('`/user/friends/${id}', { method: 'DELETE' });
+  return apiFetch<{ error: boolean, code: string, info: string }>('`/user/friends/${id}', { method: 'DELETE' })
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "USER_INVALID_ID":
+            throw new Error(i18n.t(''));
+          case "USER_NOT_FRIENDS":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // -------------- Tournament ---------------
@@ -91,7 +182,16 @@ export function fetchTournaments() {
 
 // GET
 export async function fetchTournamentsId(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/${id}`);
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/${id}`)
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "TOURNAMENT_NOT_FOUND":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // GET
@@ -112,23 +212,71 @@ export function fetchTournamentsFinished() {
 // POST
 export function createTournament(name: string, difficulty: Difficulty, maxPlayer: 2 | 4 | 8) {
   return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments', { method: 'POST',
-  json: { name, description: '', difficulty, maxPlayer, isPrivate: false } });
+  json: { name, description: '', difficulty, maxPlayer, isPrivate: false } })
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "VALIDATION_MISSING_OR_INVALID_FIELD":
+            throw new Error(i18n.t(''));
+          case "TOURNAMENT_NAME_ALREADY_TAKEN":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // POST
 export function stateTournament(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/state/${id}', { method: 'POST'});
+  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/state/${id}', { method: 'POST'})
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "TOURNAMENT_NOT_FOUND":
+            throw new Error(i18n.t(''));
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // POST
 export function resulTournament(games: string, winner: string) {
   return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/result/${id}', { method: 'POST',
-  json: { games, winner } });
+  json: { games, winner } })
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "TOURNAMENT_NOT_FOUND":
+            throw new Error(i18n.t(''));
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+          case "TOURNAMENT_INVALID_FIELD":
+            throw new Error(i18n.t(''));
+          case "TOURNAMENT_INVALID_WINNER":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // DELETE
 export function deleteTournament(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/${id}`, { method: 'DELETE' });
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/${id}`, { method: 'DELETE' })
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "TOURNAMENT_NOT_FOUND":
+            throw new Error(i18n.t(''));
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // -------------- Stat ---------------
@@ -144,7 +292,16 @@ export function deleteTournament(id: number) {
 
 // GET
 export function getStatApi() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat');
+  return apiFetch<{ error: boolean, code: string, info: string }>('/stat')
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "AUTH_ACCESS_DENIED":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+  });
 }
 
 // GET
