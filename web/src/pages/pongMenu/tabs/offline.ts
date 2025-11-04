@@ -42,7 +42,7 @@ export function renderOfflineTab(): HTMLElement {
 
         setSecondPlayerName(secondPlayerName)
         setSelectedGameMode(GameMode.LOCAL)
-        setSelectedDifficulty(Difficulty[difficulty.getValue() as keyof typeof Difficulty])
+        setSelectedDifficulty(difficulty.getValue() as Difficulty)
         navigateTo('/pong/play')
     }
 

@@ -3,7 +3,7 @@ import {navigateTo, router} from '../utils/router'
 // @ts-ignore
 import profileIcon from '../img/profile-icon.svg'
 import { createButton } from './button'
-import {setLanguage, setTheme} from "../utils/storage";
+import {setLanguage} from "../utils/storage";
 
 export function createHeader(): HTMLElement {
     const header = document.createElement('header')
@@ -33,7 +33,6 @@ function createControls(): HTMLDivElement {
 
     wrapper.append(
         createLangSelect(),
-        createThemeToggle(),
         createProfileButton()
     )
     return wrapper
@@ -68,30 +67,6 @@ function createLangSelect(): HTMLSelectElement {
     }
 
     return select
-}
-
-function createThemeToggle(): HTMLButtonElement {
-    const btn = document.createElement('button')
-    btn.className =
-        'px-3 py-2 rounded-xl bg-gray-700 text-white text-sm hover:bg-gray-600 dark:hover:bg-gray-500 transition shadow-sm'
-
-    function updateThemeLabel() {
-        btn.textContent = isDark() ? '☀️' : '🌙'
-    }
-
-    function isDark(): boolean {
-        return document.documentElement.classList.contains('dark')
-    }
-
-    updateThemeLabel()
-
-    btn.onclick = () => {
-        document.documentElement.classList.toggle('dark')
-        setTheme(isDark() ? 'dark' : 'light')
-        updateThemeLabel()
-    }
-
-    return btn
 }
 
 function createProfileButton(): HTMLButtonElement {

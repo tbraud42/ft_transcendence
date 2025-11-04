@@ -1,7 +1,6 @@
 import i18n from '../../utils/lang/i18n'
 import { renderOnlineTab } from './tabs/online'
 import { renderOfflineTab } from './tabs/offline'
-import { renderAITab } from './tabs/ai'
 
 export type TabDef = { id: string; label: string; render: () => HTMLElement; accent: string }
 
@@ -24,7 +23,6 @@ export function buildPongTabs(root: HTMLElement, defaultTabId: string = 'offline
     const tabs: TabDef[] = [
         { id: 'offline', label: i18n.t('pong_tab_offline'), render: () => renderOfflineTab(), accent: 'bg-emerald-500' },
         { id: 'online',  label: i18n.t('pong_tab_online'),  render: () => renderOnlineTab(),  accent: 'bg-indigo-500' },
-        { id: 'ai',      label: i18n.t('pong_tab_ai'),      render: () => renderAITab(),      accent: 'bg-rose-500' },
     ]
 
     const updateTabs = () => {
