@@ -1,12 +1,10 @@
 import {navigateTo} from "./router";
-import {refreshToken} from "../api/auth";
 
 export const USERNAME_KEY = 'username'
 export const TMP_TOKEN_KEY = 'tmpToken'
 export const TOKEN_KEY = 'token'
 export const LAST_REFRESH_KEY = 'lastTokenRefresh'
 export const LANGUAGE_KEY = 'lang'
-export const THEME_KEY = 'theme'
 
 export function isLoggedIn(): boolean {
     return !!getToken();
@@ -62,14 +60,6 @@ export function setLanguage(lang: string): void {
 
 export function getLanguage(): string {
     return localStorage.getItem(LANGUAGE_KEY) || 'en'
-}
-
-export function setTheme(theme: string): void {
-    localStorage.setItem(THEME_KEY, theme)
-}
-
-export function getTheme(): string {
-    return localStorage.getItem(THEME_KEY) || ''
 }
 
 export function removeItem(key: string): void {
