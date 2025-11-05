@@ -97,10 +97,6 @@ export default async function (fastify, options) {
   fastify.get('/:id(\\d+)/tournaments', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
 
-    if (targetId !== req.user.id && req.user.role !== 'admin') {
-      return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
-    }
-
     return reply.send({ error: false, code: '', info: fastify.listUserRecentMatches(fastify.db, targetId)});
   });
 }

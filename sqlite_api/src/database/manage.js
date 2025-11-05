@@ -264,5 +264,9 @@ export function mapUserForPublic(user) {
     id: user.id,
     username: user.username,
     avatar: user.avatar ?? null,
+    created_at: user.created_at,
+    last_timestamp: user.last_timestamp,
+    total_seconds: user.total_seconds,
+    total_games: user.total_games,
   };
 }
