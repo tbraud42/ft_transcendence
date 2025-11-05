@@ -2,7 +2,8 @@ import i18n from '../utils/lang/i18n'
 import {navigateTo, router} from '../utils/router'
 // @ts-ignore
 import { createButton } from './button'
-import {getAvatar, setLanguage} from "../utils/storage";
+import {getAvatar, isLoggedIn, setLanguage} from "../utils/storage";
+import profileIcon from '../img/profile-icon.svg'
 
 export function createHeader(): HTMLElement {
     const header = document.createElement('header')
@@ -69,7 +70,10 @@ function createLangSelect(): HTMLSelectElement {
 }
 
 function createProfileButton(): HTMLButtonElement {
-    let avatar = getAvatar();
+    let avatar = profileIcon
+    if (isLoggedIn()) {
+        avatar = getAvatar();
+    }
 
     const btn = createButton('', 'button', 'black');
     btn.className = 'w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full transition';

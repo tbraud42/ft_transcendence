@@ -23,6 +23,7 @@ export function login(token: string, username: string): void {
 export function logout(): void {
     removeItem(USERNAME_KEY)
     removeItem(TOKEN_KEY)
+    removeItem(AVATAR_KEY)
     navigateTo('/')
 }
 

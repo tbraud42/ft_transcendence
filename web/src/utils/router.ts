@@ -71,19 +71,21 @@ export function router(): void {
     const main = document.createElement('main')
     main.className = 'flex-grow p-4'
 
-    const avatar = getAvatar()
-    if (avatar === '') {
-        setAvatar(profileIcon)
-        userMe().then((info) => {
-            if (info.info.avatar) {
-                setAvatar(info.info.avatar)
-                router()
-            }
-        }).catch(() => {})
-    }
     if (!isLoggedIn()) {
         notLoggedIn(main, mainPage, subPage)
     } else {
+
+        const avatar = getAvatar()
+        if (avatar === '') {
+            setAvatar(profileIcon)
+            userMe().then((info) => {
+                if (info.info.avatar) {
+                    setAvatar(info.info.avatar)
+                    router()
+                }
+            }).catch(() => {})
+        }
+
         switch (mainPage) {
         case 'pong': {
             if (subPage === 'play') {
