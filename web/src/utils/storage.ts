@@ -67,6 +67,7 @@ export function removeItem(key: string): void {
     localStorage.removeItem(key)
 }
 
+export function setAvatar(avatar: string): void {
     localStorage.setItem(AVATAR_KEY, avatar)
 }
 
