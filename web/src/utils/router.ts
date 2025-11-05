@@ -8,6 +8,7 @@ import { createFooter } from '../components/footer'
 import { env } from './env'
 import { renderAuth } from '../pages/auth'
 import { request42Auth } from '../api/auth'
+import {renderStats} from "../pages/stats";
 
 const PONG_WS_URL = env.PONG_WS_URL
 
@@ -88,6 +89,11 @@ export function router(): void {
 
         case 'profile': {
             main.appendChild(renderProfile(subPage))
+            break
+        }
+
+        case 'stats': {
+            main.appendChild(renderStats(subPage))
             break
         }
 

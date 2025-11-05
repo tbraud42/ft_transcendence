@@ -13,7 +13,7 @@ export default async function handleJoin(msg, socket) {
     const maxPlayers = Number(msg.maxPlayers || 2)
 
     const tournamentManager = getTournamentManager()
-    const tournament = await tournamentManager.getOrCreate(client.token, { id, name, maxPlayers, creator: { id: client.id, username: client.getUsername() } })
+    const tournament = await tournamentManager.getOrCreate({ id, name, maxPlayers, creator: { id: client.id, username: client.getUsername() } })
 
     if (!client.attachToTournament(tournament)) {
         client.send({ type: SrvMessageType.GAME_FULL, tournamentId: tournament.id });

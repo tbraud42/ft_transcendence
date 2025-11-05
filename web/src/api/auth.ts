@@ -57,7 +57,7 @@ async function requestAuth(
                 throw new Error(i18n.t(''));
                 break;
             case "USER_NOT_FOUND":                      // login
-                throw new Error(i18n.t('login_error_user_not_found'));
+                throw new Error(i18n.t('user_not_found'));
                 break;
             case "AUTH_INVALID_PASSWORD":               // login
                 throw new Error(i18n.t(''));

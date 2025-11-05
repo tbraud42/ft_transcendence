@@ -7,7 +7,7 @@ const API_URL = env.API_URL
 export async function fetchTournaments(): Promise<any[]> {
     await refreshToken();
 
-    const url = `${API_URL}/tournaments`
+    const url = `${API_URL}/tournaments/waitting`
 
     const res = await fetch(url, {
         headers: {
