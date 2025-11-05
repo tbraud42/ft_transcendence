@@ -1,9 +1,14 @@
-import profileIcon from '../img/profile-icon.svg'
+// src/pages/stats.ts
 import i18n from '../utils/lang/i18n'
-import { userInfoById, getDashboard, userTournament, userInfoByUsername } from '../api/methode'
+import {userInfoById, getDashboard, userTournament, userInfoByUsername, changeUserAvatar} from '../api/methode'
 import { renderPieWinRate } from '../components/charts/PieWinRate'
 import { renderLineMatchesOverTime } from '../components/charts/LineMatchesOverTime'
 import { renderBarScores } from '../components/charts/BarScores'
+import {getAvatar, getUsername, setAvatar} from '../utils/storage'
+import profileIcon from '../img/profile-icon.svg'
+import {fileToBase64} from "../utils/files";
+import {createOverlayCard} from "../components/overlayCard";
+import {router} from "../utils/router";
 
 type GamesInfo = {
     id: number
@@ -132,13 +137,35 @@ export function renderStats(userName: string): HTMLElement {
                     const db = settledValue<Dashboard>(results[1])?.info as Dashboard | undefined
                     const rows = settledValue<TournamentRow[]>(results[2])?.info as TournamentRow[] | undefined
 
-                    const avatarUrl = gi?.avatar && gi.avatar.trim() !== '' ? gi.avatar : profileIcon
-                    const avatarImg = document.createElement('img')
-                    avatarImg.src = avatarUrl
-                    avatarImg.alt = gi?.username || 'User'
-                    avatarImg.className = 'w-24 h-24 rounded-full mx-auto mb-4 object-cover border border-white/20'
-                    userContent.replaceChildren(avatarImg)
+                    const isSelf = userName === getUsername()
+                    const avatar = gi?.avatar && gi.avatar.trim() !== '' ? gi.avatar : (isSelf ? getAvatar() : profileIcon)
 
+                    const avatarEl = createEditableAvatar(
+                        avatar,
+                        gi?.username || 'User',
+                        isSelf,
+                        async (file) => {
+
+                            const base64 = await fileToBase64(file);
+
+                            if (base64.length > 1_398_102) {
+                                createOverlayCard({
+                                    title: "File to large",
+                                    text: "The selected image exceeds the maximum size of 1.33 MB. Please choose a smaller image."
+                                });
+                            } else {
+                                changeUserAvatar(base64).then(() => {})
+                                setAvatar(base64)
+
+                                const img = avatarEl.querySelector('img') as HTMLImageElement | null
+                                if (img) {
+                                    img.src = base64
+                                }
+                            }
+                        }
+                    )
+
+                    userContent.replaceChildren(avatarEl)
                     userContent.append(
                         row('Username', gi?.username ?? '-'),
                         row('Registered', fmtDateTime(gi?.created_at)),
@@ -158,6 +185,7 @@ export function renderStats(userName: string): HTMLElement {
                     )
 
                     renderPieWinRate(pieHost, { wins, losses })
+
                     const sorted = (rows ?? []).slice().sort(
                         (a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime()
                     )
@@ -217,50 +245,118 @@ export function renderStats(userName: string): HTMLElement {
     return page
 }
 
-/** Create a div element with class */
+/** Create an editable avatar element (hover "Modifier", click to upload) */
+function createEditableAvatar(
+    url: string,
+    altText: string,
+    editable: boolean,
+    onUpload: (file: File) => Promise<void>
+): HTMLElement {
+    const wrap = div('relative w-24 h-24 mx-auto mb-4')
+    const img = document.createElement('img')
+    img.src = url || profileIcon
+    img.alt = altText
+    img.className = 'w-24 h-24 rounded-full object-cover border border-white/20 block'
+    wrap.appendChild(img)
+
+    if (!editable) return wrap
+
+    wrap.classList.add('group', 'cursor-pointer')
+    const overlay = div(
+        'absolute inset-0 rounded-full bg-black/40 text-white text-xs flex items-center justify-center opacity-0 ' +
+        'transition-opacity group-hover:opacity-100 select-none'
+    )
+    overlay.textContent = i18n.t('edit') || 'Modifier'
+    wrap.appendChild(overlay)
+
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.className = 'hidden'
+    wrap.appendChild(input)
+
+    wrap.addEventListener('click', () => input.click())
+    input.addEventListener('change', async () => {
+        const file = input.files?.[0]
+        if (!file) return
+        overlay.textContent = i18n.t('uploading') || 'Uploading...'
+        try {
+            await onUpload(file)
+        } catch (e) {
+            console.error(e)
+            overlay.textContent = i18n.t('upload_failed') || 'Upload failed'
+            setTimeout(() => { overlay.textContent = i18n.t('edit') || 'Modifier' }, 1500)
+            return
+        }
+        overlay.textContent = i18n.t('edit') || 'Modifier'
+    })
+
+    return wrap
+}
+
+/** DOM helpers + formatters */
+
 function div(cls: string) {
     const d = document.createElement('div')
     d.className = cls
     return d
 }
 
-/** Create an HTML element with optional text */
-function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, txt?: string) {
+function h<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    cls: string,
+    txt?: string
+) {
     const n = document.createElement(tag)
     n.className = cls
     if (txt) n.textContent = txt
     return n
 }
 
-/** Create section title */
 function sectionTitle(text: string) {
-    return h('h3', 'text-lg font-semibold text-center text-gray-800 dark:text-white mb-2', text)
+    return h(
+        'h3',
+        'text-lg font-semibold text-center text-gray-800 dark:text-white mb-2',
+        text
+    )
 }
 
-/** Create card container */
 function card() {
-    return div('rounded-2xl border border-black/10 dark:border-white/10 bg-white/20 dark:bg-white/5 p-4 backdrop-blur')
+    return div(
+        'rounded-2xl border border-black/10 dark:border-white/10 ' +
+        'bg-white/20 dark:bg-white/5 p-4 backdrop-blur'
+    )
 }
 
-/** Create a row with label and value */
 function row(label: string, value: string) {
     const wrap = div('flex items-center justify-between gap-4')
-    const l = h('span', 'text-sm text-black/60 dark:text-white/70', label)
-    const v = h('span', 'text-sm font-medium text-black dark:text-white', value || '-')
+
+    const l = h(
+        'span',
+        'text-sm text-black/60 dark:text-white/70',
+        label
+    )
+
+    const v = h(
+        'span',
+        'text-sm font-medium text-black dark:text-white',
+        value || '-'
+    )
+
     wrap.append(l, v)
     return wrap
 }
 
-/** Create metric bubble */
 function metricBubble(label: string, value: string, extraCls = '') {
     const box = div('rounded-xl border p-4 text-center ' + extraCls)
+
     const v = h('div', 'text-2xl font-bold', value)
     const l = h('div', 'text-xs mt-1 opacity-70', label)
+
     box.append(v, l)
     return box
 }
 
-/** Create a table cell */
 function td(text: string, cls: string) {
     const cell = document.createElement('td')
     cell.className = cls
@@ -268,19 +364,18 @@ function td(text: string, cls: string) {
     return cell
 }
 
-/** Placeholder for user rows */
 function placeholderRows() {
     const s = div('space-y-2')
-    for (let i = 0; i < 3; i++) s.appendChild(div('h-5 rounded bg-white/40 dark:bg-white/10 animate-pulse'))
+    for (let i = 0; i < 3; i++) {
+        s.appendChild(div('h-5 rounded bg-white/40 dark:bg-white/10 animate-pulse'))
+    }
     return s
 }
 
-/** Placeholder for metrics */
 function placeholderMetric() {
     return div('h-20 rounded-xl border border-white/10 bg-white/10 animate-pulse')
 }
 
-/** Format date-time */
 function fmtDateTime(v?: string | null) {
     if (!v) return '-'
     const d = new Date(v)
@@ -288,14 +383,12 @@ function fmtDateTime(v?: string | null) {
     return d.toLocaleString()
 }
 
-/** Short date */
 function shortDate(v: string) {
     const d = new Date(v)
     if (isNaN(+d)) return '-'
     return d.toLocaleDateString()
 }
 
-/** Short date-time */
 function shortDateTime(v: string) {
     const d = new Date(v)
     if (isNaN(+d)) return '-'
@@ -304,12 +397,10 @@ function shortDateTime(v: string) {
     return `${date} ${time}`
 }
 
-/** Clamp between 0 and 1 */
 function clamp01(x: number) {
     return Math.max(0, Math.min(1, x))
 }
 
-/** Extract value from settled promise */
 function settledValue<T>(p: PromiseSettledResult<any>): T | undefined {
     return p.status === 'fulfilled' ? (p.value as T) : undefined
 }

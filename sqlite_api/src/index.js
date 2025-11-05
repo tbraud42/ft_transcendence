@@ -24,11 +24,12 @@ import statRoutes from './routes/stat.js';
 
 const start = async () => {
   let fastify;
+  const fastifyOptions = {bodyLimit: 3 * 1024 * 1024};
   if (process.env.NODE_ENV === 'development') {
-    fastify = Fastify({ logger: true });
-  } else {
-    fastify = Fastify();
+    fastifyOptions.logger = true;
   }
+
+  fastify = Fastify(fastifyOptions);
 
   loadDecorate(fastify);
 
@@ -70,7 +71,7 @@ const start = async () => {
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
       preflightContinue: false,
-      optionsSuccessStatus: 204
+      optionsSuccessStatus: 204,
     })
 
     fastify.listen({ port: PORT, host: ADDRESS });

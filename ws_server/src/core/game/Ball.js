@@ -16,10 +16,18 @@ export class Ball {
         this.speed = Math.hypot(this.vx, this.vy);
     }
 
-    getX() { return this.x; }
-    getY() { return this.y; }
-    getRadius() { return this.radius; }
-    getVelocity() { return { vx: this.vx, vy: this.vy }; }
+    getX() {
+        return this.x; 
+    }
+    getY() {
+        return this.y; 
+    }
+    getRadius() {
+        return this.radius; 
+    }
+    getVelocity() {
+        return { vx: this.vx, vy: this.vy }; 
+    }
 
     tick(player1, player2) {
         this.x += this.vx;

@@ -1,4 +1,4 @@
-import { getToken, isLoggedIn, login } from './storage'
+import {getAvatar, getToken, isLoggedIn, login, setAvatar} from './storage'
 import { renderHome } from '../pages/home'
 import { renderProfile } from '../pages/profile'
 import { renderPongPlay } from '../pages/pongPlay'
@@ -9,6 +9,8 @@ import { env } from './env'
 import { renderAuth } from '../pages/auth'
 import { request42Auth } from '../api/auth'
 import {renderStats} from "../pages/stats";
+import {userMe} from "../api/methode";
+import profileIcon from '../img/profile-icon.svg'
 
 const PONG_WS_URL = env.PONG_WS_URL
 
@@ -69,6 +71,16 @@ export function router(): void {
     const main = document.createElement('main')
     main.className = 'flex-grow p-4'
 
+    const avatar = getAvatar()
+    if (avatar === '') {
+        setAvatar(profileIcon)
+        userMe().then((info) => {
+            if (info.info.avatar) {
+                setAvatar(info.info.avatar)
+                router()
+            }
+        }).catch(() => {})
+    }
     if (!isLoggedIn()) {
         notLoggedIn(main, mainPage, subPage)
     } else {

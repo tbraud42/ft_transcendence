@@ -5,6 +5,7 @@ export const TMP_TOKEN_KEY = 'tmpToken'
 export const TOKEN_KEY = 'token'
 export const LAST_REFRESH_KEY = 'lastTokenRefresh'
 export const LANGUAGE_KEY = 'lang'
+export const AVATAR_KEY = 'avatar'
 
 export function isLoggedIn(): boolean {
     return !!getToken();
@@ -64,6 +65,13 @@ export function getLanguage(): string {
 
 export function removeItem(key: string): void {
     localStorage.removeItem(key)
+}
+
+    localStorage.setItem(AVATAR_KEY, avatar)
+}
+
+export function getAvatar(): string {
+    return localStorage.getItem(AVATAR_KEY) || ''
 }
 
 export function clearStorage(): void {
