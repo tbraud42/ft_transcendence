@@ -17,7 +17,7 @@ import i18n from "../utils/lang/i18n";
 
 // GET
 export function userMe() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/me')
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/me`)
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -29,9 +29,9 @@ export function userMe() {
     });
 }
 
-// GET
-export function getUserInfo(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}')
+// POST
+export function userInfoById(id: number) {
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/${id}`, { method: 'POST'})
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -45,9 +45,27 @@ export function getUserInfo(id: number) {
     });
 }
 
+// POST
+export function userInfoByUsername(username: string) {
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/username`,{ method: 'POST',
+    json: { username: username }})
+    .then(data => {
+      if (data.error === true) {
+        switch (data.code) {
+          case "USER_INVALID_ID":
+            throw new Error(i18n.t(''));
+          case "USER_NOT_FOUND":
+            throw new Error(i18n.t(''));
+        }
+      }
+      return data;
+    });
+}
+
+
 // PATCH
 export function changeUserPass(oldPassword: string, newPassword: string) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/pass', { method: 'PATCH',
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/pass`, { method: 'PATCH',
     json: { oldPassword: oldPassword, newPassword: newPassword } })
     .then(data => {
       if (data.error === true) {
@@ -70,7 +88,7 @@ export function changeUserPass(oldPassword: string, newPassword: string) {
 
 // PATCH
 export function changeUserAvatar(newAvatar: string) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/avatar', { method: 'PATCH',
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/avatar`, { method: 'PATCH',
     json: {newAvatar: newAvatar}})
     .then(data => {
       if (data.error === true) {
@@ -87,7 +105,7 @@ export function changeUserAvatar(newAvatar: string) {
 
 // DELETE
 export function deleteUser(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}', { method: 'DELETE' })
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/${id}`, { method: 'DELETE' })
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -101,7 +119,7 @@ export function deleteUser(id: number) {
 
 // GET
 export function userTournament(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/${id}/tournaments')
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/${id}/tournaments`)
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -125,12 +143,12 @@ export function userTournament(id: number) {
 
 // GET
 export function getFriend(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/user/friends');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/friends`);
 }
 
 // POST
 export function addFriend(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('`/user/friends/${id}', { method: 'POST'})
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/friends/${id}`, { method: 'POST'})
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -148,7 +166,7 @@ export function addFriend(id: number) {
 
 // DELETE
 export function deleteFirend(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('`/user/friends/${id}', { method: 'DELETE' })
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/friends/${id}`, { method: 'DELETE' })
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -177,7 +195,7 @@ export function deleteFirend(id: number) {
 
 // GET
 export function fetchTournaments() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments`);
 }
 
 // GET
@@ -196,22 +214,22 @@ export async function fetchTournamentsId(id: number) {
 
 // GET
 export function fetchTournamentsWaitting() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/waitting');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/waitting`);
 }
 
 // GET
 export function fetchTournamentsPlaying() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/playing');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/playing`);
 }
 
 // GET
 export function fetchTournamentsFinished() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/finished');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/finished`);
 }
 
 // POST
 export function createTournament(name: string, difficulty: Difficulty, maxPlayer: 2 | 4 | 8) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments', { method: 'POST',
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments`, { method: 'POST',
   json: { name, description: '', difficulty, maxPlayer, isPrivate: false } })
     .then(data => {
       if (data.error === true) {
@@ -228,7 +246,7 @@ export function createTournament(name: string, difficulty: Difficulty, maxPlayer
 
 // POST
 export function stateTournament(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/state/${id}', { method: 'POST'})
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/state/${id}`, { method: 'POST'})
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -243,8 +261,8 @@ export function stateTournament(id: number) {
 }
 
 // POST
-export function resulTournament(games: string, winner: string) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/tournaments/result/${id}', { method: 'POST',
+export function resulTournament(id:number, games: string, winner: string) {
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/tournaments/result/${id}`, { method: 'POST',
   json: { games, winner } })
     .then(data => {
       if (data.error === true) {
@@ -292,7 +310,7 @@ export function deleteTournament(id: number) {
 
 // GET
 export function getStatApi() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat')
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat`)
     .then(data => {
       if (data.error === true) {
         switch (data.code) {
@@ -306,30 +324,30 @@ export function getStatApi() {
 
 // GET
 export function getDashboard(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat/dashboard/${id}');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/${id}`);
 }
 
 // GET
 export function getDashboardWin() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat/dashboard/perWin');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perWin`);
 }
 
 // GET
 export function getDashboardLose() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat/dashboard/perLose');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perLose`);
 }
 
 // GET
 export function getDashboardTime() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat/dashboard/perTime');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perTime`);
 }
 
 // GET
 export function getDashboardCreat() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat/dashboard/perCrea');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perCrea`);
 }
 
 // GET
 export function getDashboardTWin() {
-  return apiFetch<{ error: boolean, code: string, info: string }>('/stat/dashboard/perTWin');
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perTWin`);
 }

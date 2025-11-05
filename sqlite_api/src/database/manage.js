@@ -98,7 +98,6 @@ export function isAdminOrCreator(db, tournamentId, username) {
   const tid = Number(tournamentId);
 
   const user = String(username || '').trim();
-  // const user = username;
 
   const result = db.prepare(`
     SELECT u.role, t.creator

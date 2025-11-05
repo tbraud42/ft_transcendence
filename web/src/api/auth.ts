@@ -38,24 +38,6 @@ async function requestAuth(
         body: JSON.stringify({ username, password }),
     })
 
-    if (res.status === 429) {
-        let msg = 'Too many attempts. Please try again later.';
-        try {
-            const j = await res.json();
-            if (j?.message) {
-                msg = j.message;
-            }
-        } catch {}
-        alert(msg);
-        throw new Error(msg);
-    }
-
-    // if (!res.ok) {
-    //     const errText = await res.text().catch(() => '')
-    //     console.error(`${endpoint} error:`, res.status, errText)
-    //     throw new Error(i18n.t('login_error_user_not_found'));
-    // }
-
     const data = await res.json()
     const info = data.info
 
@@ -108,16 +90,16 @@ export async function request42Auth(code: string, state: string): Promise<{ toke
     if (data.error === true || !res.ok) {
         switch (data.code) {
             case "INVALID_CODE":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('INVALID_CODE'));
                 break;
             case "INVALID_STATE":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('INVALID_STATE'));
                 break;
             case "TOKEN_EXCHANGE_FAILED":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('TOKEN_EXCHANGE_FAILED'));
                 break;
             case "PROFILE_FETCH_FAILED":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('PROFILE_FETCH_FAILED'));
                 break;
             default:
                 throw new Error("login error : ${data.code}");
