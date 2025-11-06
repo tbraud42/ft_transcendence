@@ -1,9 +1,9 @@
 import i18n from '../utils/lang/i18n'
 import {navigateTo, router} from '../utils/router'
 // @ts-ignore
-import profileIcon from '../img/profile-icon.svg'
 import { createButton } from './button'
-import {setLanguage} from "../utils/storage";
+import {getAvatar, isLoggedIn, setLanguage} from "../utils/storage";
+import profileIcon from '../img/profile-icon.svg'
 
 export function createHeader(): HTMLElement {
     const header = document.createElement('header')
@@ -70,22 +70,32 @@ function createLangSelect(): HTMLSelectElement {
 }
 
 function createProfileButton(): HTMLButtonElement {
-    const btn = createButton('', 'button', 'black')
-    btn.className = 'w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full transition'
-
-    const icon = document.createElement('img')
-    icon.src = profileIcon
-    icon.alt = 'Profile Icon'
-    icon.className = 'w-5 h-5'
-
-    btn.appendChild(icon)
-    btn.title = i18n.t('header_profile')
-
-    btn.onclick = () => {
-        const currentPath = window.location.pathname
-        navigateTo(currentPath === '/profile' ? '/home' : '/profile')
-        router()
+    let avatar = profileIcon
+    if (isLoggedIn()) {
+        avatar = getAvatar();
     }
 
-    return btn
+    const btn = createButton('', 'button', 'black');
+    btn.className = 'w-9 h-9 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded-full transition';
+
+    const icon = document.createElement('img');
+    icon.src = avatar;
+    icon.alt = 'Profile Icon';
+
+    if (avatar.startsWith('data:image/')) {
+        icon.className = 'w-9 h-9 object-cover rounded-full';
+    } else {
+        icon.className = 'w-5 h-5';
+    }
+
+    btn.appendChild(icon);
+    btn.title = i18n.t('header_profile');
+
+    btn.onclick = () => {
+        const currentPath = window.location.pathname;
+        navigateTo(currentPath === '/profile' ? '/home' : '/profile');
+        router();
+    };
+
+    return btn;
 }

@@ -92,7 +92,7 @@ export default async function (fastify, options) {
 
   fastify.patch('/avatar', {preHandler: [fastify.auth]}, async (req, reply) => {
     const body = req.body ?? {};
-    const newAvatar = typeof body.avatar === 'string' ? body.avatar.trim() : '';
+    const newAvatar = typeof body.newAvatar === 'string' ? body.newAvatar.trim() : '';
 
     if (!newAvatar) {
       return reply.code(400).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_AVATAR', info: 'Missing or invalid field [avatar]' });

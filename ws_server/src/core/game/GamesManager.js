@@ -7,8 +7,7 @@ class TournamentManager {
         this.tournaments = new Map()
     }
 
-    // token: JWT du client ; params: { id }
-    async getOrCreate(token, { id, name, maxPlayers, creator }) {
+    async getOrCreate({ id, name, maxPlayers, creator }) {
         const key = String(id)
         if (this.tournaments.has(key)) {
             const tournament = this.tournaments.get(key);
@@ -20,7 +19,7 @@ class TournamentManager {
 
         let difficulty = "medium"
         try {
-            const data = await getTournamentFromApi(token, key)
+            const data = await getTournamentFromApi(creator, key)
             if (data?.name) {
                 name = String(data.name)
             }
