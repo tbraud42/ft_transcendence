@@ -73,7 +73,8 @@ export default async function (fastify, options) {
 
   fastify.post('/state/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tid = Number(req.params.id);
-    const status = req.body.status === undefined ? 0 : Number(req.body.status);
+    const body = req.body ?? {};
+    const status = body.status === undefined ? 0 : Number(body.status);
     if (!Number.isFinite(tid)) return reply.code(400).send({ error: true, code: 'TOURNAMENT_INVALID_ID', info: 'Invalid tournament id' });
 
     if (!await fastify.getTournamentById(fastify.db, tid)) {
