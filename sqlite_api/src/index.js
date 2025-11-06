@@ -78,13 +78,24 @@ const start = async () => {
 
     if (fastify.isDev()) {
       console.log(`----------show time !----------\n`);
-      await fastify.showAllData(fastify.db);
+      await showAllData(fastify.db);
     }
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
 };
+
+function showAllData(db) {
+  const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
+
+  for (const { name } of tables) {
+    console.log(`\nTable: ${name}`);
+    const result = db.prepare(`SELECT * FROM ${name}`).all();
+    if (result.length === 0) console.log('empty db');
+    else for (const row of result) console.log(row);
+  }
+}
 
 start();
 

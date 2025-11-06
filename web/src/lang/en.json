@@ -57,7 +57,7 @@
   "lb_col_user": "Username",
   "lb_col_wins": "Wins",
   "lb_col_losses": "Losses",
-  "lb_col_games": "Games",
+  "lb_col_tWon": "tour. gagné",
   "lb_col_winrate": "Winrate",
   "lb_col_time": "Time play (s)",
   "lb_col_create": "Tour. create",
@@ -116,5 +116,6 @@
   "stats_result_loss": "Loss",
   "stats_no_recent": "No recent matches.",
   "stats_service_unavailable": "Service unavailable",
-  "unknown_error": "Unknown error"
+  "unknown_error": "Unknown error",
+  "not_available_yet": "Coming soon"
 }

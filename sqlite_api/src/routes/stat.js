@@ -1,13 +1,14 @@
 // routes/stat.js
-// | Method   | Route                      | Description                             | Access       |
-// | -------- | -------------------------- | --------------------------------------- | ------------ |
-// | `GET`    | `/stat`                    | show api's stats                        | Admin        |
-// | `GET`    | `/stat/dashboard/:id`      | show user(id) stats for dashboard       | Admin + self |
-// | `GET`    | `/stat/dashboard/perWin`   | show stats  dashboard per win           | Authenticate |
-// | `GET`    | `/stat/dashboard/perLose`  | show stats dashboard per lose           | Authenticate |
-// | `GET`    | `/stat/dashboard/perTime`  | show stats dashboard per time           | Authenticate |
-// | `GET`    | `/stat/dashboard/perCreat` | show stats dashboard per creat          | Authenticate |
-// | `GET`    | `/stat/dashboard/perTWin`  | show stats dashboard per tournament win | Authenticate |
+// | Method   | Route                        | Description                             | Access       |
+// | -------- | ---------------------------- | --------------------------------------- | ------------ |
+// | `GET`    | `/stat`                      | show api's stats                        | Admin        |
+// | `GET`    | `/stat/dashboard/:id`        | show user(id) stats for dashboard       | Admin + self |
+// | `GET`    | `/stat/dashboard/perWin`     | show stats  dashboard per win           | Authenticate |
+// | `GET`    | `/stat/dashboard/perLose`    | show stats dashboard per lose           | Authenticate |
+// | `GET`    | `/stat/dashboard/perTWon`    | show stats dashboard per tournament win | Authenticate |
+// | `GET`    | `/stat/dashboard/perWinRate` | show stats dashboard per win rate       | Authenticate |
+// | `GET`    | `/stat/dashboard/perTime`    | show stats dashboard per time           | Authenticate |
+// | `GET`    | `/stat/dashboard/perCreat`   | show stats dashboard per creat          | Authenticate |
 
 export default async function (fastify, opts) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
@@ -28,24 +29,29 @@ export default async function (fastify, opts) {
   });
 
   fastify.get('/dashboard/perWin', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send({ error: false, code: '', info: fastify.topWinRate(fastify.db) });
+    return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'wins', limit: 10 }) });
   });
 
   fastify.get('/dashboard/perLose', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send({ error: false, code: '', info: fastify.topLoseRate(fastify.db) });
+    return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'losses', limit: 10 }) });
+  });
+
+  fastify.get('/dashboard/perTWon', { preHandler: [fastify.auth] }, async (req, reply) => {
+    return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'tWon', limit: 10 }) });
+  });
+
+  fastify.get('/dashboard/perWinRate', { preHandler: [fastify.auth] }, async (req, reply) => {
+    return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'winRate', limit: 10 }) });
   });
 
   fastify.get('/dashboard/perTime', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send({ error: false, code: '', info: fastify.topTotalPlayTime(fastify.db) });
+    return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'time', limit: 10 }) });
   });
 
   fastify.get('/dashboard/perCreat', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send({ error: false, code: '', info: fastify.topTournamentsCreated(fastify.db) });
+    return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'create', limit: 10 }) });
   });
 
-  fastify.get('/dashboard/perTWin', { preHandler: [fastify.auth] }, async (req, reply) => {
-    return reply.send({ error: false, code: '', info: fastify.topTournamentsWon(fastify.db) });
-  });
 }
 
 // | Error                       | Code                    |

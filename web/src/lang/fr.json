@@ -57,7 +57,7 @@
   "lb_col_user": "Nom",
   "lb_col_wins": "Victoires",
   "lb_col_losses": "Défaites",
-  "lb_col_games": "Parties",
+  "lb_col_tWon": "tour. won",
   "lb_col_winrate": "Taux de victoire",
   "lb_col_time": "Temps joué (s)",
   "lb_col_create": "Tour. créé",
@@ -116,5 +116,6 @@
   "stats_result_loss": "Défaite",
   "stats_no_recent": "Aucun match récent.",
   "stats_service_unavailable": "Service indisponible",
-  "unknown_error": "Erreur inconnue"
+  "unknown_error": "Erreur inconnue",
+  "not_available_yet": "Disponible prochainement"
 }
