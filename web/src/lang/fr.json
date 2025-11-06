@@ -46,6 +46,7 @@
   "2fa_copy_failed": "Échec de la copie.",
   "2fa_generating": "Génération de votre code QR…",
   "2fa_code_required": "Veuillez entrer votre code à 6 chiffres.",
+  "2fa_code_invalid": "Code invalide.",
   "2fa_verifying": "Vérification…",
   "pong_menu_title": "Pong",
   "pong_tab_offline": "Local",

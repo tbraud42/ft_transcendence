@@ -1,7 +1,7 @@
 import {createButton} from "../../components/button";
 import i18n from "../../utils/lang/i18n";
 import {createInput} from "../../components/input";
-import {api2faSetup, twofaVerify} from "../../api/auth";
+import {api2faSetup, twofaActivate, twofaVerify} from "../../api/auth";
 import {setToast} from "../../components/toast";
 
 export function render2faView(): HTMLElement {
@@ -41,24 +41,22 @@ export function render2faView(): HTMLElement {
 
     btnSetup.onclick = async () => {
         setToast(status, 'info', i18n.t('2fa_generating'))
-        let data
+        let qrcode
+        let secret
         try {
-            data = await api2faSetup()
+            const result = await api2faSetup()
+            qrcode = result?.info?.qrCode
+            secret = result?.info?.secret
         } catch (err) {
-            // errorMsg.textContent = (err as Error).message
-            setToast(status, 'error', i18n.t('2fa_error_invalid')) // test
-        }
-        // const data = await api2faSetup()
-        if (!data) {
             setToast(status, 'success', i18n.t('2fa_already_enabled'))
             return
         }
-        if (data.qrCode) {
-            qrImg.src = data.qrCode
+        if (qrcode) {
+            qrImg.src = qrcode
             qrImg.classList.remove('hidden')
         }
-        secretInput.value = data.secret || ''
-        copyBtn.disabled = !data.secret
+        secretInput.value = secret || ''
+        copyBtn.disabled = false
         secretWrap.classList.remove('hidden')
         form.classList.remove('hidden')
         setToast(status, 'info', i18n.t('2fa_scan_qr'))
@@ -67,20 +65,19 @@ export function render2faView(): HTMLElement {
     form.onsubmit = async (e) => {
         e.preventDefault()
         const code = codeInput.value.trim()
-        if (!code) {
+        if (!code || code.length === 0) {
             setToast(status, 'error', i18n.t('2fa_code_required'))
             return
         }
         setToast(status, 'info', i18n.t('2fa_verifying'))
-        let ok
+        let error
         try {
-            ok = await twofaVerify(code)
+            error = await twofaActivate(code)
         } catch (err) {
-            // errorMsg.textContent = (err as Error).message
-            setToast(status, 'error', i18n.t('2fa_error_invalid')) // test
+            setToast(status, 'error', i18n.t('2fa_error_invalid'))
+            return
         }
-        // const ok = await twofaVerify(code)
-        if (ok) {
+        if (!error) {
             setToast(status, 'success', i18n.t('2fa_success_enabled'))
             codeInput.value = ''
             hideSetupUI()
@@ -114,6 +111,7 @@ async function copy(text: string, status: HTMLParagraphElement) {
         return
     }
     try {
+
         await navigator.clipboard.writeText(text)
         setToast(status, 'success', i18n.t('2fa_copied'))
     } catch {

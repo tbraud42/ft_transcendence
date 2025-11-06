@@ -184,7 +184,7 @@ export async function api2faSetup(): Promise<{ qrCode: string, secret: string, o
         }
     }
 
-    return await data
+    return data
 }
 
 
@@ -210,7 +210,7 @@ export async function twofaVerify(code: string): Promise<boolean> {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ code: code }),
+        body: JSON.stringify({ token: code }),
     })
 
     const data = await res.json()
@@ -227,11 +227,46 @@ export async function twofaVerify(code: string): Promise<boolean> {
         }
     }
 
-    if (data?.token) {
+    if (data?.info?.token) {
         if (isTmpToken) {
             removeItem(TMP_TOKEN_KEY)
         }
         setToken(data.token)
+        return true
+    }
+    return false
+}
+
+export async function twofaActivate(code: string): Promise<boolean> {
+    if (!code) {
+        return false
+    }
+
+    const url = `${API_URL}/auth/2fa/activate`
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ token: code }),
+    })
+
+    const data = await res.json()
+    if (data.error === true || !res.ok) {
+        switch (data.code) {
+            case "TFA_ALREADY_DISABLED":
+                throw new Error(i18n.t('2fa_error_invalid'));
+                break;
+            case "TFA_INVALID_CODE":
+                throw new Error(i18n.t(''));
+                break;
+            default:
+                throw new Error("activate faild ${data.code}");
+        }
+    }
+
+    if (data?.success) {
         return true
     }
     return false

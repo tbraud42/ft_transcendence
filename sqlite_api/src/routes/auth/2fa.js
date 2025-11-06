@@ -26,7 +26,7 @@ export default async function (fastify, options) {
 
     const qrDataUrl = await qrcode.toDataURL(secret.otpauth_url);
 
-    return reply.send({ error: false, code: '', info: { qrCode: qrDataUrl } });
+    return reply.send({ error: false, code: '', info: { qrCode: qrDataUrl, secret: secret.base32 } });
   });
 
   fastify.post('/activate', {preHandler: [fastify.auth]}, async (req, reply) => {
