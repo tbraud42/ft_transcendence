@@ -69,22 +69,3 @@ export function buildLevels(stage: HTMLElement, perSide: number) {
 
     return { L, R, finalBox, g }
 }
-
-/* ---------- ui helpers ---------- */
-
-function button(label: string, cls: string) {
-    const b = document.createElement('button')
-    b.type = 'button'
-    b.textContent = label
-    b.className = cls + ' focus:outline-none transition'
-    return b
-}
-
-function mount(el: HTMLElement, btn: HTMLButtonElement) {
-    el.style.display = 'flex'
-    el.style.alignItems = 'center'
-    el.style.justifyContent = 'center'
-    el.style.gap = '8px'
-    btn.setAttribute('data-b', '1')
-    el.appendChild(btn)
-}

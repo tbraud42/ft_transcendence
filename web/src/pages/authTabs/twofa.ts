@@ -35,8 +35,8 @@ export function renderTwofaTab(): HTMLElement {
             return
         }
         errorMsg.textContent = ''
-        twofaVerify(code).then((success) => {
-            if (success) {
+        twofaVerify(code).then((succes) => {
+            if (succes) {
                 navigateTo('/home')
             } else {
                 errorMsg.textContent = i18n.t('2fa_code_invalid')

@@ -111,7 +111,7 @@ export function loadDecorate(fastify) {
   cron.schedule('0 0 0 * * *', () => { crontab(fastify) }, { timezone: 'Europe/Paris' });
 
   fastify.register(rateLimit, {
-    max: 100,
+    max: 1000,
     timeWindow: '1 minute'
   });
 }

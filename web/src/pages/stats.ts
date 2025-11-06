@@ -6,9 +6,8 @@ import { renderLineMatchesOverTime } from '../components/charts/LineMatchesOverT
 import { renderBarScores } from '../components/charts/BarScores'
 import {getAvatar, getUsername, setAvatar} from '../utils/storage'
 import profileIcon from '../img/profile-icon.svg'
-import {fileToBase64} from "../utils/files";
+import {byteSizeToHumanReadable, fileToBase64} from "../utils/files";
 import {createOverlayCard} from "../components/overlayCard";
-import {router} from "../utils/router";
 
 type GamesInfo = {
     id: number
@@ -149,10 +148,11 @@ export function renderStats(userName: string): HTMLElement {
                             const base64 = await fileToBase64(file);
 
                             if (base64.length > 1_398_102) {
-                                createOverlayCard({
-                                    title: "File to large",
-                                    text: "The selected image exceeds the maximum size of 1.33 MB. Please choose a smaller image."
+                                const overlay = createOverlayCard({
+                                    title: i18n.t('error_file_too_large'),
+                                    text: i18n.t('error_file_exceeded_limit', { size: byteSizeToHumanReadable(1_398_102) }),
                                 });
+                                document.body.appendChild(overlay.element);
                             } else {
                                 changeUserAvatar(base64).then(() => {})
                                 setAvatar(base64)
