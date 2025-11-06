@@ -116,5 +116,7 @@
   "stats_result_loss": "Défaite",
   "stats_no_recent": "Aucun match récent.",
   "stats_service_unavailable": "Service indisponible",
-  "unknown_error": "Erreur inconnue"
+  "unknown_error": "Erreur inconnue",
+  "error_file_too_large": "Fichier trop volumineux",
+  "error_file_exceeded_limit": "La taille du fichier dépasse la limite autorisée de {{size}} Mo. Veuillez choisir un fichier plus petit."
 }

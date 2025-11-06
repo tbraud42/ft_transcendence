@@ -116,5 +116,7 @@
   "stats_result_loss": "Loss",
   "stats_no_recent": "No recent matches.",
   "stats_service_unavailable": "Service unavailable",
-  "unknown_error": "Unknown error"
+  "unknown_error": "Unknown error",
+  "error_file_too_large": "File to large",
+  "error_file_exceeded_limit": "The selected image exceeds the maximum size of {{size}} MB. Please choose a smaller file."
 }
