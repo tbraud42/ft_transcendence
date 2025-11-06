@@ -193,10 +193,7 @@ function getDbCache(db) {
   return map;
 }
 
-export function topBy(db, {
-  orderKey,
-  limit = 10
-}) {
+export function topBy(db, { orderKey, limit = 10 }) {
   const col = ORDER_MAP[orderKey];
   if (!col) throw new Error('Invalid order key');
 
@@ -210,11 +207,10 @@ export function topBy(db, {
     cache.set(sql, request);
   }
 
-  const l = Math.max(1, Math.min(100, Number(limit) || 10));
+  const l = Math.max(1, Math.min(100, Number(limit)));
 
   return request.all({ limit: l, minGames: 0 });
 }
-
 
 export function listUserRecentMatches(db, userId, limit = 20) {
   const uid = Number(userId);
@@ -257,5 +253,5 @@ export function validateGameRow(row) {
     ok: errors.length === 0,
     errors,
     normalized: { game_num, p1, p2, s1, s2, dur, startedAt, winner: winnerUsername }
-};
+  };
 }

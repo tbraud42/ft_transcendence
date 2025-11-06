@@ -20,15 +20,15 @@ export const user_stat = `
       GROUP BY creator
     )
     SELECT
-      u.id                AS userId,
-      u.username          AS username,
-      COALESCE(p.wins, 0)   AS wins,
-      COALESCE(p.losses, 0) AS losses,
-      u.total_games         AS games,
+      u.id                     AS userId,
+      u.username               AS username,
+      COALESCE(p.wins, 0)      AS wins,
+      COALESCE(p.losses, 0)    AS losses,
+      u.total_games            AS games,
       CASE WHEN u.total_games > 0
            THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END       AS winRate,
-      u.total_seconds       AS time,
+           ELSE 0 END          AS winRate,
+      u.total_seconds          AS time,
       COALESCE(tc."create", 0) AS "create"
     FROM users u
     LEFT JOIN p  ON p.username  = u.username
@@ -53,8 +53,6 @@ export const recent_matches = `
     WHERE g.player1 = ? OR g.player2 = ?
     ORDER BY g.started_at DESC, g.id DESC
     LIMIT ?`;
-
-
 
 export const dashboard_stat = `
     WITH p AS (
@@ -84,20 +82,20 @@ export const dashboard_stat = `
       GROUP BY winner
     )
     SELECT
-      u.id                   AS userId,
-      u.username             AS username,
-      COALESCE(p.wins, 0)    AS wins,
-      COALESCE(p.losses, 0)  AS losses,
-      u.total_games          AS games,
+      u.id                    AS userId,
+      u.username              AS username,
+      COALESCE(p.wins, 0)     AS wins,
+      COALESCE(p.losses, 0)   AS losses,
+      u.total_games           AS games,
       CASE
         WHEN (COALESCE(p.wins,0) + COALESCE(p.losses,0)) > 0
           THEN CAST(COALESCE(p.wins,0) AS REAL)
               / (COALESCE(p.wins,0) + COALESCE(p.losses,0))
         ELSE 0
-      END                    AS winRate,
-      u.total_seconds        AS time,
+      END                     AS winRate,
+      u.total_seconds         AS time,
       COALESCE(tc."create",0) AS "create",
-      COALESCE(tw.tWon, 0)     AS tWon
+      COALESCE(tw.tWon, 0)    AS tWon
     FROM users u
     LEFT JOIN p  ON p.username  = u.username
     LEFT JOIN tc ON tc.username = u.username

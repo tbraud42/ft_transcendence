@@ -162,7 +162,7 @@ function renderLeaderboard(): HTMLElement {
   })
   thead.appendChild(headRow)
 
-  renderEmptyRow(tbody, headers.length, i18n.t('not_available_yet') || 'Data not available yet')
+  renderEmptyRow(tbody, headers.length, i18n.t('not_available_yet'))
 
   table.append(thead, tbody)
   tableScroll.appendChild(table)
@@ -213,19 +213,19 @@ function renderLeaderboard(): HTMLElement {
 
       const fn = fetchers[currentKey as StatKey]
       if (!fn) {
-        renderEmptyRow(tbody, headers.length, i18n.t('not_available_yet') || 'Data not available yet')
+        renderEmptyRow(tbody, headers.length, i18n.t('not_available_yet'))
         return
       }
 
       const data = await fn()
 
       if (!data || data.length === 0) {
-        renderEmptyRow(tbody, headers.length, i18n.t('no_data') || 'No data')
+        renderEmptyRow(tbody, headers.length,i18n.t('not_available_yet'))
       } else {
         tbody.replaceChildren(rowsFrom(data))
       }
     } catch (_e) {
-      renderEmptyRow(tbody, headers.length, i18n.t('not_available_yet') || 'Data not available yet')
+      renderEmptyRow(tbody, headers.length, i18n.t('not_available_yet'))
     } finally {
       updateHeaderIndicators()
     }

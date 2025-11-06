@@ -3,7 +3,7 @@
 // | -------- | ---------------------------- | --------------------------------------- | ------------ |
 // | `GET`    | `/stat`                      | show api's stats                        | Admin        |
 // | `GET`    | `/stat/dashboard/:id`        | show user(id) stats for dashboard       | Admin + self |
-// | `GET`    | `/stat/dashboard/perWin`     | show stats  dashboard per win           | Authenticate |
+// | `GET`    | `/stat/dashboard/perWin`     | show stats dashboard per win            | Authenticate |
 // | `GET`    | `/stat/dashboard/perLose`    | show stats dashboard per lose           | Authenticate |
 // | `GET`    | `/stat/dashboard/perTWon`    | show stats dashboard per tournament win | Authenticate |
 // | `GET`    | `/stat/dashboard/perWinRate` | show stats dashboard per win rate       | Authenticate |
@@ -51,7 +51,6 @@ export default async function (fastify, opts) {
   fastify.get('/dashboard/perCreat', { preHandler: [fastify.auth] }, async (req, reply) => {
     return reply.send({ error: false, code: '', info: fastify.topBy(fastify.db, { orderKey: 'create', limit: 10 }) });
   });
-
 }
 
 // | Error                       | Code                    |

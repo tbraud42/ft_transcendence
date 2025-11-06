@@ -13,6 +13,7 @@ import {
   addFriend,
   removeFriend,
   listFriends,
+  pendingFriends,
   mapUserForSelfOrAdmin,
   mapUserForPublic,
   crontab
@@ -73,6 +74,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('addFriend', addFriend);
   fastify.decorate('removeFriend', removeFriend);
   fastify.decorate('listFriends', listFriends);
+  fastify.decorate('pendingFriends', pendingFriends);
   fastify.decorate('mapUserForSelfOrAdmin', mapUserForSelfOrAdmin);
   fastify.decorate('mapUserForPublic', mapUserForPublic);
 
