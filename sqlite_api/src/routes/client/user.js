@@ -34,17 +34,13 @@ export default async function (fastify, options) {
       return reply.send({ error: false, code: '', info: fastify.mapUserForSelfOrAdmin(user) });
     }
 
-    return reply.send({ error: false, code: '', info: fastify.mapUserForPublic(user) });
+    return reply.send({ error: false, code: '', info: fastify.mapUserForPublic(fastify.db, user, req.user.id) });
   });
 
   fastify.post('/username', { preHandler: [fastify.auth] }, async (req, reply) => {
     const body = req.body ?? {};
     const username = typeof body.username === 'string' ? body.username.trim() : '';
 
-    console.log(body)
-
-    console.log("lalalalallalalalalla")
-    console.log(username)
     const user = await fastify.showUserByUsername(fastify.db, username);
     if (!user) return reply.code(404).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found' });
 
@@ -55,7 +51,7 @@ export default async function (fastify, options) {
       return reply.send({ error: false, code: '', info: fastify.mapUserForSelfOrAdmin(user) });
     }
 
-    return reply.send({ error: false, code: '', info: fastify.mapUserForPublic(user) });
+    return reply.send({ error: false, code: '', info: fastify.mapUserForPublic(fastify.db, user, req.user.id) });
   });
 
   fastify.patch('/pass', {preHandler: [fastify.auth]}, async (req, reply) => {

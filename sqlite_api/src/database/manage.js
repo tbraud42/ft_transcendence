@@ -130,7 +130,12 @@ export function mapUserForSelfOrAdmin(user) {
   };
 }
 
-export function mapUserForPublic(user) {
+export function mapUserForPublic(db, user, requestUser) {
+
+  let isFriend = false;
+  if (db.prepare(`SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?`).get(requestUser, user.id))
+      isFriend = true;
+
   return {
     id: user.id,
     username: user.username,
@@ -139,6 +144,7 @@ export function mapUserForPublic(user) {
     last_timestamp: user.last_timestamp,
     total_seconds: user.total_seconds,
     total_games: user.total_games,
+    follow: isFriend,
   };
 }
 
@@ -156,7 +162,7 @@ export function addFriend(db, userId, friendId) {
   if (!exists) return { error: true, msg: 'unknowUser' };
 
   const already = db.prepare(`SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?`).get(u, f);
-  if (already) return { error: true, msg: 'alreadyFollowing' };
+  if (already) return { error: true, msg: 'alreadyFriend' };
 
   try {
     db.prepare(`INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)`).run(u, f);
@@ -196,24 +202,35 @@ export function listFriends(db, userId, minutes = 5) {
   return db.prepare(sql).all(`-${minutes} minutes`, uid);
 }
 
-
-export function pendingFriends(db, userId) {
+export function pendingFriends(db, userId, minutes = 5) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return [];
 
   const sql = `
-    SELECT u.id, u.username
+    SELECT
+      u.id,
+      u.username,
+      CASE
+        WHEN u.last_timestamp IS NULL THEN 0
+        WHEN u.last_timestamp >= datetime('now', ?) THEN 1
+        ELSE 0
+      END AS online,
+      CAST(strftime('%s','now') - strftime('%s', COALESCE(u.last_timestamp, '1970-01-01')) AS INTEGER)
+        AS last_seen_seconds
     FROM user_friends f
     JOIN users u ON u.id = f.user_id
-    WHERE f.friend_id = @userId
+    WHERE f.friend_id = ?
       AND NOT EXISTS (
-        SELECT 1 FROM user_friends f2
-        WHERE f2.user_id = @userId
+        SELECT 1
+        FROM user_friends f2
+        WHERE f2.user_id = ?
           AND f2.friend_id = f.user_id
-      )`;
+      )
+    ORDER BY u.username COLLATE NOCASE`;
 
-  return db.prepare(sql).all({ userId });
+  return db.prepare(sql).all(`-${minutes} minutes`, uid, uid);
 }
+
 
 
 /* -------------------- Tournaments -------------------- */
