@@ -22,10 +22,6 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   const method = init.method ?? 'GET';
   const hasBody = init.json !== undefined;
 
-  console.log("ici")
-  console.log(url)
-  console.log(method)
-  console.log(init.json)
   const res = await fetch(url, {
     ...init,
     method,

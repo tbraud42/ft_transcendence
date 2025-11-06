@@ -36,7 +36,6 @@ export function renderTwofaTab(): HTMLElement {
         }
         errorMsg.textContent = ''
         twofaVerify(code).then((succes) => {
-            console.log(succes)
             if (succes) {
                 navigateTo('/home')
             } else {

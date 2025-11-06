@@ -3,6 +3,8 @@
 // | -------- | ------------------ | --------------------------- | ---------------- |
 // | `POST`   | `/auth/2fa/setup`  | create QR code auth         | Authenticated    |
 // | `POST`   | `/auth/2fa/verif`  | generate JWT after auth     | Authenticated    |
+// | `POST`   | `/auth/2fa/disable`| disable 2FA                 | Authenticated    |
+// | `POST`   | `/auth/2fa/activate`| activate 2FA               | Authenticated    |
 
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
@@ -79,6 +81,28 @@ export default async function (fastify, options) {
 
     return reply.code(401).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
   });
+
+    fastify.post('/disable', {preHandler: [fastify.auth]}, async (req, reply) => {
+        if (!req.user.is_twofa_enabled) {
+            return reply.code(403).send({ error: true, code: 'TFA_ALREADY_DISABLED', info: '2FA disabled' });
+        }
+
+        const body = req.body ?? {};
+        const token = typeof body.token === 'string' ? body.token.trim() : typeof body.token === 'number' ? Number(body.token) : '';
+
+        const isValid = speakeasy.totp.verify({
+            secret: req.user.twofa_secret,
+            encoding: 'base32',
+            token: token
+        });
+
+        if (isValid) {
+            await fastify.db.prepare('UPDATE users SET is_twofa_enabled = 0, twofa_secret = null WHERE id = ?').run(req.user.id);
+            return reply.send({ error: false, code: '', info: {} });
+        }
+
+        return reply.code(401).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
+    });
 }
 
 // | Error                       | Code                    |

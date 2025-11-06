@@ -174,10 +174,10 @@ export async function api2faSetup(): Promise<{ qrCode: string, secret: string, o
     if (data.error === true || !res.ok) {
         switch (data.code) {
             case "TFA_NOT_ALLOWED_42":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('2fa_not_allowed_for_ft'));
                 break;
             case "TFA_ALREADY_ENABLED":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('2fa_already_enabled'));
                 break;
             default:
                 throw new Error("setup faild ${data.code}");
@@ -217,10 +217,10 @@ export async function twofaVerify(code: string): Promise<boolean> {
     if (data.error === true || !res.ok) {
         switch (data.code) {
             case "TFA_ALREADY_VERIFIED":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('2fa_already_enabled'));
                 break;
             case "TFA_INVALID_CODE":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('2fa_code_invalid'));
                 break;
             default:
                 throw new Error("verify faild ${data.code}");
@@ -231,7 +231,7 @@ export async function twofaVerify(code: string): Promise<boolean> {
         if (isTmpToken) {
             removeItem(TMP_TOKEN_KEY)
         }
-        setToken(data.token)
+        setToken(data?.info?.token)
         return true
     }
     return false
@@ -255,11 +255,46 @@ export async function twofaActivate(code: string): Promise<boolean> {
     const data = await res.json()
     if (data.error === true || !res.ok) {
         switch (data.code) {
+            case "TFA_ALREADY_ENABLED":
+                throw new Error(i18n.t('2fa_error_invalid'));
+                break;
+            case "TFA_INVALID_CODE":
+                throw new Error(i18n.t('2fa_code_invalid'));
+                break;
+            default:
+                throw new Error("activate faild ${data.code}");
+        }
+    }
+
+    if (data?.success) {
+        return true
+    }
+    return false
+}
+
+export async function twofaDisable(code: string): Promise<boolean> {
+    if (!code) {
+        return false
+    }
+
+    const url = `${API_URL}/auth/2fa/disable`
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ token: code }),
+    })
+
+    const data = await res.json()
+    if (data.error === true || !res.ok) {
+        switch (data.code) {
             case "TFA_ALREADY_DISABLED":
                 throw new Error(i18n.t('2fa_error_invalid'));
                 break;
             case "TFA_INVALID_CODE":
-                throw new Error(i18n.t(''));
+                throw new Error(i18n.t('2fa_code_invalid'));
                 break;
             default:
                 throw new Error("activate faild ${data.code}");
