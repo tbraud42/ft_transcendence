@@ -24,7 +24,10 @@ After that, you can access the application at `http://localhost`.
 
 ## How to run in development mode
 
-NOTE: load pages to accept https certificate in your browser.
+NOTE: load pages to accept https certificate in your browser:
+ - DOMAIN_NAME
+ - api.DOMAIN_NAME
+ - pong.ws.DOMAIN_NAME
 
 ## How to use Javascript/Typescript formatting
 

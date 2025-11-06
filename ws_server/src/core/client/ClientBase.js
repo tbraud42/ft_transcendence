@@ -118,14 +118,7 @@ export class ClientBase {
      * Mark the client as disconnected and trigger a snapshot.
      */
     onDisconnect() {
-        this.ready = false;
-        this.connected = false;
-        if (this.tournament) {
-            this.tournament.broadcastSnapshot();
-        }
-        if (this.room && this.room.started) {
-            this.room.removePlayer(this.getUsername());
-        }
+        this.tournament.remove(this.username);
     }
 
     /**

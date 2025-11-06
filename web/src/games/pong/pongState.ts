@@ -1,5 +1,4 @@
 export enum GameMode {
-    AI = 'ai',
     LOCAL = 'local',
     ONLINE = 'online',
 }
@@ -11,8 +10,8 @@ export enum Difficulty {
 }
 
 export let roomId: number | null = null
-export let selectedDifficulty: Difficulty = Difficulty.MEDIUM
-export let selectedGameMode: GameMode = GameMode.AI
+export let selectedDifficulty: Difficulty = Difficulty.EASY
+export let selectedGameMode: GameMode = GameMode.LOCAL
 export let maxPlayers: number = 2
 export let isPrivate: boolean = false
 export let secondPlayerName: string | null = null

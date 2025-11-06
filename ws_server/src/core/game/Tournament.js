@@ -1,6 +1,10 @@
 import { MatchStatus, SrvMessageType } from '../client/protocol.js';
 import { Room } from './Room.js';
 import { Bot } from '../client/Bot.js';
+import {
+    saveTournamentResult,
+    updateTournamentState
+} from "../../api/game.js";
 
 export class Tournament {
     /**
@@ -46,7 +50,9 @@ export class Tournament {
         }
 
         this.broadcastSnapshot();
-        // TODO: set game full on api
+        if (this.isFull()) {
+            updateTournamentState(this.creator, this.id, 1).then();
+        }
         return true;
     }
 
@@ -81,8 +87,10 @@ export class Tournament {
         bot.attachToRoom(room);
         bot.setReady(true);
 
-        // TODO: set game full on api
         this.broadcastSnapshot();
+        if (this.isFull()) {
+            updateTournamentState(this.creator, this.id, 1).then();
+        }
     }
 
     /**
@@ -93,6 +101,10 @@ export class Tournament {
         const client = this.getPlayerByUsername(username);
         if (!client) {
             return;
+        }
+
+        if (this.isFull()) {
+            updateTournamentState(this.creator, this.id, 0).then();
         }
 
         client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
@@ -115,7 +127,31 @@ export class Tournament {
         room.removePlayer(loser.getUsername());
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
-        // TODO: process end of tournament if last match
+        if (this.isEnded()) {
+            updateTournamentState(this.creator, this.id, 2).then();
+            saveTournamentResult(this).then();
+        }
+    }
+
+    /**
+     * Check if the tournament ended (all match rooms finished).
+     */
+    isEnded() {
+        for (const roundMap of this.rooms.values()) {
+            for (const room of roundMap.values()) {
+                if (!room.ended) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Check if the tournament is full
+     */
+    isFull() {
+        return this.maxPlayers <= this.participants.size;
     }
 
     /* ======================= Snapshot ======================= */
@@ -202,6 +238,65 @@ export class Tournament {
      */
     getRoom(r, i) {
         return this.rooms.get(r)?.get(i) || null;
+    }
+
+    convertTournamentToResult() {
+        let result = {
+            name: this.name,
+            description: this.description,
+            difficulty: this.difficulty,
+            maxPlayer: this.maxPlayers,
+            winner: this.getWinner()
+        };
+
+        result.participants = [];
+        for (const [username, participant] of this.participants) {
+            result.participants.push({
+                id: participant.id,
+                username: username,
+            });
+        }
+
+        result.games = [];
+        for (const [round, roundMap] of this.rooms) {
+            for (const [index, room] of roundMap) {
+
+                const p1_username = room.p1?.getUsername?.() ?? null;
+                const p2_username = room.p2?.getUsername?.() ?? null;
+                const p1_score = room.winnerUsername === p1_username ? room.winnerScore : room.loserScore;
+                const p2_score = room.winnerUsername === p2_username ? room.winnerScore : room.loserScore;
+
+                result.games.push({
+                    game_num: this.id.charAt(0),
+                    winner: room.winnerUsername,
+                    p1: p1_username,
+                    p2: p2_username,
+                    p1_score: p1_score,
+                    p2_score: p2_score,
+                    duration_sec: room.totalTime / 1000,
+                    started_at: new Date(room.startTime).toISOString(), //TODO: check format
+                });
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Get winner from the final room. Returns null if tournament not ended.
+     */
+    getWinner() {
+        if (!this.isEnded()) {
+            return null;
+        }
+
+        const finalRound = this.rooms.size;
+        const finalRoom = this.getRoom(finalRound, 1);
+        if (!finalRoom || !finalRoom.winnerUsername) {
+            return null;
+        }
+
+        return finalRoom.winnerUsername;
     }
 
     /**

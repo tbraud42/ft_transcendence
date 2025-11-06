@@ -1,12 +1,11 @@
 import {navigateTo} from "./router";
-import {refreshToken} from "../api/auth";
 
 export const USERNAME_KEY = 'username'
 export const TMP_TOKEN_KEY = 'tmpToken'
 export const TOKEN_KEY = 'token'
 export const LAST_REFRESH_KEY = 'lastTokenRefresh'
 export const LANGUAGE_KEY = 'lang'
-export const THEME_KEY = 'theme'
+export const AVATAR_KEY = 'avatar'
 
 export function isLoggedIn(): boolean {
     return !!getToken();
@@ -24,6 +23,7 @@ export function login(token: string, username: string): void {
 export function logout(): void {
     removeItem(USERNAME_KEY)
     removeItem(TOKEN_KEY)
+    removeItem(AVATAR_KEY)
     navigateTo('/')
 }
 
@@ -64,16 +64,16 @@ export function getLanguage(): string {
     return localStorage.getItem(LANGUAGE_KEY) || 'en'
 }
 
-export function setTheme(theme: string): void {
-    localStorage.setItem(THEME_KEY, theme)
-}
-
-export function getTheme(): string {
-    return localStorage.getItem(THEME_KEY) || ''
-}
-
 export function removeItem(key: string): void {
     localStorage.removeItem(key)
+}
+
+export function setAvatar(avatar: string): void {
+    localStorage.setItem(AVATAR_KEY, avatar)
+}
+
+export function getAvatar(): string {
+    return localStorage.getItem(AVATAR_KEY) || ''
 }
 
 export function clearStorage(): void {

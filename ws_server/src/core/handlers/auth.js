@@ -1,7 +1,8 @@
 import jwt from 'jsonwebtoken'
 import {getClientManager} from "../game/GamesManager.js";
+import {env} from "../../utils/env.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_key'
+const JWT_SECRET = env.JWT_SECRET
 
 // { 0, token: '' }
 

@@ -1,185 +1,87 @@
-import { DEFAULT_BALL_RADIUS, PongGame } from '../games/pong/engine/PongGame'
-import i18n from '../utils/lang/i18n'
-import { createButton } from '../components/button'
-import { GameMode, secondPlayerName, selectedDifficulty, selectedGameMode } from '../games/pong/pongState'
-import { LocalPlayer } from '../games/pong/engine/players/LocalPlayer'
-import { getUsername } from '../utils/storage'
-import { AiPlayer } from '../games/pong/engine/players/AiPlayer'
-import { navigateTo } from '../utils/router'
+import { DEFAULT_BALL_RADIUS, PongGame } from '../games/pong/engine/PongGame';
+import i18n from '../utils/lang/i18n';
+import { createButton } from '../components/button';
+import { secondPlayerName, selectedDifficulty } from '../games/pong/pongState';
+import { LocalPlayer } from '../games/pong/engine/players/LocalPlayer';
+import { getUsername } from '../utils/storage';
+import { navigateTo } from '../utils/router';
+import { mountPlayScene, launchCountdown } from '../components/pongUi';
 
-let currentGame: PongGame | null = null
+let currentGame: PongGame | null = null;
 
-export function createPongCanvas(): HTMLCanvasElement { // TODO: use the same canvas as online
-    const canvas = document.createElement('canvas')
-    canvas.width = 640
-    canvas.height = 480
-    canvas.className = 'rounded-xl shadow-lg border border-white'
-    return canvas
-}
+export function renderPongPlay(_roomId: string): HTMLElement {
+    document.body.classList.add('pong-mode');
 
-export function renderPongPlay(roomId: string): HTMLElement {
-    document.body.classList.add('pong-mode')
+    if (currentGame) { currentGame.stop(); currentGame = null; }
 
-    if (currentGame) {
-        currentGame.stop()
-        currentGame = null
-    }
+    const container = document.createElement('div');
 
-    let timerInterval: ReturnType<typeof setInterval>
-
-    function startTimer(display: HTMLElement) {
-        const startTime = Date.now()
-        timerInterval = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startTime) / 1000)
-            const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0')
-            const seconds = String(elapsed % 60).padStart(2, '0')
-            display.textContent = `${minutes}:${seconds}`
-        }, 1000)
-    }
-
-    function stopTimer() {
-        clearInterval(timerInterval)
-    }
-
-    const container = document.createElement('div')
-    container.className = 'relative flex items-center justify-center min-h-screen w-full text-white overflow-hidden'
-
-    const canvas = createPongCanvas()
-    canvas.classList.add('rounded-2xl', 'shadow-xl', 'border', 'border-white/20')
-
-    const canvasWrapper = document.createElement('div')
-    canvasWrapper.className = 'relative flex items-center justify-center p-4'
-    canvasWrapper.appendChild(canvas)
+    const {
+        canvas,
+        container: playRoot,
+        countdown,
+        scoreLeft,
+        scoreRight,
+        timer
+    } = mountPlayScene(container);
 
     const exitBtn = createExitButton(() => {
-        document.body.classList.remove('pong-mode')
-        navigateTo('/home')
-        stopTimer()
-        if (currentGame) {
-            currentGame.stop()
-            currentGame = null
-        }
-    })
+        document.body.classList.remove('pong-mode');
+        navigateTo('/home');
+        timer.stop();
+        if (currentGame) { currentGame.stop(); currentGame = null; }
+    });
+    exitBtn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20');
+    playRoot.appendChild(exitBtn);
 
-    const scoreOverlay = createScoreOverlay()
-    const scoreLeft = scoreOverlay.children[0] as HTMLDivElement
-    const scoreRight = scoreOverlay.children[1] as HTMLDivElement
+    const p1 = new LocalPlayer(true,  canvas, getUsername() || i18n.t('pong_you'));
+    const p2 = new LocalPlayer(false, canvas, secondPlayerName || i18n.t('pong_opponent'));
 
-    const countdown = createCountdownOverlay()
+    const game = new PongGame(
+        'local',
+        canvas,
+        p1,
+        p2,
+        selectedDifficulty,
+        DEFAULT_BALL_RADIUS,
+        scoreLeft,
+        scoreRight
+    );
 
-    const timerDisplay = document.createElement('div')
-    timerDisplay.className = 'absolute top-4 right-4 text-white text-xl font-mono z-10 pointer-events-none'
-    timerDisplay.textContent = '00:00'
+    currentGame = game;
+    game.start();
 
-    container.append(exitBtn, canvasWrapper, countdown, scoreOverlay, timerDisplay)
+    launchCountdown(countdown, () => {
+        countdown.remove();
+        game.startBall();
+        timer.start();
+    });
 
-    const mode = selectedGameMode
-    let game: PongGame
-
-    if (mode === GameMode.AI) {
-        const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
-        const p2 = new AiPlayer(false, canvas, i18n.t('pong_ai_opponent'), selectedDifficulty)
-
-        game = new PongGame('local', canvas, p1, p2, selectedDifficulty, DEFAULT_BALL_RADIUS, scoreLeft, scoreRight)
-        currentGame = game
-        game.start()
-
-        launchCountdown(countdown, () => {
-            countdown.remove()
-            game.startBall()
-            startTimer(timerDisplay)
-        })
-
-        return container
-    }
-
-    if (mode === GameMode.LOCAL) {
-        const p1 = new LocalPlayer(true, canvas, getUsername() || i18n.t('pong_you'))
-        const p2 = new LocalPlayer(false, canvas, secondPlayerName || i18n.t('pong_opponent'))
-
-        game = new PongGame('local', canvas, p1, p2, selectedDifficulty, DEFAULT_BALL_RADIUS, scoreLeft, scoreRight)
-        currentGame = game
-        game.start()
-
-        launchCountdown(countdown, () => {
-            countdown.remove()
-            game.startBall()
-            startTimer(timerDisplay)
-        })
-
-        return container
-    }
-
-    // TODO: support local games in tournament.ts?
-    return container
+    return container;
 }
 
 function createExitButton(onConfirm: () => void): HTMLButtonElement {
-    const btn = createButton(i18n.t('button_exit'), 'button', 'red')
-    btn.className = btn.className.replace('w-full', '')
-    btn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20')
-
-    let confirmMode = false
-    let timeout: ReturnType<typeof setTimeout> | null = null
+    const btn = createButton(i18n.t('button_exit'), 'button', 'red');
+    btn.className = btn.className.replace('w-full', '');
+    let confirmMode = false;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
 
     const reset = () => {
-        confirmMode = false
-        btn.textContent = i18n.t('button_exit')
-        if (timeout) {
-            clearTimeout(timeout)
-            timeout = null
-        }
-    }
+        confirmMode = false;
+        btn.textContent = i18n.t('button_exit');
+        if (timeout) { clearTimeout(timeout); timeout = null; }
+    };
 
     btn.onclick = () => {
         if (!confirmMode) {
-            confirmMode = true
-            btn.textContent = i18n.t('button_exit_confirm')
-            timeout = setTimeout(reset, 3000)
+            confirmMode = true;
+            btn.textContent = i18n.t('button_exit_confirm');
+            timeout = setTimeout(reset, 3000);
         } else {
-            onConfirm()
+            onConfirm();
         }
-    }
+    };
 
-    btn.onmouseleave = reset
-    return btn
-}
-
-function createCountdownOverlay(): HTMLDivElement {
-    const div = document.createElement('div')
-    div.className =
-        'absolute inset-0 flex items-center justify-center text-white text-6xl font-extrabold pointer-events-none transition-all z-10'
-    return div
-}
-
-function launchCountdown(container: HTMLElement, onComplete: () => void) {
-    const sequence = ['3', '2', '1', 'GO!']
-    let index = 0
-
-    const interval = setInterval(() => {
-        container.textContent = sequence[index]
-        container.style.opacity = '1'
-        container.style.transform = 'scale(1.1)'
-
-        setTimeout(() => {
-            container.style.opacity = '0'
-            container.style.transform = 'scale(1)'
-        }, 400)
-
-        index++
-        if (index === sequence.length) {
-            clearInterval(interval)
-            setTimeout(onComplete, 500)
-        }
-    }, 1000)
-}
-
-function createScoreOverlay(): HTMLDivElement {
-    const wrapper = document.createElement('div')
-    wrapper.className =
-        'absolute top-4 w-full flex justify-center gap-24 text-white text-4xl font-bold pointer-events-none z-10'
-    const left = document.createElement('div')
-    const right = document.createElement('div')
-    wrapper.append(left, right)
-    return wrapper
+    btn.onmouseleave = reset;
+    return btn;
 }
