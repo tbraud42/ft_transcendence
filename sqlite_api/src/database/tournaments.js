@@ -1,4 +1,5 @@
 // database/tournaments.js
+import { user_stat, dashboard_stat, recent_matches } from "./sqlRequest.js";
 
 export function getAllTournaments(db) {
   return db.prepare(`
@@ -162,265 +163,56 @@ export function insertStatGame(fastify, tournamentId, gamesInput) {
   return tx(gamesInput);
 };
 
-export function listUserMatches(db, userId) {
-  const uid = Number(userId);
-  if (!Number.isFinite(uid)) return [];
-
-  const result = db.prepare(`
-    SELECT
-      t.name        AS tournament_name,
-      u1.username   AS player1_username,
-      u2.username   AS player2_username,
-      uw.username   AS winner,
-      g.started_at  AS started_at
-    FROM games g
-    JOIN tournaments t ON t.id = g.tournament_id
-    JOIN users u1      ON u1.id = g.player1_id
-    JOIN users u2      ON u2.id = g.player2_id
-    LEFT JOIN users uw ON uw.id = g.winner_id
-    WHERE g.player1_id = ? OR g.player2_id = ?
-    ORDER BY g.started_at DESC, g.id DESC`).all(uid, uid);
-
-  return result;
-};
-
-export function userExists(db, id) {
-  const tid = Number(id);
-  if (!Number.isFinite(tid)) return false;
-  const result = db.prepare(`SELECT 1 FROM users WHERE id = ?`).get(id);
-  return !!result;
-};
-
-// --------- Stats ---------
+/* -------------------- Stats -------------------- */
 
 export function getStat(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return null;
 
-  const sql = `
-    WITH p AS (
-      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
-      FROM (
-        SELECT g.player1 AS username,
-               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-        FROM games g
-        UNION ALL
-        SELECT g.player2 AS username,
-               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-        FROM games g
-      )
-      GROUP BY username
-    ),
-    tc AS (
-      SELECT creator AS username, COUNT(*) AS "create"
-      FROM tournaments
-      GROUP BY creator
-    )
-    SELECT
-      u.id                AS userId,
-      u.username          AS username,
-      COALESCE(p.wins, 0)   AS wins,
-      COALESCE(p.losses, 0) AS losses,
-      u.total_games         AS games,
-      CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END       AS winRate,
-      u.total_seconds       AS time,
-      COALESCE(tc."create", 0) AS "create"
-    FROM users u
-    LEFT JOIN p  ON p.username  = u.username
-    LEFT JOIN tc ON tc.username = u.username
-    WHERE u.id = ?`;
-
-  const row = db.prepare(sql).get(uid);
+  const row = db.prepare(user_stat).get(uid);
   return row || null;
 }
 
-export function topWinRate(db, limit = 10, minGames = 1) {
-  const sql = `
-    WITH p AS (
-      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
-      FROM (
-        SELECT g.player1 AS username,
-               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-        FROM games g
-        UNION ALL
-        SELECT g.player2 AS username,
-               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-        FROM games g
-      )
-      GROUP BY username
-    ),
-    tc AS (
-      SELECT creator AS username, COUNT(*) AS "create"
-      FROM tournaments
-      GROUP BY creator
-    )
-    SELECT
-      u.id                  AS userId,
-      u.username            AS username,
-      COALESCE(p.wins, 0)   AS wins,
-      COALESCE(p.losses, 0) AS losses,
-      u.total_games         AS games,
-      CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END        AS winRate,
-      u.total_seconds       AS time,
-      COALESCE(tc."create", 0) AS "create"
-    FROM users u
-    LEFT JOIN p  ON p.username  = u.username
-    LEFT JOIN tc ON tc.username = u.username
-    WHERE u.total_games >= ?
-    ORDER BY winRate DESC, games DESC, wins DESC, u.username COLLATE NOCASE
-    LIMIT ?`;
+const ORDER_MAP = {
+  wins: 'wins',
+  losses: 'losses',
+  tWon: 'tWon',
+  winRate: 'winRate',
+  time: 'time',
+  create: '"create"',
+};
 
-  return db.prepare(sql).all(minGames, limit);
+const cacheRequest = new WeakMap();
+
+function getDbCache(db) {
+  let map = cacheRequest.get(db);
+  if (!map) {
+    map = new Map();
+    cacheRequest.set(db, map);
+  }
+  return map;
 }
 
-export function topLoseRate(db, limit = 10, minGames = 1) {
-  const sql = `
-    WITH p AS (
-      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
-      FROM (
-        SELECT g.player1 AS username,
-               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-        FROM games g
-        UNION ALL
-        SELECT g.player2 AS username,
-               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-        FROM games g
-      )
-      GROUP BY username
-    ),
-    tc AS (
-      SELECT creator AS username, COUNT(*) AS "create"
-      FROM tournaments
-      GROUP BY creator
-    )
-    SELECT
-      u.id                  AS userId,
-      u.username            AS username,
-      COALESCE(p.wins, 0)   AS wins,
-      COALESCE(p.losses, 0) AS losses,
-      u.total_games         AS games,
-      CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END        AS winRate,
-      u.total_seconds       AS time,
-      COALESCE(tc."create", 0) AS "create"
-    FROM users u
-    LEFT JOIN p  ON p.username  = u.username
-    LEFT JOIN tc ON tc.username = u.username
-    WHERE u.total_games >= ?
-    ORDER BY winRate ASC, games DESC, u.username COLLATE NOCASE
-    LIMIT ?`;
+export function topBy(db, {
+  orderKey,
+  limit = 10
+}) {
+  const col = ORDER_MAP[orderKey];
+  if (!col) throw new Error('Invalid order key');
 
-  return db.prepare(sql).all(minGames, limit);
-}
+  let sql = dashboard_stat;
+  sql += `\nORDER BY ${col} DESC, u.username COLLATE NOCASE\nLIMIT @limit;`;
 
-export function topTotalPlayTime(db, limit = 10, minGames = 1) {
-  const sql = `
-    WITH p AS (
-      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
-      FROM (
-        SELECT g.player1 AS username,
-               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-        FROM games g
-        UNION ALL
-        SELECT g.player2 AS username,
-               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-        FROM games g
-      )
-      GROUP BY username
-    ),
-    tc AS (
-      SELECT creator AS username, COUNT(*) AS "create"
-      FROM tournaments
-      GROUP BY creator
-    )
-    SELECT
-      u.id                  AS userId,
-      u.username            AS username,
-      COALESCE(p.wins, 0)   AS wins,
-      COALESCE(p.losses, 0) AS losses,
-      u.total_games         AS games,
-      CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END        AS winRate,
-      u.total_seconds       AS time,
-      COALESCE(tc."create", 0) AS "create"
-    FROM users u
-    LEFT JOIN p  ON p.username  = u.username
-    LEFT JOIN tc ON tc.username = u.username
-    WHERE u.total_games >= ?
-    ORDER BY time DESC, games DESC, u.username COLLATE NOCASE
-    LIMIT ?`;
+  const cache = getDbCache(db);
+  let request = cache.get(sql);
+  if (!request) {
+    request = db.prepare(sql);
+    cache.set(sql, request);
+  }
 
-  return db.prepare(sql).all(minGames, limit);
-}
+  const l = Math.max(1, Math.min(100, Number(limit) || 10));
 
-export function topTournamentsCreated(db, limit = 10) {
-  const sql = `
-    WITH tc AS (
-      SELECT creator AS username, COUNT(*) AS "create"
-      FROM tournaments
-      GROUP BY creator
-    )
-    SELECT
-      u.id              AS userId,
-      u.username        AS username,
-      0                 AS wins,
-      0                 AS losses,
-      u.total_games     AS games,
-      CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END        AS winRate,
-      u.total_seconds   AS time,
-      COALESCE(tc."create", 0) AS "create"
-    FROM users u
-    LEFT JOIN tc ON tc.username = u.username
-    WHERE COALESCE(tc."create", 0) > 0
-    ORDER BY tc."create" DESC, u.username COLLATE NOCASE
-    LIMIT ?`;
-
-  return db.prepare(sql).all(limit);
-}
-
-export function topTournamentsWon(db, limit = 20) {
-  const sql = `
-    WITH tw AS (
-      SELECT winner AS username, COUNT(*) AS won
-      FROM tournaments
-      WHERE winner IS NOT NULL
-      GROUP BY winner
-    )
-    SELECT
-      u.id              AS userId,
-      u.username        AS username,
-      0                 AS wins,
-      0                 AS losses,
-      u.total_games     AS games,
-      CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
-           ELSE 0 END        AS winRate,
-      u.total_seconds   AS time,
-      0                 AS "create",
-      COALESCE(tw.won, 0) AS won
-    FROM users u
-    LEFT JOIN tw ON tw.username = u.username
-    WHERE COALESCE(tw.won, 0) > 0
-    ORDER BY tw.won DESC, u.username COLLATE NOCASE
-    LIMIT ?`;
-
-  return db.prepare(sql).all(limit);
+  return request.all({ limit: l, minGames: 0 });
 }
 
 
@@ -434,26 +226,7 @@ export function listUserRecentMatches(db, userId, limit = 20) {
   const uname = user.username;
   const lim = Number.isFinite(limit) && limit > 0 ? Math.min(limit, 500) : 20;
 
-  const sql = `
-    SELECT
-      g.id          AS game_id,
-      g.tournament_id,
-      g.started_at,
-      g.p1_score,
-      g.p2_score,
-      g.winner      AS winner_username,
-      g.game_num   AS game_num,
-
-      CASE WHEN g.player1 = ? THEN g.player2 ELSE g.player1 END AS opponent_username,
-      CASE WHEN g.player1 = ? THEN g.p1_score ELSE g.p2_score END AS your_score,
-      CASE WHEN g.player1 = ? THEN g.p2_score ELSE g.p1_score END AS opp_score,
-      CASE WHEN g.winner = ? THEN 1 ELSE 0 END AS did_win
-    FROM games g
-    WHERE g.player1 = ? OR g.player2 = ?
-    ORDER BY g.started_at DESC, g.id DESC
-    LIMIT ?`;
-
-  return db.prepare(sql).all(uname, uname, uname, uname, uname, uname, lim);
+  return db.prepare(recent_matches).all(uname, uname, uname, uname, uname, uname, lim);
 }
 
 export function validateGameRow(row) {

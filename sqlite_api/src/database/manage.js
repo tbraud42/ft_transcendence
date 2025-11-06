@@ -3,9 +3,7 @@
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
 
-export function isDev() {
-  return process.env.NODE_ENV === 'development';
-}
+/* -------------------- User -------------------- */
 
 export async function createUser(db, { username, password, avatar } = {}) {
   if (!password || typeof password !== 'string') {
@@ -110,26 +108,6 @@ export function isAdminOrCreator(db, tournamentId, username) {
   return result.role.toLowerCase() === 'admin' || result.creator === user;
 }
 
-export async function crontab(fastify) {
-  const users = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
-
-  for (const { id } of users) {
-    await fastify.deleteUser(fastify.db, id);
-    fastify.log.info({ id }, 'User anonymized due to inactivity (RGPD)');
-  }
-}
-
-export function showAllData(db) {
-  const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
-
-  for (const { name } of tables) {
-    console.log(`\nTable: ${name}`);
-    const result = db.prepare(`SELECT * FROM ${name}`).all();
-    if (result.length === 0) console.log('empty db');
-    else for (const row of result) console.log(row);
-  }
-}
-
 export async function updateTimeStamp(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return false;
@@ -137,6 +115,31 @@ export async function updateTimeStamp(db, id) {
   const result = db.prepare(` UPDATE users SET last_timestamp = CURRENT_TIMESTAMP WHERE id = ?`);
   const info = result.run(uid);
   return info.changes > 0;
+}
+
+export function mapUserForSelfOrAdmin(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    created_at: user.created_at,
+    last_timestamp: user.last_timestamp,
+    avatar: user.avatar ?? null,
+    is_twofa_enabled: !!user.is_twofa_enabled,
+    total_seconds: user.total_seconds,
+    total_games: user.total_games,
+  };
+}
+
+export function mapUserForPublic(user) {
+  return {
+    id: user.id,
+    username: user.username,
+    avatar: user.avatar ?? null,
+    created_at: user.created_at,
+    last_timestamp: user.last_timestamp,
+    total_seconds: user.total_seconds,
+    total_games: user.total_games,
+  };
 }
 
 /* -------------------- Friends -------------------- */
@@ -200,72 +203,17 @@ export function listTournamentMembers(db, tournamentId) {
   return db.prepare(sql).all(tid);
 }
 
-export function listTournamentMembersWithStats(db, tournamentId) {
-  const tid = Number(tournamentId);
-  if (!Number.isFinite(tid)) return [];
+/* -------------------- utils -------------------- */
 
-  const sql = `
-    WITH participants AS (
-      -- côté player1
-      SELECT
-        g.player1 AS username,
-        CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-        CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss,
-        g.duration_sec AS seconds
-      FROM games g
-      WHERE g.tournament_id = ?
-      UNION ALL
-      -- côté player2
-      SELECT
-        g.player2 AS username,
-        CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-        CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss,
-        g.duration_sec AS seconds
-      FROM games g
-      WHERE g.tournament_id = ?
-    )
-    SELECT
-      p.username,
-      u.id AS id,                                    -- null si l'utilisateur n'existe plus
-      SUM(p.win)                      AS wins,
-      SUM(p.loss)                     AS losses,
-      COUNT(*)                        AS matches,
-      COALESCE(SUM(COALESCE(p.seconds,0)), 0) AS seconds_total
-    FROM participants p
-    LEFT JOIN users u ON u.username = p.username
-    WHERE p.username IS NOT NULL                     -- sécurité si NULL après suppression
-    GROUP BY p.username, u.id
-    ORDER BY wins DESC, losses ASC, p.username COLLATE NOCASE
-  `;
-
-  return db.prepare(sql).all(tid, tid);
+export function isDev() {
+  return process.env.NODE_ENV === 'development';
 }
 
-export function getTournamentStandings(db, tournamentId) {
-  return listTournamentMembersWithStats(db, tournamentId);
-}
+export async function crontab(fastify) {
+  const users = fastify.db.prepare(`SELECT id FROM users WHERE last_timestamp < datetime('now', '-1 year')`).all();
 
-export function mapUserForSelfOrAdmin(user) {
-  return {
-    id: user.id,
-    username: user.username,
-    created_at: user.created_at,
-    last_timestamp: user.last_timestamp,
-    avatar: user.avatar ?? null,
-    is_twofa_enabled: !!user.is_twofa_enabled,
-    total_seconds: user.total_seconds,
-    total_games: user.total_games,
-  };
-}
-
-export function mapUserForPublic(user) {
-  return {
-    id: user.id,
-    username: user.username,
-    avatar: user.avatar ?? null,
-    created_at: user.created_at,
-    last_timestamp: user.last_timestamp,
-    total_seconds: user.total_seconds,
-    total_games: user.total_games,
-  };
+  for (const { id } of users) {
+    await fastify.deleteUser(fastify.db, id);
+    fastify.log.info({ id }, 'User anonymized due to inactivity (RGPD)');
+  }
 }

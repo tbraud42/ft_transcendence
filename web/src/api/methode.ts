@@ -298,15 +298,16 @@ export function deleteTournament(id: number) {
 }
 
 // -------------- Stat ---------------
-// | Method   | Function                   | Description                             |
-// | -------- | -------------------------- | --------------------------------------- |
-// | `GET`    | `/stat`                    | show api's stats                        |
-// | `GET`    | `/stat/dashboard/:id`      | show user(id) stats for dashboard       |
-// | `GET`    | `/stat/dashboard/perWin`   | show stats dashboard per win            |
-// | `GET`    | `/stat/dashboard/perLose`  | show stats dashboard per lose           |
-// | `GET`    | `/stat/dashboard/perTime`  | show stats dashboard per time           |
-// | `GET`    | `/stat/dashboard/perCreat` | show stats dashboard per creat          |
-// | `GET`    | `/stat/dashboard/perTWin`  | show stats dashboard per tournament win |
+// | Method   | Function                     | Description                             |
+// | -------- | ---------------------------- | --------------------------------------- |
+// | `GET`    | `/stat`                      | show api's stats                        |
+// | `GET`    | `/stat/dashboard/:id`        | show user(id) stats for dashboard       |
+// | `GET`    | `/stat/dashboard/perWin`     | show stats dashboard per win            |
+// | `GET`    | `/stat/dashboard/perLose`    | show stats dashboard per lose           |
+// | `GET`    | `/stat/dashboard/perTWon`    | show stats dashboard per tournament win |
+// | `GET`    | `/stat/dashboard/perWinRate` | show stats dashboard per win rate       |
+// | `GET`    | `/stat/dashboard/perTime`    | show stats dashboard per time           |
+// | `GET`    | `/stat/dashboard/perCreat`   | show stats dashboard per creat          |
 
 // GET
 export function getStatApi() {
@@ -336,6 +337,15 @@ export function getDashboardWin() {
 export function getDashboardLose() {
   return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perLose`);
 }
+// GET
+export function getDashboardTWon() {
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perTWon`);
+}
+
+// GET
+export function getDashboardwinRate() {
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perWinRate`);
+}
 
 // GET
 export function getDashboardTime() {
@@ -344,10 +354,6 @@ export function getDashboardTime() {
 
 // GET
 export function getDashboardCreat() {
-  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perCrea`);
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perCreat`);
 }
 
-// GET
-export function getDashboardTWin() {
-  return apiFetch<{ error: boolean, code: string, info: string }>(`/stat/dashboard/perTWin`);
-}

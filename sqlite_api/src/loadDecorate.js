@@ -9,7 +9,6 @@ import {
   deleteUser,
   isAdmin,
   isAdminOrCreator,
-  showAllData,
   updateTimeStamp,
   addFriend,
   removeFriend,
@@ -30,13 +29,8 @@ import {
   setTournamentWinner,
   deleteTournament,
   insertStatGame,
-  userExists,
   getStat,
-  topWinRate,
-  topLoseRate,
-  topTotalPlayTime,
-  topTournamentsCreated,
-  topTournamentsWon,
+  topBy,
   listUserRecentMatches,
   validateGameRow
 } from './database/tournaments.js';
@@ -65,7 +59,6 @@ export function loadDecorate(fastify) {
     done();
   });
   fastify.decorate('isDev', isDev);
-  fastify.decorate('showAllData', showAllData);
 
   // --- Users ---
   fastify.decorate('createUser', createUser);
@@ -94,13 +87,8 @@ export function loadDecorate(fastify) {
   fastify.decorate('setTournamentWinner', setTournamentWinner);
   fastify.decorate('deleteTournament', deleteTournament);
   fastify.decorate('insertStatGame', insertStatGame);
-  fastify.decorate('userExists', userExists);
   fastify.decorate('getStat', getStat);
-  fastify.decorate('topWinRate', topWinRate);
-  fastify.decorate('topLoseRate', topLoseRate);
-  fastify.decorate('topTotalPlayTime', topTotalPlayTime);
-  fastify.decorate('topTournamentsCreated', topTournamentsCreated);
-  fastify.decorate('topTournamentsWon', topTournamentsWon);
+  fastify.decorate('topBy', topBy);
   fastify.decorate('listUserRecentMatches', listUserRecentMatches);
   fastify.decorate('validateGameRow', validateGameRow);
 

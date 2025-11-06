@@ -57,7 +57,7 @@
   "lb_col_user": "Username",
   "lb_col_wins": "Wins",
   "lb_col_losses": "Losses",
-  "lb_col_games": "Games",
+  "lb_col_tWon": "tour. gagné",
   "lb_col_winrate": "Winrate",
   "lb_col_time": "Time play (s)",
   "lb_col_create": "Tour. create",
@@ -118,5 +118,6 @@
   "stats_service_unavailable": "Service unavailable",
   "unknown_error": "Unknown error",
   "error_file_too_large": "File to large",
-  "error_file_exceeded_limit": "The selected image exceeds the maximum size of {{size}} MB. Please choose a smaller file."
+  "error_file_exceeded_limit": "The selected image exceeds the maximum size of {{size}} MB. Please choose a smaller file.",
+  "not_available_yet": "Coming soon"
 }
