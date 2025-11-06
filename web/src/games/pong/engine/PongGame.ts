@@ -1,16 +1,13 @@
 import { BasicBall } from './balls/BasicBall'
 import { PlayerBase } from './players/PlayerBase'
 import { BallBase } from './balls/BallBase'
-import { AiPlayer } from './players/AiPlayer'
-import { LocalPlayer } from './players/LocalPlayer'
 import { OnlinePlayer } from './players/OnlinePlayer'
 import { getUsername } from '../../../utils/storage'
 import { Difficulty, secondPlayerName } from '../pongState'
 import i18n from '../../../utils/lang/i18n'
 import { WSClient } from '../../../api/socket/WSClient'
 import {navigateTo} from "../../../utils/router";
-import {ServerEvent, SrvState} from "../../../api/socket/messageTypes";
-import {SrvMessageType} from "../../../api/socket/protocol";
+import {SrvState} from "../../../api/socket/messageTypes";
 
 export const DEFAULT_BALL_RADIUS = 8
 const WINNING_SCORE = 5;
@@ -98,20 +95,8 @@ export class PongGame {
             p2Score = this.lastState.players[1].score;
         }
 
-        if (PongGame.globalTick % 60 === 0) {
-            if (this.player1 instanceof AiPlayer) {
-                this.player1.process(this.ball)
-            }
-            if (this.player2 instanceof AiPlayer) {
-                this.player2.process(this.ball)
-            }
-        }
         this.player1.update(this.ball)
         this.player2.update(this.ball)
-
-        if (this.player2 instanceof AiPlayer && PongGame.globalTick % 60 === 0) {
-            this.player2.process(this.ball)
-        }
 
         this.updateScore(p1Score, p2Score)
 
@@ -180,10 +165,10 @@ export class PongGame {
 
     private updateScore(left: number, right: number) {
         if (this.scoreLeftEl) {
-            this.scoreLeftEl.textContent = String(left)
+            this.scoreLeftEl.innerHTML = `${this.player1.getName()}<br>${left}`;
         }
         if (this.scoreRightEl) {
-            this.scoreRightEl.textContent = String(right)
+            this.scoreRightEl.innerHTML = `${this.player2.getName()}<br>${right}`;
         }
     }
 

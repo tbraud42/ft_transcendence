@@ -1,13 +1,13 @@
 import { env } from '../utils/env'
 import { getToken } from "../utils/storage";
-import {refreshToken} from "./auth";
+import { refreshToken } from "./jwt";
 
 const API_URL = env.API_URL
 
 export async function fetchTournaments(): Promise<any[]> {
     await refreshToken();
 
-    const url = `${API_URL}/tournaments`
+    const url = `${API_URL}/tournaments/waitting`
 
     const res = await fetch(url, {
         headers: {
@@ -20,7 +20,8 @@ export async function fetchTournaments(): Promise<any[]> {
         throw new Error(`Failed to fetch tournaments: ${res.status} ${err}`)
     }
 
-    return res.json()
+    const data = await res.json()
+    return data.info.tournament
 }
 
 export async function createTournament(
@@ -47,12 +48,14 @@ export async function createTournament(
             'Authorization': `Bearer ${getToken()}`
         },
         body: JSON.stringify(body)
-    }).then(res => {
+    }).then(async res => {
         if (!res.ok) {
             const err = res.text().catch(() => '')
             throw new Error(`Failed to create tournament: ${res.status} ${err}`)
         }
-        return res.json()
+        const data = await res.json()
+        console.log(data.info)
+        return data.info.tournament
     })
 }
 

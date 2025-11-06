@@ -98,7 +98,6 @@ export function isAdminOrCreator(db, tournamentId, username) {
   const tid = Number(tournamentId);
 
   const user = String(username || '').trim();
-  // const user = username;
 
   const result = db.prepare(`
     SELECT u.role, t.creator
@@ -140,36 +139,25 @@ export async function updateTimeStamp(db, id) {
   return info.changes > 0;
 }
 
-function normalizePair(a, b) {
-  const x = Number(a), y = Number(b);
-  if (!Number.isFinite(x) || !Number.isFinite(y)) throw new Error('INVALID_USER_ID');
-  if (x === y) throw new Error('CANNOT_FRIEND_SELF');
-  return x < y ? [x, y] : [y, x];
-}
-
 /* -------------------- Friends -------------------- */
 
 export function addFriend(db, userA, userB) {
-  const [u, f] = normalizePair(userA, userB);
+  const exists = db.prepare(`SELECT id FROM users WHERE id IN (?, ?)`).all(userA, userB);
+  if (exists.length !== 2) return { error: true, msg: 'unknownUser' };
 
-  const exists = db.prepare(`SELECT id FROM users WHERE id IN (?, ?)`).all(u, f);
-  if (exists.length !== 2) throw new Error('UNKNOWN_USER');
-
-  const alreadyFriend = db.prepare(`SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?`).get(u, f);
-  if (alreadyFriend) throw new Error('ALREADY_FRIEND');
+  const alreadyFriend = db.prepare(`SELECT 1 FROM user_friends WHERE user_id = ? AND friend_id = ?`).get(userA, userB);
+  if (alreadyFriend) return { error: true, msg: 'alreadyFriend' };
 
   try {
-    db.prepare(`INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)`).run(u, f);
-    return { user_id: u, friend_id: f };
+    db.prepare(`INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)`).run(userA, userB);
+    return { error: false, msg: '' };
   } catch (e) {
-    if (String(e.message).includes('FRIEND_LIMIT')) throw new Error('FRIEND_LIMIT');
-    throw e;
+    return { error: true, msg: 'friendLimit' };
   }
 }
 
 export function removeFriend(db, userA, userB) {
-  const [u, f] = normalizePair(userA, userB);
-  const info = db.prepare(`DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?`).run(u, f);
+  const info = db.prepare(`DELETE FROM user_friends WHERE user_id = ? AND friend_id = ?`).run(userA, userB);
   return info.changes > 0;
 }
 
@@ -275,5 +263,9 @@ export function mapUserForPublic(user) {
     id: user.id,
     username: user.username,
     avatar: user.avatar ?? null,
+    created_at: user.created_at,
+    last_timestamp: user.last_timestamp,
+    total_seconds: user.total_seconds,
+    total_games: user.total_games,
   };
 }

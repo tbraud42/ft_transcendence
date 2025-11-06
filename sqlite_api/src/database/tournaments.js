@@ -110,6 +110,7 @@ export function changeTournamentStatus(db, id, nextStatus = null){
     const current = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(id);
     if (!current) return null;
     const newStatus = nextStatus ?? (current.status === 0 ? 1 : current.status === 1 ? 2 : 2);
+    if (newStatus !== 0 && newStatus !== 1 && newStatus !== 2) return null;
     const row = db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(newStatus, id);
     return row || null;
 };
@@ -198,172 +199,230 @@ export function getStat(db, id) {
 
   const sql = `
     WITH p AS (
-      SELECT g.player1 AS username,
-             CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-      FROM games g
-      UNION ALL
-      SELECT g.player2 AS username,
-             CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-      FROM games g
+      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
+      FROM (
+        SELECT g.player1 AS username,
+               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
+        FROM games g
+        UNION ALL
+        SELECT g.player2 AS username,
+               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
+        FROM games g
+      )
+      GROUP BY username
+    ),
+    tc AS (
+      SELECT creator AS username, COUNT(*) AS "create"
+      FROM tournaments
+      GROUP BY creator
     )
     SELECT
-      u.id            AS userId,
-      u.username      AS username,
-      COALESCE(SUM(p.win),  0) AS wins,
-      COALESCE(SUM(p.loss), 0) AS losses,
-      u.total_games          AS games,
+      u.id                AS userId,
+      u.username          AS username,
+      COALESCE(p.wins, 0)   AS wins,
+      COALESCE(p.losses, 0) AS losses,
+      u.total_games         AS games,
       CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(SUM(p.win),0) AS REAL) / u.total_games
-           ELSE 0 END        AS winRate,
-      u.total_seconds        AS time
+           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
+           ELSE 0 END       AS winRate,
+      u.total_seconds       AS time,
+      COALESCE(tc."create", 0) AS "create"
     FROM users u
-    LEFT JOIN p ON p.username = u.username
-    WHERE u.id = ?
-    GROUP BY u.id, u.username, u.total_games, u.total_seconds`;
+    LEFT JOIN p  ON p.username  = u.username
+    LEFT JOIN tc ON tc.username = u.username
+    WHERE u.id = ?`;
 
   const row = db.prepare(sql).get(uid);
   return row || null;
-};
+}
 
 export function topWinRate(db, limit = 10, minGames = 1) {
   const sql = `
     WITH p AS (
-      SELECT g.player1 AS username,
-             CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-      FROM games g
-      UNION ALL
-      SELECT g.player2 AS username,
-             CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-      FROM games g
+      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
+      FROM (
+        SELECT g.player1 AS username,
+               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
+        FROM games g
+        UNION ALL
+        SELECT g.player2 AS username,
+               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
+        FROM games g
+      )
+      GROUP BY username
+    ),
+    tc AS (
+      SELECT creator AS username, COUNT(*) AS "create"
+      FROM tournaments
+      GROUP BY creator
     )
     SELECT
-      u.id                   AS userId,
-      u.username             AS username,
-      COALESCE(SUM(p.win),0)   AS wins,
-      COALESCE(SUM(p.loss),0)  AS losses,
-      u.total_games            AS games,
+      u.id                  AS userId,
+      u.username            AS username,
+      COALESCE(p.wins, 0)   AS wins,
+      COALESCE(p.losses, 0) AS losses,
+      u.total_games         AS games,
       CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(SUM(p.win),0) AS REAL) / u.total_games
-           ELSE 0 END         AS winRate,
-      u.total_seconds         AS time
+           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
+           ELSE 0 END        AS winRate,
+      u.total_seconds       AS time,
+      COALESCE(tc."create", 0) AS "create"
     FROM users u
-    LEFT JOIN p ON p.username = u.username
+    LEFT JOIN p  ON p.username  = u.username
+    LEFT JOIN tc ON tc.username = u.username
     WHERE u.total_games >= ?
-    GROUP BY u.id, u.username, u.total_games, u.total_seconds
-    ORDER BY winRate DESC, games DESC, wins DESC
+    ORDER BY winRate DESC, games DESC, wins DESC, u.username COLLATE NOCASE
     LIMIT ?`;
 
   return db.prepare(sql).all(minGames, limit);
-};
+}
 
 export function topLoseRate(db, limit = 10, minGames = 1) {
   const sql = `
     WITH p AS (
-      SELECT g.player1 AS username,
-             CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-      FROM games g
-      UNION ALL
-      SELECT g.player2 AS username,
-             CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-      FROM games g
+      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
+      FROM (
+        SELECT g.player1 AS username,
+               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
+        FROM games g
+        UNION ALL
+        SELECT g.player2 AS username,
+               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
+        FROM games g
+      )
+      GROUP BY username
+    ),
+    tc AS (
+      SELECT creator AS username, COUNT(*) AS "create"
+      FROM tournaments
+      GROUP BY creator
     )
     SELECT
-      u.id                   AS userId,
-      u.username             AS username,
-      COALESCE(SUM(p.win),0)   AS wins,
-      COALESCE(SUM(p.loss),0)  AS losses,
-      u.total_games            AS games,
+      u.id                  AS userId,
+      u.username            AS username,
+      COALESCE(p.wins, 0)   AS wins,
+      COALESCE(p.losses, 0) AS losses,
+      u.total_games         AS games,
       CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(SUM(p.win),0) AS REAL) / u.total_games
-           ELSE 0 END         AS winRate,
-      u.total_seconds         AS time
+           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
+           ELSE 0 END        AS winRate,
+      u.total_seconds       AS time,
+      COALESCE(tc."create", 0) AS "create"
     FROM users u
-    LEFT JOIN p ON p.username = u.username
+    LEFT JOIN p  ON p.username  = u.username
+    LEFT JOIN tc ON tc.username = u.username
     WHERE u.total_games >= ?
-    GROUP BY u.id, u.username, u.total_games, u.total_seconds
-    ORDER BY winRate ASC, games DESC
+    ORDER BY winRate ASC, games DESC, u.username COLLATE NOCASE
     LIMIT ?`;
 
   return db.prepare(sql).all(minGames, limit);
-};
+}
 
 export function topTotalPlayTime(db, limit = 10, minGames = 1) {
   const sql = `
     WITH p AS (
-      SELECT g.player1 AS username,
-             CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
-      FROM games g
-      UNION ALL
-      SELECT g.player2 AS username,
-             CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
-             CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
-      FROM games g
+      SELECT username, SUM(win) AS wins, SUM(loss) AS losses
+      FROM (
+        SELECT g.player1 AS username,
+               CASE WHEN g.winner = g.player1 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player1 THEN 1 ELSE 0 END AS loss
+        FROM games g
+        UNION ALL
+        SELECT g.player2 AS username,
+               CASE WHEN g.winner = g.player2 THEN 1 ELSE 0 END AS win,
+               CASE WHEN g.winner IS NOT NULL AND g.winner != g.player2 THEN 1 ELSE 0 END AS loss
+        FROM games g
+      )
+      GROUP BY username
+    ),
+    tc AS (
+      SELECT creator AS username, COUNT(*) AS "create"
+      FROM tournaments
+      GROUP BY creator
     )
     SELECT
-      u.id                   AS userId,
-      u.username             AS username,
-      COALESCE(SUM(p.win),0)   AS wins,
-      COALESCE(SUM(p.loss),0)  AS losses,
-      u.total_games            AS games,
+      u.id                  AS userId,
+      u.username            AS username,
+      COALESCE(p.wins, 0)   AS wins,
+      COALESCE(p.losses, 0) AS losses,
+      u.total_games         AS games,
       CASE WHEN u.total_games > 0
-           THEN CAST(COALESCE(SUM(p.win),0) AS REAL) / u.total_games
-           ELSE 0 END         AS winRate,
-      u.total_seconds         AS time
+           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
+           ELSE 0 END        AS winRate,
+      u.total_seconds       AS time,
+      COALESCE(tc."create", 0) AS "create"
     FROM users u
-    LEFT JOIN p ON p.username = u.username
+    LEFT JOIN p  ON p.username  = u.username
+    LEFT JOIN tc ON tc.username = u.username
     WHERE u.total_games >= ?
-    GROUP BY u.id, u.username, u.total_games, u.total_seconds
-    ORDER BY time DESC, games DESC
+    ORDER BY time DESC, games DESC, u.username COLLATE NOCASE
     LIMIT ?`;
 
   return db.prepare(sql).all(minGames, limit);
-};
+}
 
 export function topTournamentsCreated(db, limit = 10) {
   const sql = `
+    WITH tc AS (
+      SELECT creator AS username, COUNT(*) AS "create"
+      FROM tournaments
+      GROUP BY creator
+    )
     SELECT
-      u.id           AS userId,
-      u.username     AS username,
-      -- petits bonus pour affichage homogène :
-      0              AS wins,
-      0              AS losses,
-      u.total_games  AS games,
-      CASE WHEN u.total_games > 0 THEN 0.0 ELSE 0.0 END AS winRate,
-      u.total_seconds AS time,
-      (SELECT COUNT(*) FROM tournaments t WHERE t.creator = u.username) AS created_count
+      u.id              AS userId,
+      u.username        AS username,
+      0                 AS wins,
+      0                 AS losses,
+      u.total_games     AS games,
+      CASE WHEN u.total_games > 0
+           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
+           ELSE 0 END        AS winRate,
+      u.total_seconds   AS time,
+      COALESCE(tc."create", 0) AS "create"
     FROM users u
-    WHERE created_count > 0
-    ORDER BY created_count DESC, u.username COLLATE NOCASE
-    LIMIT ?`;
-
-  return db.prepare(sql).all(limit);
-};
-
-export function topTournamentsWon(db, limit = 20) {
-  const sql = `
-    SELECT
-      u.id           AS userId,
-      u.username     AS username,
-      0              AS wins,
-      0              AS losses,
-      u.total_games  AS games,
-      CASE WHEN u.total_games > 0 THEN 0.0 ELSE 0.0 END AS winRate,
-      u.total_seconds AS time,
-      (SELECT COUNT(*) FROM tournaments t WHERE t.winner = u.username) AS won_count
-    FROM users u
-    WHERE won_count > 0
-    ORDER BY won_count DESC, u.username COLLATE NOCASE
+    LEFT JOIN tc ON tc.username = u.username
+    WHERE COALESCE(tc."create", 0) > 0
+    ORDER BY tc."create" DESC, u.username COLLATE NOCASE
     LIMIT ?`;
 
   return db.prepare(sql).all(limit);
 }
+
+export function topTournamentsWon(db, limit = 20) {
+  const sql = `
+    WITH tw AS (
+      SELECT winner AS username, COUNT(*) AS won
+      FROM tournaments
+      WHERE winner IS NOT NULL
+      GROUP BY winner
+    )
+    SELECT
+      u.id              AS userId,
+      u.username        AS username,
+      0                 AS wins,
+      0                 AS losses,
+      u.total_games     AS games,
+      CASE WHEN u.total_games > 0
+           THEN CAST(COALESCE(p.wins,0) AS REAL) / u.total_games
+           ELSE 0 END        AS winRate,
+      u.total_seconds   AS time,
+      0                 AS "create",
+      COALESCE(tw.won, 0) AS won
+    FROM users u
+    LEFT JOIN tw ON tw.username = u.username
+    WHERE COALESCE(tw.won, 0) > 0
+    ORDER BY tw.won DESC, u.username COLLATE NOCASE
+    LIMIT ?`;
+
+  return db.prepare(sql).all(limit);
+}
+
 
 export function listUserRecentMatches(db, userId, limit = 20) {
   const uid = Number(userId);
