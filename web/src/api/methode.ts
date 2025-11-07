@@ -134,15 +134,12 @@ export function userTournament(id: number) {
 // -------------- Friend ---------------
 // | Method   | Function                   | Description                                 |
 // | -------- | -------------------------- | ------------------------------------------- |
-// | `GET`    | `fetchTournaments`         | View a user's id                            |
-// | `GET`    | `fetchTournamentsId`       | View a user's profile                       |
-// | `GET`    | `fetchTournamentsWaitting` | Update user info password                   |
-// | `GET`    | `fetchTournamentsPlaying`  | Update user avatar                          |
-// | `GET`    | `fetchTournamentsFinished` | Delete an account                           |
-// | `POST`   | `createTournament`         | View tournaments a user has participated in |
+// | `GET`    | `getFriends`               | View all friends                            |
+// | `POST`   | `addFriend`                | Add a friend by id                          |
+// | `DELETE` | `deleteFriend`             | Delete a friend by id                       |
 
 // GET
-export function getFriend(id: number) {
+export function getFriends() {
   return apiFetch<{ error: boolean, code: string, info: string }>(`/user/friends`);
 }
 

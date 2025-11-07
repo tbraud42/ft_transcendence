@@ -1,6 +1,12 @@
-// src/pages/stats.ts
 import i18n from '../utils/lang/i18n'
-import {userInfoById, getDashboard, userTournament, userInfoByUsername, changeUserAvatar} from '../api/methode'
+import {
+    userInfoById,
+    getDashboard,
+    userTournament,
+    userInfoByUsername,
+    changeUserAvatar,
+    addFriend, deleteFirend
+} from '../api/methode'
 import { renderPieWinRate } from '../components/charts/PieWinRate'
 import { renderLineMatchesOverTime } from '../components/charts/LineMatchesOverTime'
 import { renderBarScores } from '../components/charts/BarScores'
@@ -8,6 +14,7 @@ import {getAvatar, getUsername, setAvatar} from '../utils/storage'
 import profileIcon from '../img/profile-icon.svg'
 import {byteSizeToHumanReadable, fileToBase64} from "../utils/files";
 import {createOverlayCard} from "../components/overlayCard";
+import {createFollowButton} from "../components/followButton";
 
 type GamesInfo = {
     id: number
@@ -18,6 +25,7 @@ type GamesInfo = {
     is_twofa_enabled?: boolean | null
     total_seconds?: number | null
     total_games?: number | null
+    follow?: boolean | null
 }
 
 type Dashboard = {
@@ -144,26 +152,30 @@ export function renderStats(userName: string): HTMLElement {
                         gi?.username || 'User',
                         isSelf,
                         async (file) => {
-
-                            const base64 = await fileToBase64(file);
-
+                            const base64 = await fileToBase64(file)
                             if (base64.length > 1_398_102) {
                                 const overlay = createOverlayCard({
                                     title: i18n.t('error_file_too_large'),
                                     text: i18n.t('error_file_exceeded_limit', { size: byteSizeToHumanReadable(1_398_102) }),
-                                });
-                                document.body.appendChild(overlay.element);
+                                })
+                                document.body.appendChild(overlay.element)
                             } else {
                                 changeUserAvatar(base64).then(() => {})
                                 setAvatar(base64)
-
                                 const img = avatarEl.querySelector('img') as HTMLImageElement | null
-                                if (img) {
-                                    img.src = base64
-                                }
+                                if (img) img.src = base64
                             }
                         }
                     )
+
+                    if (!isSelf && gi) {
+                        const isFollowing = Boolean(gi.follow)
+                        const followBtn = createFollowButton(isFollowing, async (next) => {
+                            await setFollow(Number(gi.id), next)
+                            gi.follow = next
+                        })
+                        avatarEl.appendChild(followBtn)
+                    }
 
                     userContent.replaceChildren(avatarEl)
                     userContent.append(
@@ -294,7 +306,14 @@ function createEditableAvatar(
     return wrap
 }
 
-/** DOM helpers + formatters */
+async function setFollow(userId: number, follow: boolean): Promise<void> {
+    if (follow) {
+        await addFriend(userId);
+    } else {
+        await deleteFirend(userId);
+    }
+    document.dispatchEvent(new CustomEvent('stats:follow-changed', { detail: { userId, follow } }))
+}
 
 function div(cls: string) {
     const d = document.createElement('div')
