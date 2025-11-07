@@ -5,7 +5,7 @@ import addFriendsIcon from "../img/friend_add-icon.svg";
 import { navigateTo } from "../utils/router";
 import {addFriend, deleteFirend, getFriends} from "../api/methode";
 
-type Friend = { id: string; name: string; avatar?: string; online?: boolean };
+type Friend = { id: string; name: string; mutual: boolean; avatar?: string; online?: boolean };
 type State = { mutual: Friend[]; followingOnly: Friend[]; followersOnly: Friend[] };
 
 let state: State = { mutual: [], followingOnly: [], followersOnly: [] };
@@ -60,7 +60,7 @@ export function renderFriendsPage(): HTMLElement {
     getFriends()
         .then((data) => {
             const api = data.info;
-            state = reconcile(api.friends, api.pendings);
+            state = reconcile(api.friends, api.pending);
             refresh();
         })
         .catch(console.error);
@@ -68,26 +68,46 @@ export function renderFriendsPage(): HTMLElement {
     return root;
 }
 
-function reconcile(friends: any[], pendings: any[]): State {
-    const toFriend = (u: any): Friend => ({ id: String(u.id), name: u.username, avatar: u.avatar });
+function reconcile(friends: any[], pending: any[]): State {
+    const toFriend = (u: any): Friend => ({
+        id: String(u.id),
+        name: u.username || u.name || u.user || 'Unknown',
+        avatar: u.avatar || undefined,
+        mutual: !!u.mutual,
+        online: !!u.online,
+    });
 
-    const following = (friends || []).map(toFriend);
-    const followers = (pendings || []).map(toFriend);
+    const following = friends.map(toFriend);
+    const followers = pending.map(toFriend);
 
-    console.log(followers)
+    const followingIds = new Set(following.map(u => u.id));
+    const followersIds = new Set(followers.map(u => u.id));
 
-    const followingSet = new Set(following.map(u => u.id));
-    const followersSet = new Set(followers.map(u => u.id));
+    const mutualIds = new Set(
+        friends
+            .filter(u => u.mutual || followersIds.has(String(u.id)))
+            .map(u => String(u.id))
+    );
 
-    const mutual: Friend[] = followers.filter(u => followingSet.has(u.id));
-    const followingOnly: Friend[] = following.filter(u => !followersSet.has(u.id));
-    const followersOnly: Friend[] = followers.filter(u => !followingSet.has(u.id));
+    const mutual = friends
+        .filter(u => mutualIds.has(String(u.id)))
+        .map(toFriend);
 
-    const byName = (a: Friend, b: Friend) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    const followingOnly = friends
+        .filter(u => !mutualIds.has(String(u.id)) && !followersIds.has(String(u.id)))
+        .map(toFriend);
+
+    const followersOnly = followers
+        .filter(u => !followingIds.has(String(u.id)))
+        .map(toFriend);
+
+    const sortByName = (a: Friend, b: Friend) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+
     return {
-        mutual: mutual.sort(byName),
-        followingOnly: followingOnly.sort(byName),
-        followersOnly: followersOnly.sort(byName),
+        mutual: mutual.sort(sortByName),
+        followingOnly: followingOnly.sort(sortByName),
+        followersOnly: followersOnly.sort(sortByName),
     };
 }
 

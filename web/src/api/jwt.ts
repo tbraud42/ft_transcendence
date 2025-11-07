@@ -60,10 +60,10 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
     }
 
     const data = await res.json();
-    if (!data?.token) {
+    if (!data?.info?.token) {
         logout();
         return null;
     }
-    setToken(data.token);
-    return data.token || null;
+    setToken(data.info.token);
+    return data.info.token || null;
 }
