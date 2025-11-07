@@ -98,11 +98,6 @@ export function createTournament(db, { socket_id, name, description, difficulty,
     return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);
 };
 
-export function updateTournament(db, id, { name, description, difficulty, maxPlayer}){
-    const info = db.prepare(`UPDATE tournaments SET name = ?, description = ?, difficulty = ?, maxPlayer = ? WHERE id = ?`);
-    return info.run(name, description || null, difficulty, maxPlayer, id);
-};
-
 export function changeTournamentStatus(db, id, nextStatus = null){
     const current = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(id);
     if (!current) return null;

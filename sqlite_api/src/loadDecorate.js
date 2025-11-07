@@ -24,7 +24,6 @@ import {
   getTournamentById,
   getTournamentsByStatus,
   createTournament,
-  updateTournament,
   changeTournamentStatus,
   setTournamentWinner,
   deleteTournament,
@@ -82,7 +81,6 @@ export function loadDecorate(fastify) {
   fastify.decorate('getTournamentById', getTournamentById);
   fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
   fastify.decorate('createTournament', createTournament);
-  fastify.decorate('updateTournament', updateTournament);
   fastify.decorate('changeTournamentStatus', changeTournamentStatus);
   fastify.decorate('setTournamentWinner', setTournamentWinner);
   fastify.decorate('deleteTournament', deleteTournament);
