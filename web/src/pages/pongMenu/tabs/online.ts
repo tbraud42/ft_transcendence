@@ -104,13 +104,19 @@ export function renderOnlineTab(): HTMLElement {
                 setIsPrivate(false)
                 overlay.close()
                 createTournament(nameInput.value, difficulty.getValue() as keyof typeof Difficulty, parseInt(maxPlayers.getValue()))
-                    .then(room => {
-                        setRoomId(room.id)
-                        navigateTo(`/pong/lobby/${room.id}`)
+                    .then(result => {
+                        if (result.error) {
+                            const overlay = createOverlayCard({
+                                title: i18n.t('error'),
+                                text: i18n.t(result.message),
+                            })
+                            document.body.appendChild(overlay.element)
+                        } else {
+                            setRoomId(result.id)
+                            navigateTo(`/pong/lobby/${result.id}`)
+                        }
                     })
-                    .catch(() => alert(i18n.t('pong_online_error_create')))
             }
-
             document.body.appendChild(overlay.element)
         }
 

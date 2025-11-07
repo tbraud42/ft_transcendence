@@ -64,9 +64,6 @@ export default async function (fastify, options) {
 
     const data = { name, description, difficulty, maxPlayer, creator };
 
-    if (fastify.getTournamentByName(fastify.db, name))
-        return reply.code(200).send({ error: true, code: 'TOURNAMENT_NAME_ALREADY_TAKEN', info: 'Tournament name already taken' });
-
     const tournament = await fastify.createTournament(fastify.db, data);
     return reply.send({ error: false, code: '', info: { tournament } });
   });

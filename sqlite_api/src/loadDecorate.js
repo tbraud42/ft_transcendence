@@ -23,7 +23,6 @@ import {
   getAllTournaments,
   getTournamentById,
   getTournamentsByStatus,
-  getTournamentByName,
   createTournament,
   updateTournament,
   changeTournamentStatus,
@@ -82,7 +81,6 @@ export function loadDecorate(fastify) {
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
   fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
-  fastify.decorate('getTournamentByName', getTournamentByName);
   fastify.decorate('createTournament', createTournament);
   fastify.decorate('updateTournament', updateTournament);
   fastify.decorate('changeTournamentStatus', changeTournamentStatus);

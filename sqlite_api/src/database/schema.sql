@@ -57,8 +57,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
   FOREIGN KEY (creator) REFERENCES users(username) ON DELETE SET NULL
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uq_tournaments_name_nocase
-  ON tournaments(name COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS idx_tournaments_status  ON tournaments(status);
 CREATE INDEX IF NOT EXISTS idx_tournaments_creator ON tournaments(creator);
 CREATE INDEX IF NOT EXISTS idx_tournaments_winner  ON tournaments(winner);

@@ -93,10 +93,6 @@ export function getTournamentsByStatus(db, status) {
     `).all(st);
 };
 
-export function getTournamentByName(db, name){
-    return db.prepare(`SELECT * FROM tournaments WHERE name = ? COLLATE NOCASE`).get(name);
-};
-
 export function createTournament(db, { name, description, difficulty, maxPlayer, creator}){
     const info = db.prepare(`INSERT INTO tournaments (name, description, creator, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, 0)`).run(name, description || null, creator, difficulty, maxPlayer);
     return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);

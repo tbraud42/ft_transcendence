@@ -1,6 +1,7 @@
 import { env } from '../utils/env'
 import { getToken } from "../utils/storage";
 import { refreshToken } from "./jwt";
+import i18n from "../utils/lang/i18n";
 
 const API_URL = env.API_URL
 
@@ -21,7 +22,7 @@ export async function fetchTournaments(): Promise<any[]> {
     }
 
     const data = await res.json()
-    return data.info.tournament
+    return data.info.tournament || []
 }
 
 export async function createTournament(
@@ -49,12 +50,20 @@ export async function createTournament(
         },
         body: JSON.stringify(body)
     }).then(async res => {
+        const data = await res.json()
+        console.log(data.info)
+
+        if (data.error) {
+            return {error: true, message: i18n.t(data.code)}
+        }
+
+        /*
         if (!res.ok) {
             const err = res.text().catch(() => '')
             throw new Error(`Failed to create tournament: ${res.status} ${err}`)
         }
-        const data = await res.json()
-        console.log(data.info)
+        */
+
         return data.info.tournament
     })
 }

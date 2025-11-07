@@ -193,7 +193,7 @@ function renderLeaderboard(): HTMLElement {
       const losses = document.createElement('td'); losses.className = 'px-3 py-2'; losses.textContent = String(d.losses)
       const tWon = document.createElement('td'); tWon.className = 'px-3 py-2'; tWon.textContent = String(d.tWon)
       const wr = document.createElement('td'); wr.className = 'px-3 py-2'; wr.textContent = `${(d.winRate * 100).toFixed(1)}%`
-      const time = document.createElement('td'); time.className = 'px-3 py-2'; time.textContent = String(d.time)
+      const time = document.createElement('td'); time.className = 'px-3 py-2'; time.textContent = `${(d.time).toFixed(0)}s`
       const create = document.createElement('td'); create.className = 'px-3 py-2'; create.textContent = String(d.create)
 
       tr.append(rank, user, wins, losses, tWon, wr, time, create)
