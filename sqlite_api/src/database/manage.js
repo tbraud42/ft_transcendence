@@ -186,6 +186,7 @@ export function listFriends(db, userId, minutes = 5) {
     SELECT
       u.id,
       u.username,
+      u.avatar,
       uf.created_at AS since,
       u.last_timestamp,
       CASE
@@ -218,6 +219,7 @@ export function pendingFriends(db, userId, minutes = 5) {
     SELECT
       u.id,
       u.username,
+      u.avatar,
       CASE
         WHEN u.last_timestamp IS NULL THEN 0
         WHEN u.last_timestamp >= datetime('now', ?) THEN 1
@@ -238,8 +240,6 @@ export function pendingFriends(db, userId, minutes = 5) {
 
   return db.prepare(sql).all(`-${minutes} minutes`, uid, uid);
 }
-
-
 
 /* -------------------- Tournaments -------------------- */
 
