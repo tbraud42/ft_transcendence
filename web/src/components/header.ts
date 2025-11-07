@@ -1,4 +1,4 @@
-import i18n from '../utils/lang/i18n'
+import i18n, {getLangs} from '../utils/lang/i18n'
 import { navigateTo, router } from '../utils/router'
 // @ts-ignore
 import { createButton } from './button'
@@ -85,9 +85,8 @@ function createControls(): HTMLDivElement {
 function createLangSelect(): HTMLSelectElement {
     const select = document.createElement('select')
     select.className = 'bg-gray-700 text-white px-3 py-2 rounded-xl border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm shadow-sm transition'
-    const langs: Record<string, string> = { en: '🇬🇧', fr: '🇫🇷' }
 
-    Object.entries(langs).forEach(([code, emoji]) => {
+    Object.entries(getLangs()).forEach(([code, emoji]) => {
         const opt = document.createElement('option')
         opt.value = code
         opt.textContent = emoji

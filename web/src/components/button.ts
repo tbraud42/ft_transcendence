@@ -1,7 +1,7 @@
 export function createButton(
     text: string,
     type: 'submit' | 'button' = 'button',
-    color: 'blue' | 'red' | 'black' = 'blue'
+    color: 'blue' | 'red' | 'black' | 'gray' = 'blue'
 ): HTMLButtonElement {
     const button = document.createElement('button')
     button.type = type
@@ -21,6 +21,10 @@ export function createButton(
         button.className =
             base +
             'bg-black hover:bg-gray-900 text-white'
+    } else if (color === 'gray') {
+        button.className =
+            base +
+            'bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-black dark:text-white'
     }
 
     button.textContent = text
