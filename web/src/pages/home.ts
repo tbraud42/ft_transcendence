@@ -132,7 +132,7 @@ function renderLeaderboard(): HTMLElement {
     { key: 'rank',     label: i18n.t('lb_col_rank') },
     { key: 'username', label: i18n.t('lb_col_user') },
     { key: 'wins',     label: i18n.t('lb_col_wins') },
-    { key: 'losses',   label: i18n.t('lb_col_losses') },
+    { key: 'losses',   label: i18n.t('lb_col_loses') },
     { key: 'tWon',     label: i18n.t('lb_col_tWon') },
     { key: 'winRate',  label: i18n.t('lb_col_winrate') },
     { key: 'time',     label: i18n.t('lb_col_time') },

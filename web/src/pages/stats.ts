@@ -100,8 +100,9 @@ export function renderStats(userName: string): HTMLElement {
     const table = document.createElement('table')
     table.className = 'min-w-[640px] w-full text-left border-separate border-spacing-y-2'
     const thead = document.createElement('thead')
-    const trh = document.createElement('tr')
-    ;['Date', 'Opponent', 'Score', 'Result'].forEach(lbl => {
+    const trh = document.createElement('tr');
+    [i18n.t('stats_col_date'), i18n.t('stats_col_opponent'), i18n.t('stats_col_score'), i18n.t('stats_col_result')]
+        .forEach(lbl => {
         const th = document.createElement('th')
         th.className = 'px-3 py-2 text-sm text-black/70 dark:text-white/70'
         th.textContent = lbl
@@ -179,9 +180,9 @@ export function renderStats(userName: string): HTMLElement {
 
                     userContent.replaceChildren(avatarEl)
                     userContent.append(
-                        row('Username', gi?.username ?? '-'),
-                        row('Registered', fmtDateTime(gi?.created_at)),
-                        row('Last Seen', fmtDateTime(gi?.last_timestamp)),
+                        row(i18n.t('stats_label_username'), gi?.username ?? '-'),
+                        row(i18n.t('stats_label_username'), fmtDateTime(gi?.created_at)),
+                        row(i18n.t('stats_label_last_seen'), fmtDateTime(gi?.last_timestamp)),
                     )
 
                     const totalGames = (db?.games ?? gi?.total_games ?? 0) | 0
@@ -190,10 +191,10 @@ export function renderStats(userName: string): HTMLElement {
                     const winRate = clamp01(db?.winRate ?? (totalGames ? wins / totalGames : 0))
 
                     metrics.replaceChildren(
-                        metricBubble(i18n.t('lb_col_games') || 'Total Games', String(totalGames), 'bg-white/10 border-white/10'),
-                        metricBubble(i18n.t('lb_col_wins') || 'Wins', String(wins), 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30'),
-                        metricBubble('Losses', String(losses), 'bg-rose-500/15 text-rose-400 border-rose-400/30'),
-                        metricBubble(i18n.t('lb_col_winrate') || 'Win Rate', (winRate * 100).toFixed(1) + '%', 'bg-blue-500/10 text-blue-400 border-blue-400/30 col-span-2 sm:col-span-1')
+                        metricBubble(i18n.t('lb_col_games'), String(totalGames), 'bg-white/10 border-white/10'),
+                        metricBubble(i18n.t('lb_col_wins'), String(wins), 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30'),
+                        metricBubble(i18n.t('lb_col_loses'), String(losses), 'bg-rose-500/15 text-rose-400 border-rose-400/30'),
+                        metricBubble(i18n.t('lb_col_winrate'), (winRate * 100).toFixed(1) + '%', 'bg-blue-500/10 text-blue-400 border-blue-400/30 col-span-2 sm:col-span-1')
                     )
 
                     renderPieWinRate(pieHost, { wins, losses })

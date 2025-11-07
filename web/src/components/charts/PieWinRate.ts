@@ -1,4 +1,5 @@
 import { ensureChartJS } from '../../utils/ensureChart';
+import i18n from "../../utils/lang/i18n";
 
 export interface PieWinRateProps {
     wins: number;
@@ -16,7 +17,7 @@ export async function renderPieWinRate(container: HTMLElement, props: PieWinRate
     new Chart(canvas.getContext('2d'), {
         type: 'pie',
         data: {
-            labels: ['Wins', 'Losses'],
+            labels: [ i18n.t('lb_col_wins'), i18n.t('lb_col_loses') ],
             datasets: [{ data: [props.wins, props.losses] }]
         },
         options: {

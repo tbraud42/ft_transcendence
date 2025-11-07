@@ -1,4 +1,5 @@
 import { ensureChartJS } from '../../utils/ensureChart';
+import i18n from "../../utils/lang/i18n";
 
 export interface BarScoresProps {
     labels: string[];
@@ -19,8 +20,8 @@ export async function renderBarScores(container: HTMLElement, props: BarScoresPr
         data: {
             labels: props.labels,
             datasets: [
-                { label: 'You', data: props.you },
-                { label: 'Opponent', data: props.opp }
+                { label: i18n.t('stats_col_you'), data: props.you },
+                { label: i18n.t('stats_col_opponent'), data: props.opp }
             ]
         },
         options: {
