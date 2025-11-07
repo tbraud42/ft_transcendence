@@ -9,6 +9,7 @@ import {
   getDashboardTime,
   getDashboardCreat,
 } from '../api/methode'
+import {navigateTo} from "../utils/router";
 
 export type SortKey = 'rank' | 'username' | 'wins' | 'losses' | 'tWon' | 'winRate' | 'time' | 'create'
 
@@ -188,7 +189,10 @@ function renderLeaderboard(): HTMLElement {
       tr.className = 'bg-white/80 dark:bg-white/10 text-black dark:text-white rounded-xl overflow-hidden'
 
       const rank = document.createElement('td'); rank.className = 'px-3 py-2 text-sm opacity-60'; rank.textContent = String(idx + 1)
-      const user = document.createElement('td'); user.className = 'px-3 py-2 font-medium'; user.textContent = d.username
+      const user = document.createElement('td');
+      user.className = 'px-3 py-2 font-medium text-blue-500 cursor-pointer hover:underline';
+      user.textContent = d.username;
+      user.addEventListener('click', () => navigateTo(`/stats/${d.username}`));
       const wins = document.createElement('td'); wins.className = 'px-3 py-2'; wins.textContent = String(d.wins)
       const losses = document.createElement('td'); losses.className = 'px-3 py-2'; losses.textContent = String(d.losses)
       const tWon = document.createElement('td'); tWon.className = 'px-3 py-2'; tWon.textContent = String(d.tWon)

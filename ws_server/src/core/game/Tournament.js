@@ -38,7 +38,7 @@ export class Tournament {
      */
     addPlayer(client) {
         const username = client.getUsername();
-        if (!username || this.participants.has(username) || this.participants.size >= this.maxPlayers) {
+        if (!username || this.participants.has(username) || this.participants.size >= this.maxPlayers || this.isEnded()) {
             return false;
         }
 
