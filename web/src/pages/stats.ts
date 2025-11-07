@@ -307,10 +307,14 @@ function createEditableAvatar(
 }
 
 async function setFollow(userId: number, follow: boolean): Promise<void> {
-    if (follow) {
-        await addFriend(userId);
-    } else {
-        await deleteFirend(userId);
+    try {
+        if (follow) {
+            await addFriend(userId);
+        } else {
+            await deleteFirend(userId);
+        }
+    } catch (err) {
+        console.error('Error following user:', err);
     }
     document.dispatchEvent(new CustomEvent('stats:follow-changed', { detail: { userId, follow } }))
 }
