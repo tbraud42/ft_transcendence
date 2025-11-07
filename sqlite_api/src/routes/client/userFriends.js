@@ -15,18 +15,18 @@ export default async function (fastify, options) {
   fastify.post('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friendId = Number(req.params.id);
     if (friendId === req.user.id) {
-      return reply.code(404).send({ error: true, code: 'USER_INVALID_ID', info: 'id must be different of yours' });
+      return reply.code(200).send({ error: true, code: 'USER_INVALID_ID', info: 'id must be different of yours' });
     }
 
     const friend = fastify.addFriend(fastify.db, req.user.id, friendId);
     if (friend.error === true) {
       switch (friend.msg) {
         case 'unknowUser':
-          return reply.code(404).send({ error: true, code: 'USER_INVALID_ID', info: 'unknow user id' });
+          return reply.code(200).send({ error: true, code: 'USER_INVALID_ID', info: 'unknow user id' });
         case 'alreadyFriend':
-          return reply.code(404).send({ error: true, code: 'USER_ALREADY_FRIEND', info: 'user already friend' });
+          return reply.code(200).send({ error: true, code: 'USER_ALREADY_FRIEND', info: 'user already friend' });
         case 'friendLimit':
-          return reply.code(404).send({ error: true, code: 'MAX_FRIEND_LIMIT', info: 'limit friend hit' });
+          return reply.code(200).send({ error: true, code: 'MAX_FRIEND_LIMIT', info: 'limit friend hit' });
       }
     }
     return reply.send({ error: false, code: '', info: { } });
@@ -35,12 +35,12 @@ export default async function (fastify, options) {
   fastify.delete('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friendId = Number(req.params.id);
     if (friendId === req.user.id) {
-      return reply.code(404).send({ error: true, code: 'USER_INVALID_ID', info: 'id must be different of yours' });
+      return reply.code(200).send({ error: true, code: 'USER_INVALID_ID', info: 'id must be different of yours' });
     }
 
     const removed = fastify.removeFriend(fastify.db, req.user.id, friendId);
     if (!removed) {
-      return reply.code(404).send({ error: true, code: 'USER_NOT_FRIENDS', info: 'Not friends' });
+      return reply.code(200).send({ error: true, code: 'USER_NOT_FRIENDS', info: 'Not friends' });
     }
     return reply.send({ error: false, code: '', info: 'friend delete' });
   });

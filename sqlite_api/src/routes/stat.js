@@ -13,7 +13,7 @@
 export default async function (fastify, opts) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const admin = fastify.isAdmin(fastify.db, req.user.id);
-    if (!admin) return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
+    if (!admin) return reply.code(200).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
 
     return reply.send({ error: true, code: '', info: {
       request: fastify.apiStat.request,

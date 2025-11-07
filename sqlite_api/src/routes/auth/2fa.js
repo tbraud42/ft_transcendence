@@ -13,11 +13,11 @@ export default async function (fastify, options) {
   fastify.post('/setup', {preHandler: [fastify.auth]}, async (req, reply) => {
 
     if (fastify.usernameEndsWith42(req.user.username)) {
-      return reply.code(403).send({ error: true, code: 'TFA_NOT_ALLOWED_42' , info: '2FA not allowed for 42 users' } );
+      return reply.code(200).send({ error: true, code: 'TFA_NOT_ALLOWED_42' , info: '2FA not allowed for 42 users' } );
     }
 
     if (req.user.is_twofa_enabled) {
-      return reply.code(403).send({ error: true, code: 'TFA_ALREADY_ENABLED', info: '2FA already enabled' });
+      return reply.code(200).send({ error: true, code: 'TFA_ALREADY_ENABLED', info: '2FA already enabled' });
     }
 
     const secret = speakeasy.generateSecret({
@@ -33,7 +33,7 @@ export default async function (fastify, options) {
 
   fastify.post('/activate', {preHandler: [fastify.auth]}, async (req, reply) => {
     if (req.user.is_twofa_enabled) {
-      return reply.code(403).send({ error: true, code: 'TFA_ALREADY_ENABLED', info: '2FA already enabled' });
+      return reply.code(200).send({ error: true, code: 'TFA_ALREADY_ENABLED', info: '2FA already enabled' });
     }
 
     const body = req.body ?? {};
@@ -50,12 +50,12 @@ export default async function (fastify, options) {
       return reply.send({ error: false, code: '', info: {} });
     }
 
-    return reply.code(401).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
+    return reply.code(200).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
   });
 
   fastify.post('/verify', {preHandler: [fastify.auth2faPending]}, async (req, reply) => {
     if (req.user.twofa !== false) {
-      return reply.code(400).send({ error: true, code: 'TFA_ALREADY_DISABLED', info: '2FA disabled' });
+      return reply.code(200).send({ error: true, code: 'TFA_ALREADY_DISABLED', info: '2FA disabled' });
     }
 
     const body = req.body ?? {};
@@ -79,12 +79,12 @@ export default async function (fastify, options) {
       return reply.send({ error: false, code: '', info: { token: fullToken } });
     }
 
-    return reply.code(401).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
+    return reply.code(200).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
   });
 
     fastify.post('/disable', {preHandler: [fastify.auth]}, async (req, reply) => {
         if (!req.user.is_twofa_enabled) {
-            return reply.code(403).send({ error: true, code: 'TFA_ALREADY_DISABLED', info: '2FA disabled' });
+            return reply.code(200).send({ error: true, code: 'TFA_ALREADY_DISABLED', info: '2FA disabled' });
         }
 
         const body = req.body ?? {};
@@ -101,7 +101,7 @@ export default async function (fastify, options) {
             return reply.send({ error: false, code: '', info: {} });
         }
 
-        return reply.code(401).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
+        return reply.code(200).send({ error: true, code: 'TFA_INVALID_CODE', info: 'Invalid 2FA code' });
     });
 }
 

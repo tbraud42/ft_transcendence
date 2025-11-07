@@ -10,20 +10,20 @@ export default async function (fastify, options) {
     const password = typeof body.password === 'string' ? body.password : '';
 
     if (fastify.usernameEndsWith42(username)) {
-      return reply.code(400).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: 'Missing or invalid field [username/password]' });
+      return reply.code(200).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: 'Missing or invalid field [username/password]' });
     }
 
     if (!username || !password) {
-      return reply.code(400).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: 'Missing or invalid field [username/password]' });
+      return reply.code(200).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: 'Missing or invalid field [username/password]' });
     }
 
     const user = await fastify.showUserByUsername(fastify.db, username);
     if (!user) {
-      return reply.code(401).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found'});
+      return reply.code(200).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found'});
     }
 
     if (!(await fastify.verifyPassword(password, user.password_hash))) {
-      return reply.code(400).send({ error: true, code: 'AUTH_INVALID_PASSWORD', info: 'Invalid password' });
+      return reply.code(200).send({ error: true, code: 'AUTH_INVALID_PASSWORD', info: 'Invalid password' });
     }
 
     fastify.updateTimeStamp(fastify.db, user.id);
