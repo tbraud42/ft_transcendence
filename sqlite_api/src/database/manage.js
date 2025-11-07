@@ -193,13 +193,21 @@ export function listFriends(db, userId, minutes = 5) {
         WHEN u.last_timestamp >= datetime('now', ?) THEN 1
         ELSE 0
       END AS online,
-      CAST(strftime('%s','now') - strftime('%s', COALESCE(u.last_timestamp, '1970-01-01')) AS INTEGER) AS last_seen_seconds
+      CAST(strftime('%s','now') - strftime('%s', COALESCE(u.last_timestamp, '1970-01-01')) AS INTEGER)
+        AS last_seen_seconds,
+      CASE
+        WHEN EXISTS (
+          SELECT 1 FROM user_friends f2
+          WHERE f2.user_id = u.id AND f2.friend_id = ?
+        )
+        THEN 1 ELSE 0
+      END AS mutual
     FROM user_friends uf
     JOIN users u ON u.id = uf.friend_id
     WHERE uf.user_id = ?
     ORDER BY u.username COLLATE NOCASE`;
 
-  return db.prepare(sql).all(`-${minutes} minutes`, uid);
+  return db.prepare(sql).all(`-${minutes} minutes`, uid, uid);
 }
 
 export function pendingFriends(db, userId, minutes = 5) {

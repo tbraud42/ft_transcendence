@@ -14,7 +14,7 @@ export default async function (fastify, options) {
 
   fastify.post('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friendId = Number(req.params.id);
-    if (friendId === Number(req.user.id)) {
+    if (friendId === req.user.id) {
       return reply.code(404).send({ error: true, code: 'USER_INVALID_ID', info: 'id must be different of yours' });
     }
 
