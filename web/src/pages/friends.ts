@@ -60,7 +60,6 @@ export function renderFriendsPage(): HTMLElement {
     getFriends()
         .then((data) => {
             const api = data.info;
-            console.log(api)
             state = reconcile(api.friends, api.pending);
             refresh();
         })
