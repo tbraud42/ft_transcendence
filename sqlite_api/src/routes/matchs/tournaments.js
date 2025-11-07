@@ -48,6 +48,7 @@ export default async function (fastify, options) {
   fastify.post('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const body = req.body ?? {};
 
+    const socket_id   = 1;
     const name        = typeof body.name === 'string' ? body.name.trim() : '';
     const description = typeof body.description === 'string' ? body.description.trim() : '';
     const difficulty  = typeof body.difficulty === 'string' ? body.difficulty.trim().toLowerCase() : '';
@@ -62,7 +63,7 @@ export default async function (fastify, options) {
     if (!Number.isInteger(maxPlayer) || ![2,4,8].includes(maxPlayer)) return bad('Invalid maxPlayer');
     if (!creator) return bad('Invalid creator');
 
-    const data = { name, description, difficulty, maxPlayer, creator };
+    const data = { socket_id, name, description, difficulty, maxPlayer, creator };
 
     const tournament = await fastify.createTournament(fastify.db, data);
     return reply.send({ error: false, code: '', info: { tournament } });

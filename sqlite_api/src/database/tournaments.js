@@ -93,8 +93,8 @@ export function getTournamentsByStatus(db, status) {
     `).all(st);
 };
 
-export function createTournament(db, { name, description, difficulty, maxPlayer, creator}){
-    const info = db.prepare(`INSERT INTO tournaments (name, description, creator, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, 0)`).run(name, description || null, creator, difficulty, maxPlayer);
+export function createTournament(db, { socket_id, name, description, difficulty, maxPlayer, creator}){
+    const info = db.prepare(`INSERT INTO tournaments (socket_id, name, description, creator, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, ?, 0)`).run(socket_id, name, description || null, creator, difficulty, maxPlayer);
     return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);
 };
 

@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS user_friends (
 -- TOURNAMENTS
 CREATE TABLE IF NOT EXISTS tournaments (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  socket_id    INTEGER,
   name         VARCHAR(50) NOT NULL,
   description  VARCHAR(255),
   maxPlayer    INTEGER NOT NULL DEFAULT 2 CHECK (maxPlayer IN (2,4,8)),
