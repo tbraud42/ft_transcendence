@@ -58,6 +58,7 @@
   "pong_tab_ai": "IA",
   "leaderboard_title": "Classement",
   "search": "rechercher",
+  "lb_col_games": "Parties",
   "lb_col_rank": "Rang",
   "lb_col_user": "Nom",
   "lb_col_wins": "Victoires",
@@ -124,5 +125,17 @@
   "unknown_error": "Erreur inconnue",
   "error_file_too_large": "Fichier trop volumineux",
   "error_file_exceeded_limit": "La taille du fichier dépasse la limite autorisée de {{size}} Mo. Veuillez choisir un fichier plus petit.",
-  "not_available_yet": "Disponible prochainement"
+  "not_available_yet": "Disponible prochainement",
+
+  "friends_title": "Liste d’amis",
+  "friends_tab_mutual": "Mutuels",
+  "friends_tab_following_only": "Abonnements",
+  "friends_tab_followers_only": "Abonnés",
+  "friends_no_mutual": "Pas d’amis mutuels trouvés.",
+  "friends_no_following": "Aucun abonnement trouvé.",
+  "friends_no_followers": "Aucun abonné trouvé.",
+  "friends_unfollow": "Se désabonner",
+  "friends_follow": "S’abonner",
+  "friends_status_online": "En ligne",
+  "friends_status_offline": "Hors ligne"
 }

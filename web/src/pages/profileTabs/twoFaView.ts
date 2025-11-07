@@ -125,10 +125,10 @@ export function render2faView(): HTMLElement {
                 btnEnable.classList.remove("hidden");
                 hideSetupUI();
             } else {
-                setToast(status, "error", i18n.t("2fa_disable_error"));
+                setToast(status, "error", i18n.t("2fa_error_invalid"));
             }
         } catch {
-            setToast(status, "error", i18n.t("2fa_disable_error"));
+            setToast(status, "error", i18n.t("2fa_error_invalid"));
         }
     };
 

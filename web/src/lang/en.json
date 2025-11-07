@@ -58,6 +58,7 @@
   "pong_tab_ai": "AI",
   "leaderboard_title": "Leaderboard",
   "search": "search",
+  "lb_col_games": "Games",
   "lb_col_rank": "Rank",
   "lb_col_user": "Username",
   "lb_col_wins": "Wins",
@@ -124,5 +125,17 @@
   "unknown_error": "Unknown error",
   "error_file_too_large": "File to large",
   "error_file_exceeded_limit": "The selected image exceeds the maximum size of {{size}} MB. Please choose a smaller file.",
-  "not_available_yet": "Coming soon"
+  "not_available_yet": "Coming soon",
+
+  "friends_title": "Friends List",
+  "friends_tab_mutual": "Mutual",
+  "friends_tab_following_only": "Following",
+  "friends_tab_followers_only": "Followers",
+  "friends_no_mutual": "No mutual friends found.",
+  "friends_no_following": "Not following anyone.",
+  "friends_no_followers": "No followers found.",
+  "friends_unfollow": "Unfollow",
+  "friends_follow": "Follow",
+  "friends_status_online": "Online",
+  "friends_status_offline": "Offline"
 }
