@@ -140,7 +140,7 @@ export default async function (fastify, options) {
     await fastify.insertStatGame(fastify, tid, preparedRows);
 
     if (tourWinnerUsername !== undefined) {
-      const u = fastify.showUserByUsername(fastify.db, tourWinnerUsername);
+      const u = fastify.showUserByUsername(fastify, tourWinnerUsername);
       if (!u) return reply.code(200).send({ error: true, code: 'TOURNAMENT_INVALID_WINNER', info: 'Invalid tournament winner' });
 
       const done = await fastify.setTournamentWinner(fastify.db, tid, tourWinnerUsername);

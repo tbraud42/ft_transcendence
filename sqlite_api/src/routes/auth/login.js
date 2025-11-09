@@ -17,7 +17,7 @@ export default async function (fastify, options) {
       return reply.code(200).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: 'Missing or invalid field [username/password]' });
     }
 
-    const user = await fastify.showUserByUsername(fastify.db, username);
+    const user = await fastify.showUserByUsername(fastify, username);
     if (!user) {
       return reply.code(200).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found'});
     }

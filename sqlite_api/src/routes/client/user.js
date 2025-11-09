@@ -11,6 +11,9 @@
 
 export default async function (fastify, options) {
   fastify.get('/me', { preHandler: [fastify.auth] }, async (req, reply) => {
+    const user = await fastify.showUserById(fastify.db, req.user.id);
+    if (!user) return reply.code(404).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found' });
+
     return reply.send({ error: false, code: '', info: fastify.mapUserForSelfOrAdmin(user) });
   });
 
@@ -37,7 +40,7 @@ export default async function (fastify, options) {
     const body = req.body ?? {};
     const username = typeof body.username === 'string' ? body.username.trim() : '';
 
-    const user = await fastify.showUserByUsername(fastify.db, username);
+    const user = await fastify.showUserByUsername(fastify, username);
     if (!user) return reply.code(200).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found' });
 
     const isSelf = username === req.user.username;
@@ -100,9 +103,15 @@ export default async function (fastify, options) {
 
   fastify.delete('/:id(\\d+)', {preHandler: [fastify.auth]}, async (req, reply) => {
     const targetId = Number(req.params.id);
+    const body = req.body ?? {};
+    const password = typeof body.password === 'string' ? body.password.trim() : '';
 
     if (targetId !== req.user.id && req.user.role !== 'admin') {
       return reply.code(200).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
+    }
+
+    if (!await fastify.verifyPassword(password, req.user.password_hash)) {
+        return reply.code(200).send({ error: true, code: 'PASSWORD_CHANGE_REQUIRED', info: 'Need too change the password' });
     }
 
     await fastify.deleteUser(fastify.db, req.params.id);

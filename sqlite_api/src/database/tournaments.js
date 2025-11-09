@@ -5,7 +5,7 @@ export function getAllTournaments(db) {
   return db.prepare(`
     SELECT
       t.id,
-      t.soket_id,
+      t.socket_id,
       t.name,
       t.description,
       t.maxPlayer,
@@ -26,7 +26,7 @@ export function getTournamentById(db, id) {
   const tournament = db.prepare(`
     SELECT
       t.id,
-      t.soket_id,
+      t.socket_id,
       t.name,
       t.description,
       t.maxPlayer,
@@ -81,7 +81,7 @@ export function getTournamentsByStatus(db, status) {
   return db.prepare(`
     SELECT
       t.id,
-      t.soket_id,
+      t.socket_id,
       t.name,
       t.description,
       t.maxPlayer,
@@ -143,9 +143,9 @@ export function insertStatGame(fastify, tournamentId, gamesInput) {
 
       insGame.run(game_num, tid, p1, p2, winner, started, dur, s1, s2);
 
-      if (fastify.showUserByUsername(fastify.db, p1))
+      if (fastify.showUserByUsername(fastify, p1))
         updUserByName.run(dur, p1);
-      if (fastify.showUserByUsername(fastify.db, p2))
+      if (fastify.showUserByUsername(fastify, p2))
         updUserByName.run(dur, p2);
 
       inserted++;

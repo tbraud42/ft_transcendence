@@ -26,16 +26,18 @@ export async function createUser(db, { username, password, avatar } = {}) {
   };
 }
 
-export function showUserByUsername(db, username) {
-  if (typeof username !== 'string') return null;
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+export function showUserByUsername(fastify, username) {
+  if (typeof username !== 'string' || fastify.isDeletedUsername(username)) return null;
+  const sql = `SELECT * FROM users WHERE username = ? AND username NOT LIKE 'deleted_%'`;
+  const user = fastify.db.prepare(sql).get(username);
   return user || null;
 }
 
 export function showUserById(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return null;
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(uid);
+  const sql = `SELECT * FROM users WHERE id = ? AND username NOT LIKE 'deleted_%'`;
+  const user = db.prepare(sql).get(uid);
   return user || null;
 }
 
@@ -67,7 +69,18 @@ export async function deleteUser(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return null;
 
+  const u = db.prepare(`SELECT username FROM users WHERE id = ?`).get(uid);
+  if (!u) return null;
+  const oldUsername = u.username;
+
   const dummy = await bcrypt.hash(crypto.randomUUID(), 12);
+
+  db.prepare(`UPDATE tournaments SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
+  db.prepare(`UPDATE tournaments SET creator = NULL WHERE creator = ?`).run(oldUsername);
+  db.prepare(`UPDATE games SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
+  db.prepare(`UPDATE games SET player1 = NULL WHERE player1 = ?`).run(oldUsername);
+  db.prepare(`UPDATE games SET player2 = NULL WHERE player2 = ?`).run(oldUsername);
+  db.prepare(`DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?`).run(uid, uid);
 
   const info = db.prepare(`
     UPDATE users

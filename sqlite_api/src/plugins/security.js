@@ -109,6 +109,10 @@ export async function passwordFeedback(errors) {
   return `Password must contain ${messages.join(", ")}.`;
 }
 
-export function usernameEndsWith42(name) {
-  return name.toLowerCase().endsWith('_42');
+export function usernameEndsWith42(username) {
+  return username.toLowerCase().endsWith('_42');
+}
+
+export function isDeletedUsername(username) {
+  return typeof username === 'string' && username.startsWith('deleted_');
 }

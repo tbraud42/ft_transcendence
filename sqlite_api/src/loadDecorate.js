@@ -41,7 +41,8 @@ import {
   allowSelfOrAdmin,
   validatePassword,
   passwordFeedback,
-  usernameEndsWith42
+  usernameEndsWith42,
+  isDeletedUsername
 } from './plugins/security.js'
 
 // import crontab module
@@ -99,6 +100,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
+    fastify.decorate('isDeletedUsername', isDeletedUsername);
 
   // --- Stats ---
   fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });

@@ -13,13 +13,17 @@ export default async function (fastify, options) {
       return reply.code(200).send({ error: true, code: 'VALIDATION_MISSING_OR_INVALID_FIELD', info: 'Missing or invalid field [username/password]' });
     }
 
-    const user = await fastify.showUserByUsername(fastify.db, username);
+    const user = await fastify.showUserByUsername(fastify, username);
     if (user) {
       return reply.code(200).send({ error: true, code: 'USERNAME_ALREADY_USED', info: 'Username already use' });
     }
 
     if (fastify.usernameEndsWith42(username)) {
-      return reply.code(200).send({ error: true, code: 'INVALID_USERNAME_SUFFIX_42', info: 'Invalide username, connot finish by _42' });
+      return reply.code(200).send({ error: true, code: 'INVALID_USERNAME_SUFFIX_42', info: 'Invalide username, cannot finish by _42' });
+    }
+
+    if (fastify.isDeletedUsername(username)) {
+      return reply.code(400).send({ error: true, code: 'INVALID_USERNAME_RESERVED', info: 'Invalide username, reserved username'});
     }
 
     const validation = await fastify.validatePassword(password);
