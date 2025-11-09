@@ -67,7 +67,7 @@ const start = async () => {
           }
         }
       },
-      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
       preflightContinue: false,
@@ -78,7 +78,7 @@ const start = async () => {
 
     if (fastify.isDev()) {
       console.log(`----------show time !----------\n`);
-      await showAllData(fastify.db);
+      showAllData(fastify.db);
     }
   } catch (err) {
     fastify.log.error(err);

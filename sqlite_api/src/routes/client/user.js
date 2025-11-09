@@ -11,12 +11,8 @@
 
 export default async function (fastify, options) {
   fastify.get('/me', { preHandler: [fastify.auth] }, async (req, reply) => {
-    const user = await fastify.showUserById(fastify.db, req.user.id);
-    if (!user) return reply.code(200).send({ error: true, code: 'USER_NOT_FOUND', info: 'User not found' });
-
-    reply.send({ error: false, code: '', info: fastify.mapUserForSelfOrAdmin(user) });
+    return reply.send({ error: false, code: '', info: fastify.mapUserForSelfOrAdmin(user) });
   });
-
 
   fastify.post('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const targetId = Number(req.params.id);
@@ -122,7 +118,6 @@ export default async function (fastify, options) {
 
 // | Error                                        | Code                                        |
 // | -------------------------------------------- | ------------------------------------------- |
-// | User not found                               | `USER_NOT_FOUND`                            |
 // | Invalid id                                   | `USER_INVALID_ID`                           |
 // | Cannot change 42 auth password               | `AUTH_42_PASSWORD_CHANGE_FORBIDDEN`         |
 // | Missing or invalid field [username/password] | `VALIDATION_MISSING_OR_INVALID_CREDENTIALS` |

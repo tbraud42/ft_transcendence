@@ -21,7 +21,7 @@ let db;
 
 if (process.env.NODE_ENV === 'development') {
   db = new Database(dbPath, {
-    verbose: console.log // print toute les action dans la console
+    verbose: console.log
   });
 } else {
   db = new Database(dbPath);

@@ -9,7 +9,7 @@ export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
     const friends = fastify.listFriends(fastify.db, req.user.id);
     const pending = fastify.pendingFriends(fastify.db, req.user.id);
-    return reply.send({ error: false, code: '', info: { friends, pending} });
+    return reply.send({ error: false, code: '', info: { friends, pending } });
   });
 
   fastify.post('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
@@ -29,6 +29,7 @@ export default async function (fastify, options) {
           return reply.code(200).send({ error: true, code: 'MAX_FRIEND_LIMIT', info: 'limit friend hit' });
       }
     }
+
     return reply.send({ error: false, code: '', info: { } });
   });
 
@@ -42,6 +43,7 @@ export default async function (fastify, options) {
     if (!removed) {
       return reply.code(200).send({ error: true, code: 'USER_NOT_FRIENDS', info: 'Not friends' });
     }
+
     return reply.send({ error: false, code: '', info: 'friend delete' });
   });
 }

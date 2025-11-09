@@ -17,16 +17,7 @@ import i18n from "../utils/lang/i18n";
 
 // GET
 export function userMe() {
-  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/me`)
-    .then(data => {
-      if (data.error === true) {
-        switch (data.code) {
-          case "USER_NOT_FOUND":
-            throw new Error(i18n.t(''));
-        }
-      }
-      return data;
-    });
+  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/me`);
 }
 
 // POST

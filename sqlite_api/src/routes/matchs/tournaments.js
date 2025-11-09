@@ -17,32 +17,32 @@ export default async function (fastify, options) {
     if (!tournament || tournament.length === 0) {
       return reply.send({ error: false, code: '', info: {} });
     }
-    reply.send({ error: false, code: '', info: { tournament } });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/:id(\\d+)', { preHandler: [fastify.auth] }, async (req, reply) => {
     const id = Number(req.params.id);
     const tournament = await fastify.getTournamentById(fastify.db, id);
     if (!tournament) return reply.code(200).send({ error: true, code: 'TOURNAMENT_NOT_FOUND', info: 'tournament not found' });
-    reply.send({ error: false, code: '', info: { tournament } });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/waitting', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 0);
     if (!tournament || tournament.length === 0) return reply.send({ error: false, code: '', info: {} });
-    reply.send({ error: false, code: '', info: { tournament } });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/playing', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 1);
     if (!tournament || tournament.length === 0) return reply.send({ error: false, code: '', info: {} });
-    reply.send({ error: false, code: '', info: { tournament } });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.get('/finished', { preHandler: [fastify.auth] }, async (req, reply) => {
     const tournament = await fastify.getTournamentsByStatus(fastify.db, 2);
     if (!tournament || tournament.length === 0) return reply.send({ error: false, code: '', info: {} });
-    reply.send({ error: false, code: '', info: { tournament } });
+    return reply.send({ error: false, code: '', info: { tournament } });
   });
 
   fastify.post('/', { preHandler: [fastify.auth] }, async (req, reply) => {

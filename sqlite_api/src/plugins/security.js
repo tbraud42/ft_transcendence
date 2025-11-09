@@ -31,7 +31,7 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
 
     const user = await fastify.showUserById(fastify.db, Number(decoded.id));
     if (!user) {
-      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // user no longer exists
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // User no longer exists
     }
 
     const is2FAEnabled = !!(user.is_twofa_enabled === true || user.is_twofa_enabled === 1);
@@ -109,8 +109,6 @@ export async function passwordFeedback(errors) {
   return `Password must contain ${messages.join(", ")}.`;
 }
 
-const FORBIDDEN_SUFFIX = '_42';
-
 export function usernameEndsWith42(name) {
-  return name.toLowerCase().endsWith(FORBIDDEN_SUFFIX);
+  return name.toLowerCase().endsWith('_42');
 }

@@ -40,6 +40,7 @@ export default async function (fastify) {
     if (!code || code.length > 2048 ) {
       return reply.code(200).send({ error: true, code: 'INVALID_CODE', info: 'Invalid code' });
     }
+
     if (!state || state.length > 256 || !stateStore.has(state)) {
       return reply.code(200).send({ error: true, code: 'INVALID_STATE', info: 'Invalid state' });
     }
@@ -90,11 +91,7 @@ export default async function (fastify) {
 
     fastify.updateTimeStamp(fastify.db, user.id);
 
-    const token = fastify.generateToken({
-      id: user.id,
-      username: user.username,
-      role: user.role
-    }, true, '12h');
+    const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role }, true, '12h');
 
     return reply.send({ error: false, code: '', info: { token, user: { id: user.id, username: user.username } } });
   });

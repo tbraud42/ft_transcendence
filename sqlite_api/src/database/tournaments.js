@@ -5,6 +5,7 @@ export function getAllTournaments(db) {
   return db.prepare(`
     SELECT
       t.id,
+      t.soket_id,
       t.name,
       t.description,
       t.maxPlayer,
@@ -25,6 +26,7 @@ export function getTournamentById(db, id) {
   const tournament = db.prepare(`
     SELECT
       t.id,
+      t.soket_id,
       t.name,
       t.description,
       t.maxPlayer,
@@ -79,6 +81,7 @@ export function getTournamentsByStatus(db, status) {
   return db.prepare(`
     SELECT
       t.id,
+      t.soket_id,
       t.name,
       t.description,
       t.maxPlayer,
