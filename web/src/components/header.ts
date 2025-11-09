@@ -78,7 +78,11 @@ function createTitle(): HTMLButtonElement {
 function createControls(): HTMLDivElement {
     const wrapper = document.createElement('div')
     wrapper.className = 'flex items-center gap-3'
-    wrapper.append(createLangSelect(), createFriendsButton(), createProfileButton())
+    wrapper.append(createLangSelect())
+    if (isLoggedIn()) {
+        wrapper.append(createFriendsButton())
+    }
+    wrapper.append(createProfileButton())
     return wrapper
 }
 
