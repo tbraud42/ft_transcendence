@@ -74,7 +74,6 @@ export async function updateTournamentState(creator, id, status) {
     })
 
     const data = await res.json().catch(() => ({}))
-    console.log(data)
 
     if (!res.ok) {
         console.error('Error updating tournament state:', res.status, res.statusText)

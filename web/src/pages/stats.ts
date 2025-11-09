@@ -70,7 +70,7 @@ export function renderStats(userName: string): HTMLElement {
     const topGrid = div('grid grid-cols-1 md:grid-cols-2 gap-8 items-start')
 
     const cardUser = card()
-    cardUser.append(sectionTitle(i18n.t('stats_user') || 'User'))
+    cardUser.append(sectionTitle(userName || i18n.t('stats_user')))
     const userContent = div('space-y-3 text-left')
     cardUser.append(userContent)
 

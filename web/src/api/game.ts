@@ -51,7 +51,6 @@ export async function createTournament(
         body: JSON.stringify(body)
     }).then(async res => {
         const data = await res.json()
-        console.log(data.info)
 
         if (data.error) {
             return {error: true, message: i18n.t(data.code)}
