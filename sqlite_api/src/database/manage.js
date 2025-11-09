@@ -66,36 +66,37 @@ export async function updateUserAvatar(db, id, avatar) {
 }
 
 export async function deleteUser(db, id) {
-  const uid = Number(id);
-  if (!Number.isFinite(uid)) return null;
+    const uid = Number(id);
+    if (!Number.isFinite(uid)) return null;
 
-  const u = db.prepare(`SELECT username FROM users WHERE id = ?`).get(uid);
-  if (!u) return null;
-  const oldUsername = u.username;
+    const u = db.prepare(`SELECT username FROM users WHERE id = ?`).get(uid);
+    if (!u) return null;
+    const oldUsername = u.username;
 
-  const dummy = await bcrypt.hash(crypto.randomUUID(), 12);
+    const dummy = await bcrypt.hash(crypto.randomUUID(), 12);
 
-  db.prepare(`UPDATE tournaments SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
-  db.prepare(`UPDATE tournaments SET creator = NULL WHERE creator = ?`).run(oldUsername);
-  db.prepare(`UPDATE games SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
-  db.prepare(`UPDATE games SET player1 = NULL WHERE player1 = ?`).run(oldUsername);
-  db.prepare(`UPDATE games SET player2 = NULL WHERE player2 = ?`).run(oldUsername);
-  db.prepare(`DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?`).run(uid, uid);
+    db.prepare(`UPDATE tournaments SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
+    db.prepare(`UPDATE tournaments SET creator = NULL WHERE creator = ?`).run(oldUsername);
+    db.prepare(`UPDATE games SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
+    db.prepare(`UPDATE games SET player1 = NULL WHERE player1 = ?`).run(oldUsername);
+    db.prepare(`UPDATE games SET player2 = NULL WHERE player2 = ?`).run(oldUsername);
+    db.prepare(`DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?`).run(uid, uid);
+    db.prepare(`DELETE FROM tournaments WHERE creator = ? AND status != 2`).run(oldUsername);
 
-  const info = db.prepare(`
-    UPDATE users
-    SET
-      username         = 'deleted_' || id,
-      password_hash    = ?,
-      role             = 'user',
-      twofa_secret     = NULL,
-      is_twofa_enabled = 0,
-      avatar           = NULL,
-      last_timestamp   = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).run(dummy, uid);
+    const info = db.prepare(`
+        UPDATE users
+        SET
+            username         = 'deleted_' || id,
+            password_hash    = ?,
+            role             = 'user',
+            twofa_secret     = NULL,
+            is_twofa_enabled = 0,
+            avatar           = NULL,
+            last_timestamp   = CURRENT_TIMESTAMP
+        WHERE id = ?
+    `).run(dummy, uid);
 
-  return info.changes > 0 ? { success: true, id: uid, anonymized: true } : null;
+    return info.changes > 0 ? { success: true, id: uid, anonymized: true } : null;
 }
 
 export function isAdmin(db, userId) {

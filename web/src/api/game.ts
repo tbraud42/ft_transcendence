@@ -57,32 +57,6 @@ export async function createTournament(
             return {error: true, message: i18n.t(data.code)}
         }
 
-        /*
-        if (!res.ok) {
-            const err = res.text().catch(() => '')
-            throw new Error(`Failed to create tournament: ${res.status} ${err}`)
-        }
-        */
-
         return data.info.tournament
-    })
-}
-
-export async function getTournament(id: number): Promise<any> {
-    await refreshToken();
-
-    const url = `${API_URL}/tournaments/${id}`
-
-    return fetch(url, {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
-        }
-    }).then(res => {
-        if (!res.ok) {
-            const err = res.text().catch(() => '')
-            throw new Error(`Failed to fetch tournament: ${res.status} ${err}`)
-        }
-        return res.json()
     })
 }

@@ -1,8 +1,9 @@
 import i18n from '../../utils/lang/i18n';
 import { createInput } from '../../components/input';
 import { createButton } from '../../components/button';
-import { changeUserPass } from '../../api/methode';
+import {changeUserPass, deleteUser, userMe} from '../../api/methode';
 import {createOverlayCard} from "../../components/overlayCard";
+import {clearStorage} from "../../utils/storage";
 
 export function renderSettingsView(): HTMLElement {
     const wrapper = document.createElement('div');
@@ -135,8 +136,21 @@ const createDeleteAccountButton = (label: string): HTMLButtonElement => {
         cancel.onclick = () => overlay.close();
         confirm.onclick = () => {
             const password = pwd.value.trim();
-            console.log(password);
-            //TODO: api call to delete account with password verification
+            userMe().then((user) => {
+                deleteUser(user.info.id, password)
+                    .then((res) => {
+                        if (res.error) {
+                            const errorOverlay = createOverlayCard({
+                                title: i18n.t('settings_delete_account_password_error'),
+                            })
+                            document.body.appendChild(errorOverlay.element)
+                            return;
+                        }
+                        overlay.close();
+                        clearStorage()
+                        window.location.href = '/';
+                    })
+            })
             overlay.close();
         };
 

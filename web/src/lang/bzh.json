@@ -21,6 +21,7 @@
   "settings_delete_account_confirm_title": "Kadarnaat dilemel ar gont",
   "settings_delete_account_confirm_message": "Roit ho ker-tremen evit kadarnaat. N’haller ket distreiñ war an ober-mañ.",
   "settings_delete_account_warning": "⚠ N’haller ket distreiñ war an ober-mañ. Ur wech dilemet, ne c’hallot ket adtapout ho kont na ho roadennoù.",
+  "settings_delete_account_password_error": "Ger-tremen direizh.",
   "auth_password_placeholder": "Ger-tremen",
   "common_confirm": "Kadarnaat",
   "common_cancel": "Nullañ",

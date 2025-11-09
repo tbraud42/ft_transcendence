@@ -5,6 +5,7 @@ import {
     saveTournamentResult,
     updateTournamentState
 } from "../../api/game.js";
+import {getTournamentManager} from "./GamesManager.js";
 
 export class Tournament {
     /**
@@ -107,6 +108,9 @@ export class Tournament {
 
         client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
         client.detachTournament();
+        if (this.isEmpty()) {
+            getTournamentManager().removeTournament(this.id);
+        }
         this.broadcastSnapshot();
     }
 
@@ -126,7 +130,9 @@ export class Tournament {
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
         if (this.isEnded()) {
-            updateTournamentState(this.creator, this.id, 2).then();
+            updateTournamentState(this.creator, this.id, 2).then((res) => {
+                console.log(res)
+            });
             saveTournamentResult(this).then();
         }
     }
@@ -143,6 +149,19 @@ export class Tournament {
             }
         }
         return true;
+    }
+
+    /**
+     * Check if the tournament is empty
+     */
+    isEmpty() {
+        let count = 0
+        for (const participant of this.participants.values()) {
+            if (!participant.isBot || !participant.isBot()) {
+                count += 1
+            }
+        }
+        return count === 0;
     }
 
     /**

@@ -95,17 +95,18 @@ export function changeUserAvatar(newAvatar: string) {
 }
 
 // DELETE
-export function deleteUser(id: number) {
-  return apiFetch<{ error: boolean, code: string, info: string }>(`/user/${id}`, { method: 'DELETE' })
-    .then(data => {
-      if (data.error === true) {
-        switch (data.code) {
-          case "AUTH_ACCESS_DENIED":
-            throw new Error(i18n.t(''));
-        }
-      }
-      return data;
-  });
+export function deleteUser(id: number, password: string) {
+    return apiFetch<{ error: boolean, code: string, info: string }>(`/user/${id}`, { method: 'DELETE' ,
+        json: {password: password}})
+        .then(data => {
+            if (data.error === true) {
+                switch (data.code) {
+                    case "AUTH_ACCESS_DENIED":
+                        throw new Error(i18n.t(''));
+                }
+            }
+            return data;
+        });
 }
 
 // GET

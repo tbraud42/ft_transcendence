@@ -1,5 +1,5 @@
 import { Tournament } from './Tournament.js'
-import { getTournamentFromApi } from '../../api/game.js'
+import {deleteTournament, getTournamentFromApi} from '../../api/game.js'
 import {ClientManager} from "../client/ClientManager.js";
 
 class TournamentManager {
@@ -22,6 +22,9 @@ class TournamentManager {
         let difficulty = "medium"
         try {
             const data = await getTournamentFromApi(creator, key)
+            if (data.error) {
+                return null
+            }
             if (data?.name) {
                 name = String(data.name)
             }
@@ -47,6 +50,12 @@ class TournamentManager {
 
     get(id) {
         return this.tournaments.get(String(id)) || null
+    }
+
+    removeTournament(id) {
+        const tournament = this.get(id)
+        deleteTournament(tournament.creator, String(id)).catch(() => ({}))
+        this.tournaments.delete(String(id))
     }
 }
 

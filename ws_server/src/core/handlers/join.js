@@ -17,6 +17,10 @@ export default async function handleJoin(msg, socket) {
 
     const tournamentManager = getTournamentManager()
     const tournament = await tournamentManager.getOrCreate(id, { id: client.id, username: client.getUsername()})
+    if (!tournament) {
+        client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
+        return;
+    }
 
     if (!client.attachToTournament(tournament)) {
         client.send({ type: SrvMessageType.GAME_FULL, tournamentId: tournament.id });
