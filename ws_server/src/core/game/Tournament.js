@@ -23,14 +23,12 @@ export class Tournament {
         this.creator = creator || { id: null, username: '' };
         this.difficulty = difficulty;
 
-        this.participants = new Map();   // username -> Client | Bot
-        this.rooms = new Map();          // round -> Map(matchIndex -> Room)
+        this.participants = new Map();
+        this.rooms = new Map();
         this._botCounter = 1;
 
         this._generateRooms();
     }
-
-    /* ======================= Players ======================= */
 
     /**
      * Try to add a player to the tournament and auto-assign a first-round slot.
@@ -121,9 +119,9 @@ export class Tournament {
 
     /**
      * Handle the end of a room: move the winner forward and broadcast.
+     * Keep the loser in participants.
      */
     onRoomEnd(room, winner, loser) {
-        // keep loser in participants map; only advance the winner
         room.removePlayer(loser.getUsername());
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
@@ -153,8 +151,6 @@ export class Tournament {
     isFull() {
         return this.maxPlayers <= this.participants.size;
     }
-
-    /* ======================= Snapshot ======================= */
 
     /**
      * Build a full tournament snapshot for clients (players, matches, status).
@@ -208,8 +204,6 @@ export class Tournament {
     getId() {
         return this.id;
     }
-
-    /* ======================= Rooms ======================= */
 
     /**
      * Pre-generate the full bracket rooms for all rounds based on maxPlayers.
@@ -274,7 +268,7 @@ export class Tournament {
                     p1_score: p1_score,
                     p2_score: p2_score,
                     duration_sec: room.totalTime / 1000,
-                    started_at: new Date(room.startTime).toISOString(), //TODO: check format
+                    started_at: new Date(room.startTime).toISOString(),
                 });
             }
         }
@@ -380,8 +374,6 @@ export class Tournament {
         return true;
     }
 
-    /* ======================= Utils ======================= */
-
     /**
      * Send a message to all participants currently attached to this tournament.
      */
@@ -396,8 +388,6 @@ export class Tournament {
         }
     }
 }
-
-/* ======================= Helpers ======================= */
 
 /**
  * Stable ordering for first-round seeding: maps a client to a leaf index.

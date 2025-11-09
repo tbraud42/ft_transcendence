@@ -1,4 +1,3 @@
-// Bot.js
 import { ClientBase } from './ClientBase.js';
 
 export class Bot extends ClientBase {
@@ -13,11 +12,9 @@ export class Bot extends ClientBase {
         this.difficulty = difficulty;
         this._lastObsAt = 0;
         this._lastBall = null;
-        this._vel = { vx: 0, vy: 0 };
         this._targetY = null;
 
         this._hesitateUntil = 0;
-        this._viewPeriodMs = 1000; // 1 Hz
     }
 
     /**
@@ -28,7 +25,6 @@ export class Bot extends ClientBase {
         this.setReady(true);
         this._lastObsAt = 0;
         this._lastBall = null;
-        this._vel = { vx: 0, vy: 0 };
         this._targetY = room ? room.H * 0.5 : 0;
         this._hesitateUntil = 0;
     }
@@ -57,7 +53,6 @@ export class Bot extends ClientBase {
             vx = (bx - this._lastBall.x) / dt;
             vy = (by - this._lastBall.y) / dt;
         }
-        this._vel = { vx, vy };
         this._lastBall = { x: bx, y: by, r: br };
         this._lastObsAt = now;
 

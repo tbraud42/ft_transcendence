@@ -7,7 +7,7 @@ class TournamentManager {
         this.tournaments = new Map()
     }
 
-    async getOrCreate({ id, name, maxPlayers, creator }) {
+    async getOrCreate(id, creator) {
         const key = String(id)
         if (this.tournaments.has(key)) {
             const tournament = this.tournaments.get(key);
@@ -17,6 +17,8 @@ class TournamentManager {
             return tournament
         }
 
+        let maxPlayers = 2
+        let name = 2
         let difficulty = "medium"
         try {
             const data = await getTournamentFromApi(creator, key)

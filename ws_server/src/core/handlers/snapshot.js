@@ -1,5 +1,10 @@
 import { getTournamentManager } from '../game/GamesManager.js'
 
+/**
+ * Handle snapshot request, sending back the current state of the tournament.
+ * @param msg { type: number, tournamentId: string }
+ * @param socket The socket connection that sent the message.
+ */
 export default function handleSnapshot(msg, socket) {
     const c = socket.__client
     if (!c?.auth) {

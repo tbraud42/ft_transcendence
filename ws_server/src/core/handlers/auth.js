@@ -4,8 +4,12 @@ import {env} from "../../utils/env.js";
 
 const JWT_SECRET = env.JWT_SECRET
 
-// { 0, token: '' }
-
+/**
+ * Handles authentication for a WebSocket connection.
+ * Check JWT token validity and set up client session.
+ * @param msg { type: number, token: string }
+ * @param socket The socket connection that sent the message.
+ */
 export default function handleAuth(msg, socket) {
     const token = msg?.token
     if (!token) {

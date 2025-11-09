@@ -45,7 +45,6 @@ export class Room {
             paddles: {},
         };
 
-        // Tracks a username that forfeited mid-match (decided in onEnd)
         this._forfeitBy = null;
     }
 
@@ -104,13 +103,6 @@ export class Room {
     }
 
     /**
-     * Return an array of currently present players (filters nulls).
-     */
-    getPlayers() {
-        return [this.p1, this.p2].filter(Boolean);
-    }
-
-    /**
      * If both players exist and are ready, announce start and kick off a countdown.
      * Cancels countdown if readiness changes.
      */
@@ -148,18 +140,6 @@ export class Room {
             this.countdownTimer = null;
         }
         return false;
-    }
-
-    /**
-     * Apply input flags to a player (up/down booleans).
-     */
-    applyInput(username, up, down) {
-        const player = this.getPlayerByUsername(username);
-        if (!player) {
-            return;
-        }
-        player.up = up;
-        player.down = down;
     }
 
     /**

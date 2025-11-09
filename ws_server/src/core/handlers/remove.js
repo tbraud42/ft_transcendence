@@ -1,3 +1,8 @@
+/**
+ * Handle 'remove' message to remove a player from the tournament.
+ * @param msg { type: number, username: string }
+ * @param socket The socket connection that sent the message.
+ */
 export default function handleRemove(msg, socket) {
     const t = socket.__client?.tournament;
     if (!t) {

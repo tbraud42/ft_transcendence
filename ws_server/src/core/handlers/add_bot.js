@@ -1,3 +1,8 @@
+/**
+ * Handle adding a bot to a tournament room.
+ * @param msg { type: number, roomId: string, slot: 'p1' | 'p2' }
+ * @param socket The socket connection that sent the message.
+ */
 export default function handleAddBot(msg, socket) {
     const t = socket.__client?.tournament;
     if (!t) {
