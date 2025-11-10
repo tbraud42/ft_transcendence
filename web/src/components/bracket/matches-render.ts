@@ -2,6 +2,7 @@ import { setBubble } from '../Bubble';
 import type { LeafAddress, Match, Player, RenderOptions } from '../../api/socket/types';
 import type { SrvSnapshot } from '../../api/socket/messageTypes';
 import { ClientStatus, MatchStatus } from '../../api/socket/protocol';
+import i18n from "../../utils/lang/i18n";
 
 /* ================= Helpers ================= */
 
@@ -142,10 +143,9 @@ function decorateLeaf(
     const addr: LeafAddress = { side, pair: pairIdx, pos: posName };
     const isOwner = !!opts.isOwner || (!!snap.creator && opts.myUsername === snap.creator);
 
-    // Add bot
     if (!label && isOwner) {
         const b = button(
-            'Add bot',
+            i18n.t('pong_lobby_add_bot'),
             'px-2 py-1 text-[11px] rounded bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 ml-2'
         );
         b.onclick = e => {
@@ -159,7 +159,7 @@ function decorateLeaf(
     // Ready (if mine)
     if (label && opts.myUsername === label) {
         const readyLocal = !!opts.isReady?.(opts.myUsername, addr);
-        const b = button(readyLocal ? 'Ready ✅' : 'Ready', readyClass(readyLocal));
+        const b = button(readyLocal ? i18n.t('pong_lobby_you_ready') : i18n.t('pong_lobby_other_ready'), readyClass(readyLocal));
         b.onclick = e => {
             e.stopPropagation();
             opts.onReady?.(addr);
@@ -173,7 +173,7 @@ function decorateLeaf(
         const p = players.get(label);
         if (p && label !== snap.creator) {
             const b = button(
-                p.isBot ? 'Remove bot' : 'Remove player',
+                p.isBot ? i18n.t('pong_lobby_remove_bot') : i18n.t('pong_lobby_remove_player'),
                 'px-2 py-1 text-[11px] rounded bg-rose-500/20 hover:bg-rose-500/30 border border-rose-400/40 ml-2'
             );
             b.onclick = e => {
@@ -268,7 +268,7 @@ function addReadyIfMine(el: HTMLElement, label: string | null, opts: RenderOptio
         return;
     }
     const readyLocal = !!opts.isReady?.(opts.myUsername, addr);
-    const b = button(readyLocal ? 'Ready ✅' : 'Ready', readyClass(readyLocal));
+    const b = button(readyLocal ? i18n.t('pong_lobby_you_ready') : i18n.t('pong_lobby_other_ready'), readyClass(readyLocal));
     b.onclick = e => {
         e.stopPropagation(); opts.onReady?.(addr); 
     };
