@@ -188,7 +188,7 @@ function actionBtn(kind: "follow" | "unfollow"): HTMLButtonElement {
 
     const icon = document.createElement("img");
     icon.src = kind === "follow" ? addFriendsIcon : removedFriendsIcon;
-    icon.alt = kind === "follow" ? "Follow" : "Unfollow";
+    icon.alt = kind === "follow" ? i18n.t("friends_follow") : i18n.t("friends_unfollow");
     icon.className = "w-4 h-4";
 
     const label = document.createElement("span");
@@ -201,7 +201,7 @@ function actionBtn(kind: "follow" | "unfollow"): HTMLButtonElement {
 function emptyState(type: "mutual" | "following" | "followers"): HTMLElement {
     const msg =
         type === "mutual"
-            ? i18n.t("friends_no_mutual") || "No mutuals."
+            ? i18n.t("friends_no_mutual")
             : type === "following"
                 ? i18n.t("friends_no_following")
                 : i18n.t("friends_no_followers");

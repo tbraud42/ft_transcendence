@@ -33,39 +33,55 @@ function createPasswordForm(): HTMLElement {
     const confirmNewPasswordInput = createInput('password', i18n.t('settings_confirm_new_password'));
     const currentPasswordInput = createInput('password', i18n.t('settings_current_password'));
 
+    // Message area
     const message = document.createElement('p');
-    message.className = 'text-sm text-green-500 h-5';
+    message.className = 'text-sm h-5';               // reserve space to avoid layout shift
+    message.setAttribute('role', 'alert');            // accessible
+    message.setAttribute('aria-live', 'polite');
 
     const submitBtn = createButton(i18n.t('settings_submit'), 'submit', 'black');
 
+    const setMsg = (text: string, kind: 'ok'|'err'|'') => {
+        message.textContent = text || '';
+        message.classList.remove('text-green-500','text-red-500');
+        if (kind === 'ok') message.classList.add('text-green-500');
+        if (kind === 'err') message.classList.add('text-red-500');
+    };
+
     form.onsubmit = async (e) => {
         e.preventDefault();
+        setMsg('', ''); // reset
 
         const newPass = newPasswordInput.value.trim();
         const confirmNewPass = confirmNewPasswordInput.value.trim();
         const current = currentPasswordInput.value.trim();
 
+        // Client-side checks
         if (!confirmNewPass || !newPass || !current) {
-            message.textContent = i18n.t('settings_error_empty_fields');
+            setMsg(i18n.t('settings_error_empty_fields'), 'err');
             return;
         }
         if (newPass !== confirmNewPass) {
-            message.textContent = i18n.t('settings_error_mismatch');
+            setMsg(i18n.t('settings_error_mismatch'), 'err');
             return;
         }
+
+        // Lock UI during request
+        submitBtn.disabled = true;
+
         try {
-            await changeUserPass(current, newPass);
-            message.textContent = i18n.t('settings_success_update');
+            await changeUserPass(current, newPass); // will throw on API error
+            setMsg(i18n.t('settings_success_update'), 'ok');
+            // Clear only on success
             newPasswordInput.value = '';
             confirmNewPasswordInput.value = '';
             currentPasswordInput.value = '';
-        } catch (err) {
-            if (err === 'incorrect_password') {
-                message.textContent = i18n.t('settings_error_incorrect_password');
-            } else {
-                console.log(err)
-                message.textContent = String(err);
-            }
+        } catch (err: any) {
+            // Prefer localized message from thrown Error; fallback generic
+            const msg = (err && err.message) ? err.message : i18n.t('error_generic');
+            setMsg(msg, 'err');
+        } finally {
+            submitBtn.disabled = false;
         }
     };
 

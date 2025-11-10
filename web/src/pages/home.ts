@@ -251,23 +251,25 @@ function renderLeaderboard(): HTMLElement {
 }
 
 export function renderHome(): HTMLElement {
-  refreshToken().catch(() => {})
+    refreshToken().catch(() => {})
 
-  const page = document.createElement('div')
-  page.className = 'w-full h-full px-4 py-6'
+    const page = document.createElement('div')
+    page.className = 'w-full min-h-screen px-4 py-6'
+    document.documentElement.classList.add('h-full')
+    document.body.classList.add('min-h-screen', 'overflow-y-auto')
 
-  const grid = document.createElement('div')
-  grid.className = 'grid gap-6 grid-cols-1 xl:grid-cols-2 items-start'
+    const grid = document.createElement('div')
+    grid.className = 'grid gap-6 grid-cols-1 xl:grid-cols-2 items-start'
 
-  const left = document.createElement('div')
-  left.className = 'rounded-2xl border border-black/10 dark:border-white/10 bg-white/20 dark:bg-white/5 p-4 backdrop-blur'
-  left.appendChild(renderPongMenu())
+    const left = document.createElement('div')
+    left.className = 'rounded-2xl border border-black/10 dark:border-white/10 bg-white/20 dark:bg-white/5 p-4 backdrop-blur'
+    left.appendChild(renderPongMenu())
 
-  const right = document.createElement('div')
-  right.className = 'rounded-2xl border border-black/10 dark:border-white/10 bg-white/20 dark:bg-white/5 p-4 backdrop-blur'
-  right.appendChild(renderLeaderboard())
+    const right = document.createElement('div')
+    right.className = 'rounded-2xl border border-black/10 dark:border-white/10 bg-white/20 dark:bg-white/5 p-4 backdrop-blur'
+    right.appendChild(renderLeaderboard())
 
-  grid.append(left, right)
-  page.append(grid)
-  return page
+    grid.append(left, right)
+    page.append(grid)
+    return page
 }

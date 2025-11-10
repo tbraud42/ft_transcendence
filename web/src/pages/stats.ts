@@ -54,6 +54,7 @@ type TournamentRow = {
 
 /** Render the stats page */
 export function renderStats(userName: string): HTMLElement {
+    userName = decodeURIComponent(userName || '').trim()
     const page = div('w-full h-full min-h-0')
     const scroller = div(
         'mx-auto w-full max-w-5xl px-4 py-10 overflow-y-auto ' +
@@ -68,6 +69,7 @@ export function renderStats(userName: string): HTMLElement {
     )
 
     const topGrid = div('grid grid-cols-1 md:grid-cols-2 gap-8 items-start')
+
 
     const cardUser = card()
     cardUser.append(sectionTitle(userName || i18n.t('stats_user')))

@@ -21,17 +21,20 @@ export async function handleLogin(
     }
 
     try {
-        const res = await apiLogin(user, pass)
-        if (res) {
-            if (res.twofa_required) {
-                setUsername(user)
-                setTmpToken(res.token)
-                return true
-            } else {
-                login(res.token, user)
-                return false
+        apiLogin(user, pass).then((res) => {
+            if (res) {
+                if (res.twofa_required) {
+                    setUsername(user)
+                    setTmpToken(res.token)
+                    return true
+                } else {
+                    login(res.token, user)
+                    return false
+                }
             }
-        }
+        }).catch((err) => {
+            errorMsg.textContent = (err as Error).message
+        })
     } catch (err) {
         errorMsg.textContent = (err as Error).message
     }
@@ -61,10 +64,13 @@ export async function handleSignup(
     }
 
     try {
-        const res = await apiSignup(user, pass)
-        if (res) {
-            login(res.token, user)
-        }
+        apiSignup(user, pass).then((res) => {
+            if (res) {
+                login(res.token, user)
+            }
+        }).catch((err) => {
+            errorMsg.textContent = (err as Error).message
+        })
     } catch (err) {
         errorMsg.textContent = (err as Error).message
     }

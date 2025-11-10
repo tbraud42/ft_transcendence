@@ -113,7 +113,7 @@ function createFriendsButton(): HTMLButtonElement {
     icon.alt = 'Friends Icon'
     icon.className = 'w-5 h-5'
     btn.appendChild(icon)
-    btn.title = i18n.t('header_friends')
+    btn.title = i18n.t('friends_title')
 
     btn.onclick = () => openModal(btn, renderFriendsPage())
     return btn

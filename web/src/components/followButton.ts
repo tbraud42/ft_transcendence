@@ -15,8 +15,8 @@ export function createFollowButton(
 
     const syncUI = (f: boolean) => {
         icon.src = f ? removedFriendsIcon : addFriendsIcon
-        icon.alt = f ? 'Unfollow' : 'Follow'
-        btn.title = f ? (i18n.t('unfollow') || 'Unfollow') : (i18n.t('follow') || 'Follow')
+        icon.alt = f ? (i18n.t('friends_unfollow')) : (i18n.t('friends_follow'))
+        btn.title = f ? (i18n.t('friends_unfollow')) : (i18n.t('friends_follow'))
 
         btn.className =
             'absolute -bottom-1 -right-1 rounded-full border border-white/20 shadow p-2 transition ' +

@@ -44,23 +44,23 @@ async function requestAuth(
 
     if (data.error === true || !res.ok) {
         switch (data.code) {
-            case "VALIDATION_MISSING_OR_INVALID_FIELD": // singup | login
-                throw new Error(i18n.t(''));
+            case "VALIDATION_MISSING_OR_INVALID_FIELD":
+                throw new Error(i18n.t('VALIDATION_MISSING_OR_INVALID_FIELD'));
                 break;
-            case "USERNAME_ALREADY_USED":               // singup
-                throw new Error(i18n.t(''));
+            case "USERNAME_ALREADY_USED":
+                throw new Error(i18n.t('USERNAME_ALREADY_USED'));
                 break;
-            case "INVALID_USERNAME_SUFFIX_42":          // singup
-                throw new Error(i18n.t(''));
+            case "INVALID_USERNAME_SUFFIX_42":
+                throw new Error(i18n.t('INVALID_USERNAME_SUFFIX_42'));
                 break;
-            case "INVALID_PASSWORD_POLICY":             // singup
-                throw new Error(i18n.t(''));
+            case "INVALID_PASSWORD_POLICY":
+                throw new Error(i18n.t('INVALID_PASSWORD_POLICY'));
                 break;
-            case "USER_NOT_FOUND":                      // login
-                throw new Error(i18n.t('user_not_found'));
+            case "USER_NOT_FOUND":
+                throw new Error(i18n.t('USER_NOT_FOUND'));
                 break;
-            case "AUTH_INVALID_PASSWORD":               // login
-                throw new Error(i18n.t(''));
+            case "AUTH_INVALID_PASSWORD":
+                throw new Error(i18n.t('AUTH_INVALID_PASSWORD'));
                 break;
             default:
                 throw new Error("login error : ${data.code}");
