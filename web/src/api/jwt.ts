@@ -12,6 +12,7 @@ import {
     isLoggedIn, getTmpToken, removeItem, TMP_TOKEN_KEY
 } from "../utils/storage";
 import { ApiInit, Tournament, TournamentPayload } from "./types";
+import {logoutUser} from "./auth";
 
 const API_URL = env.API_URL;
 
@@ -55,13 +56,13 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
     });
 
     if (!res.ok) {
-        logout();
+        logoutUser();
         return null;
     }
 
     const data = await res.json();
     if (!data?.info?.token) {
-        logout();
+        logoutUser();
         return null;
     }
     setToken(data.info.token);
