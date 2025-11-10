@@ -30,10 +30,13 @@ function createPasswordForm(): HTMLElement {
     form.className = 'space-y-4';
 
     const newPasswordInput = createInput('password', i18n.t('settings_new_password'));
+    newPasswordInput.id = 'newPassword';
     newPasswordInput.autocomplete = 'new-password';
     const confirmNewPasswordInput = createInput('password', i18n.t('settings_confirm_new_password'));
+    confirmNewPasswordInput.id = 'confirm_new_password';
     confirmNewPasswordInput.autocomplete = 'new-password';
     const currentPasswordInput = createInput('password', i18n.t('settings_current_password'));
+    currentPasswordInput.id = 'currentPassword';
     currentPasswordInput.autocomplete = 'current-password';
 
     // Message area

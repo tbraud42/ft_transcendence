@@ -28,6 +28,7 @@ export function render2faView(): HTMLElement {
     const secretWrap = h("div", "hidden w-full max-w-md text-left space-y-2");
     const secretRow = h("div", "flex gap-2");
     const secretInput = document.createElement("input");
+    secretInput.id = "twofa-secret-input";
     secretInput.type = "text";
     secretInput.readOnly = true;
     secretInput.className =
