@@ -2,6 +2,7 @@
 // | Method   | Route              | Description                        | Access           |
 // | -------- | ------------------ | ---------------------------------- | ---------------- |
 // | `POST`   | `/auth/login`      | login, reply by JWT token          | Public           |
+// | `POST`   | `/auth/logout`     | logout                             | Authenticate     |
 
 export default async function (fastify, options) {
   fastify.post('/', async (req, reply) => {
@@ -30,11 +31,13 @@ export default async function (fastify, options) {
     fastify.apiStat.login++;
 
     if (user.is_twofa_enabled) {
-      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role }, false, '5m');
+      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, false, '5m');
+      fastify.setJwtIAT(fastify.db, user.id);
 
       return reply.send({ error: false, code: '', info: { twofa_required: true, tmp_token: token }});
     } else {
-      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role }, true, '12h');
+      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, true, '12h');
+      fastify.setJwtIAT(fastify.db, user.id);
 
       return reply.send({ error: false, code: '', info: { token: token } });
     }

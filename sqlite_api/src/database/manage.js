@@ -75,13 +75,13 @@ export async function deleteUser(db, id) {
 
     const dummy = await bcrypt.hash(crypto.randomUUID(), 12);
 
-    db.prepare(`UPDATE tournaments SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
-    db.prepare(`UPDATE tournaments SET creator = NULL WHERE creator = ?`).run(oldUsername);
-    db.prepare(`UPDATE games SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
-    db.prepare(`UPDATE games SET player1 = NULL WHERE player1 = ?`).run(oldUsername);
-    db.prepare(`UPDATE games SET player2 = NULL WHERE player2 = ?`).run(oldUsername);
-    db.prepare(`DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?`).run(uid, uid);
-    db.prepare(`DELETE FROM tournaments WHERE creator = ? AND status != 2`).run(oldUsername);
+  db.prepare(`UPDATE tournaments SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
+  db.prepare(`UPDATE tournaments SET creator = NULL WHERE creator = ?`).run(oldUsername);
+  db.prepare(`UPDATE games SET winner  = NULL WHERE winner  = ?`).run(oldUsername);
+  db.prepare(`UPDATE games SET player1 = NULL WHERE player1 = ?`).run(oldUsername);
+  db.prepare(`UPDATE games SET player2 = NULL WHERE player2 = ?`).run(oldUsername);
+  db.prepare(`DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?`).run(uid, uid);
+  db.prepare(`DELETE FROM tournaments WHERE creator = ? AND status != 2`).run(oldUsername);
 
     const info = db.prepare(`
         UPDATE users
@@ -123,6 +123,27 @@ export function isAdminOrCreator(db, tournamentId, username) {
   return result.role.toLowerCase() === 'admin' || result.creator === user;
 }
 
+export function setJwtIAT(db, userId, time = Math.floor(Date.now() / 1000)) {
+  const uid = Number(userId);
+  if (!Number.isFinite(uid)) return false;
+
+  const info = db.prepare(` UPDATE users SET jwt_issued_at = ? WHERE id = ?`).run(time, uid);
+
+  return true;
+}
+
+export function isTokenAccepted(db, userId, tokenIat) {
+  const uid = Number(userId);
+  const iat = Number(tokenIat);
+  if (!Number.isFinite(uid) || !Number.isFinite(iat)) return false;
+
+  const result = db.prepare(`SELECT jwt_issued_at FROM users WHERE id = ?`).get(uid);
+  if (!result) return false;
+
+  const jwtTime = Number(result.token_valid_after) || 0;
+  return iat >= jwtTime;
+}
+
 export async function updateTimeStamp(db, id) {
   const uid = Number(id);
   if (!Number.isFinite(uid)) return false;
@@ -131,6 +152,16 @@ export async function updateTimeStamp(db, id) {
   const info = result.run(uid);
   return info.changes > 0;
 }
+
+export function logout(db, userId, time = 5) {
+  const uid = Number(userId);
+  if (!Number.isFinite(uid)) return false;
+
+  const info = db.prepare(`UPDATE users SET last_timestamp = datetime('now', ?) WHERE id = ?`).run(`-${time} minutes`, uid);
+
+  return true;
+}
+
 
 export function mapUserForSelfOrAdmin(user) {
   return {
@@ -193,18 +224,18 @@ export function removeFriend(db, userA, userB) {
   return info.changes > 0;
 }
 
-export function listFriends(db, userId, minutes = 5) {
+export function listFriends(db, userId, time = 5) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return [];
 
-  return db.prepare(friend_list).all(`-${minutes} minutes`, uid, uid);
+  return db.prepare(friend_list).all(`-${time} minutes`, uid, uid);
 }
 
-export function pendingFriends(db, userId, minutes = 5) {
+export function pendingFriends(db, userId, time = 5) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return [];
 
-  return db.prepare(friend_pending).all(`-${minutes} minutes`, uid, uid);
+  return db.prepare(friend_pending).all(`-${time} minutes`, uid, uid);
 }
 
 /* -------------------- Tournaments -------------------- */

@@ -14,6 +14,7 @@ import twoFaRoute from './routes/auth/2fa.js';
 import ftRoutes from './routes/auth/42auth.js';
 import isLoginRoute from './routes/auth/isAuth.js';
 import loginRoute from './routes/auth/login.js';
+import logoutRoute from './routes/auth/logout.js';
 import refreshRoute from './routes/auth/refreshAuth.js';
 import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
@@ -38,6 +39,7 @@ const start = async () => {
   await fastify.register(isLoginRoute, { prefix: '/auth/isAuth' });
   await fastify.register(refreshRoute, { prefix: '/auth/refreshAuth' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
+  await fastify.register(logoutRoute, { prefix: '/auth/logout' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(friendRoutes, { prefix: '/user/friends' });

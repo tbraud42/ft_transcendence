@@ -34,6 +34,10 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
       return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // User no longer exists
     }
 
+    if (!fastify.isTokenAccepted(fastify.db, user.id, decoded.iat)) {
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // Invalid token
+    }
+
     const is2FAEnabled = !!(user.is_twofa_enabled === true || user.is_twofa_enabled === 1);
     const tokenHas2FA = !!decoded.twofa;
 

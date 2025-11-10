@@ -9,7 +9,10 @@ import {
   deleteUser,
   isAdmin,
   isAdminOrCreator,
+  setJwtIAT,
+  isTokenAccepted,
   updateTimeStamp,
+  logout,
   addFriend,
   removeFriend,
   listFriends,
@@ -69,7 +72,10 @@ export function loadDecorate(fastify) {
   fastify.decorate('deleteUser', deleteUser);
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
+  fastify.decorate('setJwtIAT', setJwtIAT);
+  fastify.decorate('isTokenAccepted', isTokenAccepted);
   fastify.decorate('updateTimeStamp', updateTimeStamp);
+  fastify.decorate('logout', logout);
   fastify.decorate('addFriend', addFriend);
   fastify.decorate('removeFriend', removeFriend);
   fastify.decorate('listFriends', listFriends);
