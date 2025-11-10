@@ -21,23 +21,22 @@ export async function handleLogin(
     }
 
     try {
-        apiLogin(user, pass).then((res) => {
-            if (res) {
-                if (res.twofa_required) {
-                    setUsername(user)
-                    setTmpToken(res.token)
-                    return true
-                } else {
-                    login(res.token, user)
-                    return false
-                }
+        const res = await apiLogin(user, pass)
+
+        if (res) {
+            if (res.twofa_required) {
+                setUsername(user)
+                setTmpToken(res.token)
+                return true
+            } else {
+                login(res.token, user)
+                return false
             }
-        }).catch((err) => {
-            errorMsg.textContent = (err as Error).message
-        })
+        }
     } catch (err) {
         errorMsg.textContent = (err as Error).message
     }
+
     return false
 }
 

@@ -17,7 +17,7 @@ export function renderTwofaTab(): HTMLElement {
     form.method = 'post'
 
     const codeInput = createInput('text', i18n.t('2fa_code'))
-    codeInput.name = 'otp'
+    codeInput.name = 'twofa_code'
     codeInput.maxLength = 6
     codeInput.inputMode = 'numeric'
     codeInput.placeholder = '123456'
