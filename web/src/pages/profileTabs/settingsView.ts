@@ -38,7 +38,7 @@ function createPasswordForm(): HTMLElement {
 
     // Message area
     const message = document.createElement('p');
-    message.className = 'text-sm h-5';
+    message.className = 'text-red-500 text-sm h-5'
     message.setAttribute('role', 'alert');
     message.setAttribute('aria-live', 'polite');
 

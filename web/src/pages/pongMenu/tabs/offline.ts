@@ -26,6 +26,7 @@ export function renderOfflineTab(): HTMLElement {
     })
 
     const secondPlayerNameInput = createInput('text', i18n.t('pong_local_2p_name'), true)
+    secondPlayerNameInput.id = 'pong-local-2p-name-input'
 
     const errorMsg = document.createElement('p')
     errorMsg.className = 'text-red-500 text-sm mt-2 text-center hidden'

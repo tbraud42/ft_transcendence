@@ -23,7 +23,7 @@ export function renderTwofaTab(): HTMLElement {
     codeInput.placeholder = '123456'
 
     const errorMsg = document.createElement('p')
-    errorMsg.className = 'text-red-500 text-sm h-5'
+    errorMsg.className = 'text-red-500 text-sm min-h-[1.25rem]'
 
     const submitBtn = createButton(i18n.t('2fa_submit'), 'submit', 'black')
 

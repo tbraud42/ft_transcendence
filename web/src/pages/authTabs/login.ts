@@ -27,7 +27,7 @@ export function renderLoginTab(): HTMLElement {
     passwordInput.autocomplete = 'current-password';
 
     const errorMsg = document.createElement('p')
-    errorMsg.className = 'text-red-500 text-sm h-5'
+    errorMsg.className = 'text-red-500 text-sm min-h-[1.25rem]'
 
     const submitBtn = createButton(i18n.t('login_login'), 'submit', 'black')
 
