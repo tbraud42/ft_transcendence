@@ -31,13 +31,13 @@ export default async function (fastify, options) {
     fastify.apiStat.login++;
 
     if (user.is_twofa_enabled) {
-      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, false, '5m');
       fastify.setJwtIAT(fastify.db, user.id);
+      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, false, '5m');
 
       return reply.send({ error: false, code: '', info: { twofa_required: true, tmp_token: token }});
     } else {
-      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, true, '12h');
       fastify.setJwtIAT(fastify.db, user.id);
+      const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, true, '12h');
 
       return reply.send({ error: false, code: '', info: { token: token } });
     }

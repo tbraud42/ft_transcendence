@@ -123,7 +123,7 @@ export function isAdminOrCreator(db, tournamentId, username) {
   return result.role.toLowerCase() === 'admin' || result.creator === user;
 }
 
-export function setJwtIAT(db, userId, time = Math.floor(Date.now() / 1000)) {
+export function setJwtIAT(db, userId, time = Math.floor(Date.now() / 1000) - 1) {
   const uid = Number(userId);
   if (!Number.isFinite(uid)) return false;
 
@@ -140,7 +140,7 @@ export function isTokenAccepted(db, userId, tokenIat) {
   const result = db.prepare(`SELECT jwt_issued_at FROM users WHERE id = ?`).get(uid);
   if (!result) return false;
 
-  const jwtTime = Number(result.token_valid_after) || 0;
+  const jwtTime = Number(result.jwt_issued_at) || 0;
   return iat >= jwtTime;
 }
 

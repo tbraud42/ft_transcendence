@@ -35,8 +35,8 @@ export default async function (fastify, options) {
 
     fastify.apiStat.signup++;
     const newUser = await fastify.createUser(fastify.db, { username: username, password: password, avatar: null});
-    const token = fastify.generateToken({ id: newUser.userId, username: newUser.username, role: newUser.role, iat: Math.floor(Date.now() / 1000) }, true, '12h');
     fastify.setJwtIAT(fastify.db, newUser.id);
+    const token = fastify.generateToken({ id: newUser.userId, username: newUser.username, role: newUser.role, iat: Math.floor(Date.now() / 1000) }, true, '12h');
 
     return reply.send({ error: false, code: '', info: { token: token } });
   });
