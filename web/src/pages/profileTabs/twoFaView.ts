@@ -43,6 +43,7 @@ export function render2faView(): HTMLElement {
     const form = document.createElement("form");
     form.className = "space-y-3 hidden";
     const codeInput = createInput("text", i18n.t("2fa_code")) as HTMLInputElement;
+    codeInput.id = "twofa-code-input";
     codeInput.maxLength = 6;
     codeInput.inputMode = "numeric";
     codeInput.placeholder = "123456";
@@ -168,6 +169,7 @@ function openDisableOverlay(): Promise<string | null> {
         form.className = "space-y-3";
 
         const code = createInput("text", i18n.t("2fa_code")) as HTMLInputElement;
+        code.id = "twofa-disable-code-input";
         code.maxLength = 6;
         code.inputMode = "numeric";
         code.placeholder = "123456";
