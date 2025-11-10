@@ -21,8 +21,10 @@ export function renderLoginTab(): HTMLElement {
 
     const pseudoInput = createInput('text', i18n.t('login_pseudo'))
     pseudoInput.name = 'username'
+    pseudoInput.autocomplete = 'username'
     const passwordInput = createInput('password', i18n.t('login_password'))
     passwordInput.name = 'password'
+    passwordInput.autocomplete = 'current-password';
 
     const errorMsg = document.createElement('p')
     errorMsg.className = 'text-red-500 text-sm h-5'

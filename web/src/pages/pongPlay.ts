@@ -34,7 +34,7 @@ export function renderPongPlay(_roomId: string): HTMLElement {
     exitBtn.classList.add('absolute', 'top-4', 'left-4', 'w-32', 'z-20');
     playRoot.appendChild(exitBtn);
 
-    const p1 = new LocalPlayer(true,  canvas, getUsername() || i18n.t('pong_you'));
+    const p1 = new LocalPlayer(true,  canvas, getUsername());
     const p2 = new LocalPlayer(false, canvas, secondPlayerName || i18n.t('pong_opponent'));
 
     const game = new PongGame(

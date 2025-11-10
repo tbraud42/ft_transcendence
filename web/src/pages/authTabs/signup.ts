@@ -19,12 +19,15 @@ export function renderSignupTab(): HTMLElement {
 
     const pseudoInput = createInput('text', i18n.t('login_pseudo'))
     pseudoInput.name = 'username'
+    pseudoInput.autocomplete = 'username'
 
     const passwordInput = createInput('password', i18n.t('login_password'))
     passwordInput.name = 'password'
+    passwordInput.autocomplete = 'new-password'
 
     const passwordConfirm = createInput('password', i18n.t('signup_password_confirm'))
     passwordConfirm.name = 'password_confirm'
+    passwordConfirm.autocomplete = 'new-password'
 
     const errorMsg = document.createElement('p')
     errorMsg.className = 'text-red-500 text-sm h-5'

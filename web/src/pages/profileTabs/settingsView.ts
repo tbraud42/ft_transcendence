@@ -30,13 +30,16 @@ function createPasswordForm(): HTMLElement {
     form.className = 'space-y-4';
 
     const newPasswordInput = createInput('password', i18n.t('settings_new_password'));
+    newPasswordInput.autocomplete = 'new-password';
     const confirmNewPasswordInput = createInput('password', i18n.t('settings_confirm_new_password'));
+    confirmNewPasswordInput.autocomplete = 'new-password';
     const currentPasswordInput = createInput('password', i18n.t('settings_current_password'));
+    currentPasswordInput.autocomplete = 'current-password';
 
     // Message area
     const message = document.createElement('p');
-    message.className = 'text-sm h-5';               // reserve space to avoid layout shift
-    message.setAttribute('role', 'alert');            // accessible
+    message.className = 'text-sm h-5';
+    message.setAttribute('role', 'alert');
     message.setAttribute('aria-live', 'polite');
 
     const submitBtn = createButton(i18n.t('settings_submit'), 'submit', 'black');
@@ -50,13 +53,12 @@ function createPasswordForm(): HTMLElement {
 
     form.onsubmit = async (e) => {
         e.preventDefault();
-        setMsg('', ''); // reset
+        setMsg('', '');
 
         const newPass = newPasswordInput.value.trim();
         const confirmNewPass = confirmNewPasswordInput.value.trim();
         const current = currentPasswordInput.value.trim();
 
-        // Client-side checks
         if (!confirmNewPass || !newPass || !current) {
             setMsg(i18n.t('settings_error_empty_fields'), 'err');
             return;
@@ -66,18 +68,15 @@ function createPasswordForm(): HTMLElement {
             return;
         }
 
-        // Lock UI during request
         submitBtn.disabled = true;
 
         try {
-            await changeUserPass(current, newPass); // will throw on API error
+            await changeUserPass(current, newPass);
             setMsg(i18n.t('settings_success_update'), 'ok');
-            // Clear only on success
             newPasswordInput.value = '';
             confirmNewPasswordInput.value = '';
             currentPasswordInput.value = '';
         } catch (err: any) {
-            // Prefer localized message from thrown Error; fallback generic
             const msg = (err && err.message) ? err.message : i18n.t('error_generic');
             setMsg(msg, 'err');
         } finally {

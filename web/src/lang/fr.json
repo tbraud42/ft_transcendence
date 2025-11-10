@@ -107,6 +107,7 @@
   "pong_game_over_you_lose_title": "Vous avez perdu...",
   "pong_game_over_text": "Score final : {{playerScore}} - {{opponentScore}}",
   "pong_winner_announce": "{{player}} gagne !",
+  "pong_opponent": "Adversaire",
   "pong_lobby_full": "Le tournoi est plein.",
   "stats_title": "Statistiques du joueur",
   "stats_user": "Utilisateur",
