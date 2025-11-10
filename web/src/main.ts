@@ -9,6 +9,8 @@ link.type = 'image/webp'
 link.href = faviconUrl
 document.head.appendChild(link)
 
+document.documentElement.classList.add('dark')
+
 window.addEventListener('DOMContentLoaded', router)
 window.addEventListener('hashchange', router)
 window.addEventListener('popstate', () => {
