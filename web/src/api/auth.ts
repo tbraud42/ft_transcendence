@@ -253,20 +253,16 @@ export async function twofaDisable(code: string): Promise<boolean> {
 export async function logoutUser(): Promise<void> {
     const url = `${API_URL}/auth/logout`
 
-    const res = await fetch(url, {
+    const token = getToken()
+
+    logout()
+
+    await fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
+            'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({})
     })
-
-    const data = await res.json()
-
-    if (data.error === true || !res.ok) {
-        throw new Error("logout failed ${data.code}");
-    }
-
-    logout()
 }
