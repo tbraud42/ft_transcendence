@@ -95,7 +95,8 @@ const createDeleteAccountButton = (label: string): HTMLButtonElement => {
     const btn = createButton(label, 'button', 'red');
 
     btn.onclick = () => {
-        const pwd = createInput('password', i18n.t('auth_password_placeholder') || 'Password');
+        const pwd = createInput('password', i18n.t('auth_password_placeholder'));
+        pwd.id = 'delete-account-password-input';
         pwd.autocomplete = 'current-password';
         pwd.classList.add(
             'w-full',
