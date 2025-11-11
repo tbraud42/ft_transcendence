@@ -142,6 +142,7 @@ export class Tournament {
     isEnded() {
         for (const roundMap of this.rooms.values()) {
             for (const room of roundMap.values()) {
+                console.log(room.ended)
                 if (!room.ended) {
                     return false;
                 }
