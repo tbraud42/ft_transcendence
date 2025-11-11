@@ -70,8 +70,8 @@ export function render2faView(): HTMLElement {
             const result = await api2faSetup();
             qrcode = result?.info?.qrCode;
             secret = result?.info?.secret;
-        } catch {
-            setToast(status, "success", i18n.t("2fa_already_enabled"));
+        } catch (err) {
+            setToast(status, "success", String(err));
             btnEnable.classList.add("hidden");
             btnDisable.classList.remove("hidden");
             return;
