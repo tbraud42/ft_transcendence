@@ -17,13 +17,13 @@ export function renderTwofaTab(): HTMLElement {
     form.method = 'post'
 
     const codeInput = createInput('text', i18n.t('2fa_code'))
-    codeInput.name = 'otp'
+    codeInput.name = 'twofa_code'
     codeInput.maxLength = 6
     codeInput.inputMode = 'numeric'
     codeInput.placeholder = '123456'
 
     const errorMsg = document.createElement('p')
-    errorMsg.className = 'text-red-500 text-sm h-5'
+    errorMsg.className = 'text-red-500 text-sm min-h-[1.25rem]'
 
     const submitBtn = createButton(i18n.t('2fa_submit'), 'submit', 'black')
 
@@ -35,8 +35,8 @@ export function renderTwofaTab(): HTMLElement {
             return
         }
         errorMsg.textContent = ''
-        twofaVerify(code).then((success) => {
-            if (success) {
+        twofaVerify(code).then((succes) => {
+            if (succes) {
                 navigateTo('/home')
             } else {
                 errorMsg.textContent = i18n.t('2fa_code_invalid')

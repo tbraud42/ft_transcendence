@@ -1,14 +1,20 @@
-// src/pages/stats.ts
 import i18n from '../utils/lang/i18n'
-import {userInfoById, getDashboard, userTournament, userInfoByUsername, changeUserAvatar} from '../api/methode'
+import {
+    userInfoById,
+    getDashboard,
+    userTournament,
+    userInfoByUsername,
+    changeUserAvatar,
+    addFriend, deleteFirend
+} from '../api/methode'
 import { renderPieWinRate } from '../components/charts/PieWinRate'
 import { renderLineMatchesOverTime } from '../components/charts/LineMatchesOverTime'
 import { renderBarScores } from '../components/charts/BarScores'
 import {getAvatar, getUsername, setAvatar} from '../utils/storage'
 import profileIcon from '../img/profile-icon.svg'
-import {fileToBase64} from "../utils/files";
+import {byteSizeToHumanReadable, fileToBase64} from "../utils/files";
 import {createOverlayCard} from "../components/overlayCard";
-import {router} from "../utils/router";
+import {createFollowButton} from "../components/followButton";
 
 type GamesInfo = {
     id: number
@@ -19,6 +25,7 @@ type GamesInfo = {
     is_twofa_enabled?: boolean | null
     total_seconds?: number | null
     total_games?: number | null
+    follow?: boolean | null
 }
 
 type Dashboard = {
@@ -47,6 +54,7 @@ type TournamentRow = {
 
 /** Render the stats page */
 export function renderStats(userName: string): HTMLElement {
+    userName = decodeURIComponent(userName || '').trim()
     const page = div('w-full h-full min-h-0')
     const scroller = div(
         'mx-auto w-full max-w-5xl px-4 py-10 overflow-y-auto ' +
@@ -62,8 +70,9 @@ export function renderStats(userName: string): HTMLElement {
 
     const topGrid = div('grid grid-cols-1 md:grid-cols-2 gap-8 items-start')
 
+
     const cardUser = card()
-    cardUser.append(sectionTitle(i18n.t('stats_user') || 'User'))
+    cardUser.append(sectionTitle(userName || i18n.t('stats_user')))
     const userContent = div('space-y-3 text-left')
     cardUser.append(userContent)
 
@@ -93,8 +102,9 @@ export function renderStats(userName: string): HTMLElement {
     const table = document.createElement('table')
     table.className = 'min-w-[640px] w-full text-left border-separate border-spacing-y-2'
     const thead = document.createElement('thead')
-    const trh = document.createElement('tr')
-    ;['Date', 'Opponent', 'Score', 'Result'].forEach(lbl => {
+    const trh = document.createElement('tr');
+    [i18n.t('stats_col_date'), i18n.t('stats_col_opponent'), i18n.t('stats_col_score'), i18n.t('stats_col_result')]
+        .forEach(lbl => {
         const th = document.createElement('th')
         th.className = 'px-3 py-2 text-sm text-black/70 dark:text-white/70'
         th.textContent = lbl
@@ -145,31 +155,36 @@ export function renderStats(userName: string): HTMLElement {
                         gi?.username || 'User',
                         isSelf,
                         async (file) => {
-
-                            const base64 = await fileToBase64(file);
-
+                            const base64 = await fileToBase64(file)
                             if (base64.length > 1_398_102) {
-                                createOverlayCard({
-                                    title: "File to large",
-                                    text: "The selected image exceeds the maximum size of 1.33 MB. Please choose a smaller image."
-                                });
+                                const overlay = createOverlayCard({
+                                    title: i18n.t('error_file_too_large'),
+                                    text: i18n.t('error_file_exceeded_limit', { size: byteSizeToHumanReadable(1_398_102) }),
+                                })
+                                document.body.appendChild(overlay.element)
                             } else {
                                 changeUserAvatar(base64).then(() => {})
                                 setAvatar(base64)
-
                                 const img = avatarEl.querySelector('img') as HTMLImageElement | null
-                                if (img) {
-                                    img.src = base64
-                                }
+                                if (img) img.src = base64
                             }
                         }
                     )
 
+                    if (!isSelf && gi) {
+                        const isFollowing = Boolean(gi.follow)
+                        const followBtn = createFollowButton(isFollowing, async (next) => {
+                            await setFollow(Number(gi.id), next)
+                            gi.follow = next
+                        })
+                        avatarEl.appendChild(followBtn)
+                    }
+
                     userContent.replaceChildren(avatarEl)
                     userContent.append(
-                        row('Username', gi?.username ?? '-'),
-                        row('Registered', fmtDateTime(gi?.created_at)),
-                        row('Last Seen', fmtDateTime(gi?.last_timestamp)),
+                        row(i18n.t('stats_label_username'), gi?.username ?? '-'),
+                        row(i18n.t('stats_label_username'), fmtDateTime(gi?.created_at)),
+                        row(i18n.t('stats_label_last_seen'), fmtDateTime(gi?.last_timestamp)),
                     )
 
                     const totalGames = (db?.games ?? gi?.total_games ?? 0) | 0
@@ -178,10 +193,10 @@ export function renderStats(userName: string): HTMLElement {
                     const winRate = clamp01(db?.winRate ?? (totalGames ? wins / totalGames : 0))
 
                     metrics.replaceChildren(
-                        metricBubble(i18n.t('lb_col_games') || 'Total Games', String(totalGames), 'bg-white/10 border-white/10'),
-                        metricBubble(i18n.t('lb_col_wins') || 'Wins', String(wins), 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30'),
-                        metricBubble('Losses', String(losses), 'bg-rose-500/15 text-rose-400 border-rose-400/30'),
-                        metricBubble(i18n.t('lb_col_winrate') || 'Win Rate', (winRate * 100).toFixed(1) + '%', 'bg-blue-500/10 text-blue-400 border-blue-400/30 col-span-2 sm:col-span-1')
+                        metricBubble(i18n.t('lb_col_games'), String(totalGames), 'bg-white/10 border-white/10'),
+                        metricBubble(i18n.t('lb_col_wins'), String(wins), 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30'),
+                        metricBubble(i18n.t('lb_col_loses'), String(losses), 'bg-rose-500/15 text-rose-400 border-rose-400/30'),
+                        metricBubble(i18n.t('lb_col_winrate'), (winRate * 100).toFixed(1) + '%', 'bg-blue-500/10 text-blue-400 border-blue-400/30 col-span-2 sm:col-span-1')
                     )
 
                     renderPieWinRate(pieHost, { wins, losses })
@@ -294,7 +309,18 @@ function createEditableAvatar(
     return wrap
 }
 
-/** DOM helpers + formatters */
+async function setFollow(userId: number, follow: boolean): Promise<void> {
+    try {
+        if (follow) {
+            await addFriend(userId);
+        } else {
+            await deleteFirend(userId);
+        }
+    } catch (err) {
+        console.error('Error following user:', err);
+    }
+    document.dispatchEvent(new CustomEvent('stats:follow-changed', { detail: { userId, follow } }))
+}
 
 function div(cls: string) {
     const d = document.createElement('div')

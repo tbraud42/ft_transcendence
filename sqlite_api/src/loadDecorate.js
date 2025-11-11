@@ -9,11 +9,12 @@ import {
   deleteUser,
   isAdmin,
   isAdminOrCreator,
-  showAllData,
   updateTimeStamp,
+  logout,
   addFriend,
   removeFriend,
   listFriends,
+  pendingFriends,
   mapUserForSelfOrAdmin,
   mapUserForPublic,
   crontab
@@ -23,20 +24,13 @@ import {
   getAllTournaments,
   getTournamentById,
   getTournamentsByStatus,
-  getTournamentByName,
   createTournament,
-  updateTournament,
   changeTournamentStatus,
   setTournamentWinner,
   deleteTournament,
   insertStatGame,
-  userExists,
   getStat,
-  topWinRate,
-  topLoseRate,
-  topTotalPlayTime,
-  topTournamentsCreated,
-  topTournamentsWon,
+  topBy,
   listUserRecentMatches,
   validateGameRow
 } from './database/tournaments.js';
@@ -48,7 +42,8 @@ import {
   allowSelfOrAdmin,
   validatePassword,
   passwordFeedback,
-  usernameEndsWith42
+  usernameEndsWith42,
+  isDeletedUsername
 } from './plugins/security.js'
 
 // import crontab module
@@ -65,7 +60,6 @@ export function loadDecorate(fastify) {
     done();
   });
   fastify.decorate('isDev', isDev);
-  fastify.decorate('showAllData', showAllData);
 
   // --- Users ---
   fastify.decorate('createUser', createUser);
@@ -77,9 +71,11 @@ export function loadDecorate(fastify) {
   fastify.decorate('isAdmin', isAdmin);
   fastify.decorate('isAdminOrCreator', isAdminOrCreator);
   fastify.decorate('updateTimeStamp', updateTimeStamp);
+  fastify.decorate('logout', logout);
   fastify.decorate('addFriend', addFriend);
   fastify.decorate('removeFriend', removeFriend);
   fastify.decorate('listFriends', listFriends);
+  fastify.decorate('pendingFriends', pendingFriends);
   fastify.decorate('mapUserForSelfOrAdmin', mapUserForSelfOrAdmin);
   fastify.decorate('mapUserForPublic', mapUserForPublic);
 
@@ -87,20 +83,13 @@ export function loadDecorate(fastify) {
   fastify.decorate('getAllTournaments', getAllTournaments);
   fastify.decorate('getTournamentById', getTournamentById);
   fastify.decorate('getTournamentsByStatus', getTournamentsByStatus);
-  fastify.decorate('getTournamentByName', getTournamentByName);
   fastify.decorate('createTournament', createTournament);
-  fastify.decorate('updateTournament', updateTournament);
   fastify.decorate('changeTournamentStatus', changeTournamentStatus);
   fastify.decorate('setTournamentWinner', setTournamentWinner);
   fastify.decorate('deleteTournament', deleteTournament);
   fastify.decorate('insertStatGame', insertStatGame);
-  fastify.decorate('userExists', userExists);
   fastify.decorate('getStat', getStat);
-  fastify.decorate('topWinRate', topWinRate);
-  fastify.decorate('topLoseRate', topLoseRate);
-  fastify.decorate('topTotalPlayTime', topTotalPlayTime);
-  fastify.decorate('topTournamentsCreated', topTournamentsCreated);
-  fastify.decorate('topTournamentsWon', topTournamentsWon);
+  fastify.decorate('topBy', topBy);
   fastify.decorate('listUserRecentMatches', listUserRecentMatches);
   fastify.decorate('validateGameRow', validateGameRow);
 
@@ -113,6 +102,7 @@ export function loadDecorate(fastify) {
   fastify.decorate('validatePassword', validatePassword);
   fastify.decorate('passwordFeedback', passwordFeedback);
   fastify.decorate('usernameEndsWith42', usernameEndsWith42);
+    fastify.decorate('isDeletedUsername', isDeletedUsername);
 
   // --- Stats ---
   fastify.decorate('apiStat', { request: 0, login: 0, signup: 0 });
@@ -121,7 +111,7 @@ export function loadDecorate(fastify) {
   cron.schedule('0 0 0 * * *', () => { crontab(fastify) }, { timezone: 'Europe/Paris' });
 
   fastify.register(rateLimit, {
-    max: 100,
+    max: 1000,
     timeWindow: '1 minute'
   });
 }

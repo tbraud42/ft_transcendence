@@ -11,8 +11,8 @@ export default async function initDb(dbPath) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const schemaPath = path.resolve(__dirname, './schema.sql');
+  const dirName = path.dirname(fileURLToPath(import.meta.url));
+  const schemaPath = path.resolve(dirName, './schema.sql');
 
   if (!fs.existsSync(schemaPath)) {
     console.error('schema.sql not found', schemaPath);

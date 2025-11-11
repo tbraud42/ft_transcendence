@@ -5,8 +5,8 @@
 
 export default async function (fastify, options) {
   fastify.get('/', { preHandler: [fastify.auth] }, async (req, reply) => {
-      const token = fastify.generateToken({id: req.user.id, username: req.user.username, role: req.user.role, }, true, '12h');
+    const token = fastify.generateToken({ id: req.user.id, username: req.user.username, role: req.user.role }, true, '12h');
 
-      return reply.send({ error: false, code: '', info: { token: token } });
+    return reply.send({ error: false, code: '', info: { token: token } });
   });
 }

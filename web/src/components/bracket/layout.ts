@@ -2,6 +2,7 @@ import { bubble, setBubble } from '../Bubble'
 import { LeafAddress, Match, Player, RenderOptions } from '../../api/socket/types'
 import { SrvSnapshot } from '../../api/socket/messageTypes'
 import { MatchStatus, ClientStatus } from '../../api/socket/protocol'
+import i18n from "../../utils/lang/i18n";
 
 const W = 176, H = 38, GX = 72, GY = 14, PAD = 14, CENTER = 260
 
@@ -65,26 +66,7 @@ export function buildLevels(stage: HTMLElement, perSide: number) {
 
     const centerX = PAD + g.leftWidth + CENTER / 2 + g.W / 2
     const finalBox = bubble(stage, centerX - g.W / 2, PAD, g.W, g.H)
-    setBubble(finalBox, 'Winner', ClientStatus.EMPTY)
+    setBubble(finalBox, i18n.t('pong_lobby_winner'), ClientStatus.EMPTY)
 
     return { L, R, finalBox, g }
-}
-
-/* ---------- ui helpers ---------- */
-
-function button(label: string, cls: string) {
-    const b = document.createElement('button')
-    b.type = 'button'
-    b.textContent = label
-    b.className = cls + ' focus:outline-none transition'
-    return b
-}
-
-function mount(el: HTMLElement, btn: HTMLButtonElement) {
-    el.style.display = 'flex'
-    el.style.alignItems = 'center'
-    el.style.justifyContent = 'center'
-    el.style.gap = '8px'
-    btn.setAttribute('data-b', '1')
-    el.appendChild(btn)
 }

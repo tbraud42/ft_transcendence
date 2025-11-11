@@ -16,7 +16,7 @@ export function createOptionSelector(options: {
     wrapper.className = 'flex flex-col gap-2 text-center'
 
     if (options.label) {
-        const labelEl = document.createElement('label')
+        const labelEl = document.createElement('div')
         labelEl.className = 'text-sm font-medium text-gray-800 dark:text-white text-center'
         labelEl.textContent = options.label
         wrapper.appendChild(labelEl)

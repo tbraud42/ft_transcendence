@@ -10,17 +10,14 @@ export class ClientBase {
         this.ready = false;
         this.bot = false;
 
-        // session
         this.tournament = null;
         this.room = null;
 
-        // inputs/state for game
         this.up = false;
         this.down = false;
         this.y = 0;
         this.score = 0;
 
-        // paddle params (overridden on attachToRoom)
         this.speed = 6;
         this.padWidth = 10;
         this.padHeight = 100;
@@ -37,8 +34,6 @@ export class ClientBase {
     getUsername() {
         return this.username;
     }
-
-    /* ---------- tournament lifecycle ---------- */
 
     /**
      * Attach to a tournament; ensures presence and broadcasts snapshot.
@@ -73,8 +68,6 @@ export class ClientBase {
         }
     }
 
-    /* ---------- room lifecycle ---------- */
-
     /**
      * Attach to a room, reset readiness, sync paddle params, and center vertically.
      */
@@ -85,12 +78,10 @@ export class ClientBase {
         this.room = room;
         this.ready = false;
 
-        // sync paddle/arena params from room
         this.padWidth  = room.PAD_W ?? this.padWidth;
         this.padHeight = room.PAD_H ?? this.padHeight;
         this.speed     = room.PAD_SPEED ?? this.speed;
 
-        // center vertically
         this.y = Math.max(0, Math.min((room.H - this.padHeight) / 2, room.H - this.padHeight));
     }
 
@@ -112,20 +103,13 @@ export class ClientBase {
         return this.room;
     }
 
-    /* ---------- connection/ready ---------- */
-
     /**
      * Mark the client as disconnected and trigger a snapshot.
      */
     onDisconnect() {
-        this.tournament.remove(this.username);
-    }
-
-    /**
-     * Authentication flag accessor.
-     */
-    isAuthenticated() {
-        return !!this.auth;
+        if (this.tournament) {
+            this.tournament.remove(this.username);
+        }
     }
 
     /**
@@ -161,8 +145,6 @@ export class ClientBase {
     isBot() {
         return !!this.bot;
     }
-
-    /* ---------- helpers ---------- */
 
     /**
      * Get current paddle Y position.

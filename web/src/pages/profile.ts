@@ -1,9 +1,9 @@
 import i18n from '../utils/lang/i18n';
 import { createSidebar } from '../components/sidebar';
-import { logout } from '../utils/storage';
 import { renderProfileView } from './profileTabs/profileView';
 import { renderSettingsView } from './profileTabs/settingsView';
 import { render2faView } from './profileTabs/twoFaView';
+import {logoutUser} from "../api/auth";
 
 export function renderProfile(activeTabId: string): HTMLElement {
     const container = document.createElement('div');
@@ -14,7 +14,7 @@ export function renderProfile(activeTabId: string): HTMLElement {
         { label: i18n.t('profile_sidebar_profile'), href: '/profile' },
         { label: i18n.t('profile_sidebar_settings'), href: '/profile/settings' },
         { label: i18n.t('profile_sidebar_2fa'), href: '/profile/2fa' },
-        { label: i18n.t('home_logout'), href: () => logout(), color: 'red' },
+        { label: i18n.t('home_logout'), href: () => logoutUser(), color: 'red' },
     ]);
 
     const contentWrap = document.createElement('div');

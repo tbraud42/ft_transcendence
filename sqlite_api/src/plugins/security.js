@@ -18,7 +18,7 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
   return async function Authenticate(request, reply) {
     const auth = request.headers.authorization;
     if (!auth || !auth.startsWith('Bearer ')) {
-      return reply.code(401).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // No token provided
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_0', info: 'Unauthorized' }); // No token provided
     }
 
     const token = auth.slice(7);
@@ -26,19 +26,19 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
     try {
       decoded = jwt.verify(token, JWT_SECRET);
     } catch {
-      return reply.code(401).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // Invalid token
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_1', info: 'Unauthorized' }); // Invalid token
     }
 
     const user = await fastify.showUserById(fastify.db, Number(decoded.id));
     if (!user) {
-      return reply.code(401).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // user no longer exists
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_2', info: 'Unauthorized' }); // User no longer exists
     }
 
     const is2FAEnabled = !!(user.is_twofa_enabled === true || user.is_twofa_enabled === 1);
     const tokenHas2FA = !!decoded.twofa;
 
     if (is2FAEnabled && !tokenHas2FA && !allow2FAPending) {
-      return reply.code(401).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // Invalid token
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_4', info: 'Unauthorized' }); // Invalid token
     }
 
     fastify.updateTimeStamp(fastify.db, user.id);
@@ -58,17 +58,17 @@ export async function verifyPassword(password, hashedPassword) {
 export function allowSelfOrAdmin(paramKey = 'id') {
   return async function allowSelfOrAdminHook(request, reply) {
     const user = request.user;
-    if (!user) return reply.code(401).send({ error: true, code:  'AUTH_UNAUTHORIZED', info: 'Unauthorized' });
+    if (!user) return reply.code(200).send({ error: true, code:  'AUTH_UNAUTHORIZED', info: 'Unauthorized' });
 
     const targetId = Number(request.params?.[paramKey]);
     if (!Number.isFinite(targetId)) {
-      return reply.code(400).send({ error: true, code: 'BAD_REQUEST', info: 'Bad Request' });
+      return reply.code(200).send({ error: true, code: 'BAD_REQUEST', info: 'Bad Request' });
     }
 
     if (user.role?.toLowerCase?.() === 'admin') return;
     if (Number(user.id) === targetId) return;
 
-    return reply.code(403).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
+    return reply.code(200).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
   };
 }
 // ^^^^^
@@ -109,8 +109,10 @@ export async function passwordFeedback(errors) {
   return `Password must contain ${messages.join(", ")}.`;
 }
 
-const FORBIDDEN_SUFFIX = '_42';
+export function usernameEndsWith42(username) {
+  return username.toLowerCase().endsWith('_42');
+}
 
-export function usernameEndsWith42(name) {
-  return name.toLowerCase().endsWith(FORBIDDEN_SUFFIX);
+export function isDeletedUsername(username) {
+  return typeof username === 'string' && username.startsWith('deleted_');
 }

@@ -25,27 +25,10 @@ CREATE TABLE IF NOT EXISTS user_friends (
   FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_user_friends_user   ON user_friends(user_id);
-CREATE INDEX IF NOT EXISTS idx_user_friends_friend ON user_friends(friend_id);
-
-CREATE TRIGGER IF NOT EXISTS trg_limit_friends_ins
-AFTER INSERT ON user_friends
-BEGIN
-  SELECT CASE
-    WHEN (SELECT COUNT(*) FROM user_friends uf
-          WHERE uf.user_id = NEW.user_id OR uf.friend_id = NEW.user_id) > 10
-    THEN RAISE(ABORT, 'FRIEND_LIMIT')
-  END;
-  SELECT CASE
-    WHEN (SELECT COUNT(*) FROM user_friends uf
-          WHERE uf.user_id = NEW.friend_id OR uf.friend_id = NEW.friend_id) > 10
-    THEN RAISE(ABORT, 'FRIEND_LIMIT')
-  END;
-END;
-
 -- TOURNAMENTS
 CREATE TABLE IF NOT EXISTS tournaments (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  socket_id    INTEGER,
   name         VARCHAR(50) NOT NULL,
   description  VARCHAR(255),
   maxPlayer    INTEGER NOT NULL DEFAULT 2 CHECK (maxPlayer IN (2,4,8)),
@@ -56,12 +39,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
   created_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (creator) REFERENCES users(username) ON DELETE SET NULL
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS uq_tournaments_name_nocase
-  ON tournaments(name COLLATE NOCASE);
-CREATE INDEX IF NOT EXISTS idx_tournaments_status  ON tournaments(status);
-CREATE INDEX IF NOT EXISTS idx_tournaments_creator ON tournaments(creator);
-CREATE INDEX IF NOT EXISTS idx_tournaments_winner  ON tournaments(winner);
 
 -- GAMES
 CREATE TABLE IF NOT EXISTS games (
@@ -80,28 +57,26 @@ CREATE TABLE IF NOT EXISTS games (
   FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_games_tournament ON games(tournament_id);
-CREATE INDEX IF NOT EXISTS idx_games_p1         ON games(player1);
-CREATE INDEX IF NOT EXISTS idx_games_p2         ON games(player2);
-CREATE INDEX IF NOT EXISTS idx_games_winner     ON games(winner);
+DROP TRIGGER IF EXISTS trg_limit_friends_ins;
+CREATE TRIGGER IF NOT EXISTS trg_limit_friends_ins
+AFTER INSERT ON user_friends
+BEGIN
+  SELECT CASE
+    WHEN (
+      SELECT COUNT(*) FROM user_friends uf
+      WHERE uf.user_id = NEW.user_id
+    ) > 10
+    THEN RAISE(ABORT, 'FRIEND_LIMIT')
+  END;
+END;
 
-CREATE VIEW IF NOT EXISTS v_tournament_participants AS
-SELECT DISTINCT
-  g.tournament_id,
-  u.username AS username
-FROM games g
-JOIN users u ON u.username IN (g.player1, g.player2);
-
-CREATE VIEW IF NOT EXISTS v_user_matches AS
-SELECT
-  g.id            AS game_id,
-  g.tournament_id,
-  t.name          AS tournament_name,
-  g.started_at,
-  g.p1_score,
-  g.p2_score,
-  g.winner        AS winner_username,
-  CASE WHEN g.player1 = u.username THEN g.player2 ELSE g.player1 END AS opponent_username
-FROM games g
-JOIN tournaments t ON t.id = g.tournament_id
-JOIN users u ON u.username IN (g.player1, g.player2);
+CREATE INDEX IF NOT EXISTS idx_users_last_timestamp ON users(last_timestamp);
+CREATE INDEX IF NOT EXISTS idx_user_friends_user    ON user_friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_friends_friend  ON user_friends(friend_id);
+CREATE INDEX IF NOT EXISTS idx_tournaments_status   ON tournaments(status);
+CREATE INDEX IF NOT EXISTS idx_tournaments_creator  ON tournaments(creator);
+CREATE INDEX IF NOT EXISTS idx_tournaments_winner   ON tournaments(winner);
+CREATE INDEX IF NOT EXISTS idx_games_tournament     ON games(tournament_id);
+CREATE INDEX IF NOT EXISTS idx_games_p1             ON games(player1);
+CREATE INDEX IF NOT EXISTS idx_games_p2             ON games(player2);
+CREATE INDEX IF NOT EXISTS idx_games_winner         ON games(winner);

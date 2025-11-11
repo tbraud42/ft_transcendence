@@ -5,6 +5,7 @@ import {
     saveTournamentResult,
     updateTournamentState
 } from "../../api/game.js";
+import {getTournamentManager} from "./GamesManager.js";
 
 export class Tournament {
     /**
@@ -23,14 +24,12 @@ export class Tournament {
         this.creator = creator || { id: null, username: '' };
         this.difficulty = difficulty;
 
-        this.participants = new Map();   // username -> Client | Bot
-        this.rooms = new Map();          // round -> Map(matchIndex -> Room)
+        this.participants = new Map();
+        this.rooms = new Map();
         this._botCounter = 1;
 
         this._generateRooms();
     }
-
-    /* ======================= Players ======================= */
 
     /**
      * Try to add a player to the tournament and auto-assign a first-round slot.
@@ -38,7 +37,7 @@ export class Tournament {
      */
     addPlayer(client) {
         const username = client.getUsername();
-        if (!username || this.participants.has(username) || this.participants.size >= this.maxPlayers) {
+        if (!username || this.participants.has(username) || this.participants.size >= this.maxPlayers || this.isEnded()) {
             return false;
         }
 
@@ -109,6 +108,9 @@ export class Tournament {
 
         client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
         client.detachTournament();
+        if (this.isEmpty()) {
+            getTournamentManager().removeTournament(this.id);
+        }
         this.broadcastSnapshot();
     }
 
@@ -121,14 +123,16 @@ export class Tournament {
 
     /**
      * Handle the end of a room: move the winner forward and broadcast.
+     * Keep the loser in participants.
      */
     onRoomEnd(room, winner, loser) {
-        // keep loser in participants map; only advance the winner
         room.removePlayer(loser.getUsername());
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
         if (this.isEnded()) {
-            updateTournamentState(this.creator, this.id, 2).then();
+            updateTournamentState(this.creator, this.id, 2).then((res) => {
+                console.log(res)
+            });
             saveTournamentResult(this).then();
         }
     }
@@ -148,13 +152,24 @@ export class Tournament {
     }
 
     /**
+     * Check if the tournament is empty
+     */
+    isEmpty() {
+        let count = 0
+        for (const participant of this.participants.values()) {
+            if (!participant.isBot || !participant.isBot()) {
+                count += 1
+            }
+        }
+        return count === 0;
+    }
+
+    /**
      * Check if the tournament is full
      */
     isFull() {
         return this.maxPlayers <= this.participants.size;
     }
-
-    /* ======================= Snapshot ======================= */
 
     /**
      * Build a full tournament snapshot for clients (players, matches, status).
@@ -208,8 +223,6 @@ export class Tournament {
     getId() {
         return this.id;
     }
-
-    /* ======================= Rooms ======================= */
 
     /**
      * Pre-generate the full bracket rooms for all rounds based on maxPlayers.
@@ -274,7 +287,7 @@ export class Tournament {
                     p1_score: p1_score,
                     p2_score: p2_score,
                     duration_sec: room.totalTime / 1000,
-                    started_at: new Date(room.startTime).toISOString(), //TODO: check format
+                    started_at: new Date(room.startTime).toISOString(),
                 });
             }
         }
@@ -380,8 +393,6 @@ export class Tournament {
         return true;
     }
 
-    /* ======================= Utils ======================= */
-
     /**
      * Send a message to all participants currently attached to this tournament.
      */
@@ -396,8 +407,6 @@ export class Tournament {
         }
     }
 }
-
-/* ======================= Helpers ======================= */
 
 /**
  * Stable ordering for first-round seeding: maps a client to a leaf index.

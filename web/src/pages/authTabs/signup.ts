@@ -3,7 +3,8 @@ import { createInput } from '../../components/input'
 import { createButton } from '../../components/button'
 import { createAuthContainer } from '../../components/authContainer'
 import { handleSignup } from '../../utils/auth'
-import {navigateTo} from "../../utils/router";
+import { navigateTo } from '../../utils/router'
+import { GDPROverlay } from '../../components/GDPROverlay'
 
 export function renderSignupTab(): HTMLElement {
     const container = createAuthContainer()
@@ -18,15 +19,18 @@ export function renderSignupTab(): HTMLElement {
 
     const pseudoInput = createInput('text', i18n.t('login_pseudo'))
     pseudoInput.name = 'username'
+    pseudoInput.autocomplete = 'username'
 
     const passwordInput = createInput('password', i18n.t('login_password'))
     passwordInput.name = 'password'
+    passwordInput.autocomplete = 'new-password'
 
     const passwordConfirm = createInput('password', i18n.t('signup_password_confirm'))
     passwordConfirm.name = 'password_confirm'
+    passwordConfirm.autocomplete = 'new-password'
 
     const errorMsg = document.createElement('p')
-    errorMsg.className = 'text-red-500 text-sm h-5'
+    errorMsg.className = 'text-red-500 text-sm min-h-[1.25rem]'
 
     const submitBtn = createButton(i18n.t('login_signup'), 'submit', 'black')
 
@@ -34,13 +38,33 @@ export function renderSignupTab(): HTMLElement {
     switchBtn.type = 'button'
     switchBtn.className = 'text-sm text-gray-500 dark:text-gray-300 hover:underline'
     switchBtn.textContent = i18n.t('signup_switch_to_login')
-    switchBtn.onclick = () => {
-        navigateTo('/login')
-    }
+    switchBtn.onclick = () => navigateTo('/login')
 
-    form.onsubmit = (e) => handleSignup(e, pseudoInput, passwordInput, passwordConfirm, errorMsg)
+    form.addEventListener('submit', (e) => {
+        e.preventDefault()
+
+        const overlay = GDPROverlay()
+        document.body.appendChild(overlay.element)
+
+        const footer = document.createElement('div')
+        footer.className = 'mt-4 flex items-center justify-end gap-2'
+
+        const cancelBtn = createButton(i18n.t('button_exit'), 'button', 'gray')
+        cancelBtn.addEventListener('click', () => {
+            overlay.close()
+        })
+
+        const confirmBtn = createButton(i18n.t('button_exit_confirm'), 'button', 'black')
+        confirmBtn.addEventListener('click', () => {
+            overlay.close()
+            handleSignup(e, pseudoInput, passwordInput, passwordConfirm, errorMsg)
+        })
+
+        footer.append(cancelBtn, confirmBtn)
+        overlay.content.appendChild(footer)
+    })
+
     form.append(pseudoInput, passwordInput, passwordConfirm, errorMsg, submitBtn)
-
     container.append(title, form, switchBtn)
     return container
 }

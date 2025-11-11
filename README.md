@@ -29,21 +29,25 @@ NOTE: load pages to accept https certificate in your browser:
  - api.DOMAIN_NAME
  - pong.ws.DOMAIN_NAME
 
-## How to use Javascript/Typescript formatting
+## How to test web socket using terminal
 
-1. Install Node.js if you haven't already.
+TOKEN=a_valid_jwt_token_here
 
-2. Initialize a new Node.js project and install the necessary packages:
-```bash
-npm init -y
-npm i -D eslint prettier \
-       @typescript-eslint/parser @typescript-eslint/eslint-plugin \
-       eslint-config-prettier
-```
+### websocat
 
-3. The configuration file already exists in the repository as [eslint.config.mjs](eslint.config.mjs)
+websocat --insecure --text wss://pong.ws.DOMAIN_NAME \
+--one-message='{"type":"AUTH","token":"$TOKEN"}'
 
-4. execute the following command to format your files:
-```bash
-npx eslint --fix FILE_NAME
-```
+
+{"type":0,"token":"a_valid_jwt_token_here"}
+
+### curl
+
+curl -i -N -k \
+-H "Connection: Upgrade" \
+-H "Upgrade: websocket" \
+-H "Host: https://pong.ws.DOMAIN_NAME" \
+-H "Origin: https://pong.ws.DOMAIN_NAME" \
+-H "Sec-WebSocket-Key: SGVsbG9Xb3JsZDEyMzQ1Ng==" \
+-H "Sec-WebSocket-Version: 13" \
+https://pong.ws.DOMAIN_NAME

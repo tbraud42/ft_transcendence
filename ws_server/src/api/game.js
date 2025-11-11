@@ -52,8 +52,6 @@ export async function saveTournamentResult(tournament) {
 
     const data = await res.json().catch(() => ({}))
 
-    console.log(data);
-
     if (!res.ok) {
         console.error('Error saving tournament result:', res.status, res.statusText)
         return null
@@ -63,6 +61,7 @@ export async function saveTournamentResult(tournament) {
 }
 
 export async function updateTournamentState(creator, id, status) {
+    console.log(creator)
     const url = `${API_URL}/tournaments/state/${encodeURIComponent(id)}`
 
     const res = await fetch(url, {
@@ -78,6 +77,26 @@ export async function updateTournamentState(creator, id, status) {
 
     if (!res.ok) {
         console.error('Error updating tournament state:', res.status, res.statusText)
+        return null
+    }
+
+    return data
+}
+
+export async function deleteTournament(creator, id) {
+    const url = `${API_URL}/tournaments/${encodeURIComponent(id)}`
+
+    const res = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${generateValidToken(creator.username, creator.id)}`,
+            'Accept': 'application/json',
+        },
+    })
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+        console.error('Error deleting tournament:', res.status, res.statusText)
         return null
     }
 

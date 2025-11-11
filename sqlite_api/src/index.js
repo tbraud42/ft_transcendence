@@ -14,6 +14,7 @@ import twoFaRoute from './routes/auth/2fa.js';
 import ftRoutes from './routes/auth/42auth.js';
 import isLoginRoute from './routes/auth/isAuth.js';
 import loginRoute from './routes/auth/login.js';
+import logoutRoute from './routes/auth/logout.js';
 import refreshRoute from './routes/auth/refreshAuth.js';
 import signupRoutes from './routes/auth/signup.js';
 import userRoutes from './routes/client/user.js';
@@ -38,6 +39,7 @@ const start = async () => {
   await fastify.register(isLoginRoute, { prefix: '/auth/isAuth' });
   await fastify.register(refreshRoute, { prefix: '/auth/refreshAuth' });
   await fastify.register(loginRoute, { prefix: '/auth/login' });
+  await fastify.register(logoutRoute, { prefix: '/auth/logout' });
   await fastify.register(signupRoutes, { prefix: '/auth/signup' });
   await fastify.register(userRoutes, { prefix: '/user' });
   await fastify.register(friendRoutes, { prefix: '/user/friends' });
@@ -67,7 +69,7 @@ const start = async () => {
           }
         }
       },
-      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
       preflightContinue: false,
@@ -78,13 +80,24 @@ const start = async () => {
 
     if (fastify.isDev()) {
       console.log(`----------show time !----------\n`);
-      await fastify.showAllData(fastify.db);
+      showAllData(fastify.db);
     }
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
   }
 };
+
+function showAllData(db) {
+  const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';`).all();
+
+  for (const { name } of tables) {
+    console.log(`\nTable: ${name}`);
+    const result = db.prepare(`SELECT * FROM ${name}`).all();
+    if (result.length === 0) console.log('empty db');
+    else for (const row of result) console.log(row);
+  }
+}
 
 start();
 

@@ -1,5 +1,5 @@
 import { Tournament } from './Tournament.js'
-import { getTournamentFromApi } from '../../api/game.js'
+import {deleteTournament, getTournamentFromApi} from '../../api/game.js'
 import {ClientManager} from "../client/ClientManager.js";
 
 class TournamentManager {
@@ -7,7 +7,7 @@ class TournamentManager {
         this.tournaments = new Map()
     }
 
-    async getOrCreate({ id, name, maxPlayers, creator }) {
+    async getOrCreate(id, creator) {
         const key = String(id)
         if (this.tournaments.has(key)) {
             const tournament = this.tournaments.get(key);
@@ -17,9 +17,14 @@ class TournamentManager {
             return tournament
         }
 
+        let maxPlayers = 2
+        let name = 2
         let difficulty = "medium"
         try {
             const data = await getTournamentFromApi(creator, key)
+            if (data.error) {
+                return null
+            }
             if (data?.name) {
                 name = String(data.name)
             }
@@ -45,6 +50,12 @@ class TournamentManager {
 
     get(id) {
         return this.tournaments.get(String(id)) || null
+    }
+
+    removeTournament(id) {
+        const tournament = this.get(id)
+        deleteTournament(tournament.creator, String(id)).catch(() => ({}))
+        this.tournaments.delete(String(id))
     }
 }
 

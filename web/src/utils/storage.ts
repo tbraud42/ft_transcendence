@@ -23,6 +23,7 @@ export function login(token: string, username: string): void {
 export function logout(): void {
     removeItem(USERNAME_KEY)
     removeItem(TOKEN_KEY)
+    removeItem(LAST_REFRESH_KEY)
     removeItem(AVATAR_KEY)
     navigateTo('/')
 }
@@ -45,11 +46,14 @@ export function getTmpToken(): string {
 
 export function setToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token)
-    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString())
 }
 
 export function getToken(): string {
     return localStorage.getItem(TOKEN_KEY) || ''
+}
+
+export function updateLastTokenRefresh(): void {
+    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString())
 }
 
 export function getLastTokenRefresh(): number {

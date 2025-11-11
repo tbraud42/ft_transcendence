@@ -11,6 +11,7 @@ import { request42Auth } from '../api/auth'
 import {renderStats} from "../pages/stats";
 import {userMe} from "../api/methode";
 import profileIcon from '../img/profile-icon.svg'
+import {refreshToken} from "../api/jwt";
 
 const PONG_WS_URL = env.PONG_WS_URL
 
@@ -86,6 +87,7 @@ export function router(): void {
             }).catch(() => {})
         }
 
+        refreshToken().catch(() => {})
         switch (mainPage) {
         case 'pong': {
             if (subPage === 'play') {

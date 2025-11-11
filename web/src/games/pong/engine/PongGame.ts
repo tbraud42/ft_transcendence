@@ -176,7 +176,7 @@ export class PongGame {
         const left = (this.player1 as PlayerBase).score || 0
         const right = (this.player2 as PlayerBase).score || 0
         if (left >= WINNING_SCORE || right >= WINNING_SCORE) {
-            const username = getUsername() || i18n.t('pong_you')
+            const username = getUsername()
             const opponent = secondPlayerName || i18n.t('pong_opponent')
             const winner = left > right ? (this.player1.isLeft ? username : opponent) : (this.player2.isLeft ? username : opponent)
             this.handleGameOver(winner)
@@ -186,7 +186,7 @@ export class PongGame {
     private handleGameOver(winner: string) {
         this.stop()
 
-        this.winTextEl.textContent = i18n.t('pong_winner_announce', { winner })
+        this.winTextEl.textContent = i18n.t('pong_winner_announce', { player: winner })
         this.winTextEl.style.opacity = '1'
 
         setTimeout(() => {

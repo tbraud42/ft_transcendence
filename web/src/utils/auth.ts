@@ -22,6 +22,7 @@ export async function handleLogin(
 
     try {
         const res = await apiLogin(user, pass)
+
         if (res) {
             if (res.twofa_required) {
                 setUsername(user)
@@ -35,6 +36,7 @@ export async function handleLogin(
     } catch (err) {
         errorMsg.textContent = (err as Error).message
     }
+
     return false
 }
 
@@ -61,10 +63,13 @@ export async function handleSignup(
     }
 
     try {
-        const res = await apiSignup(user, pass)
-        if (res) {
-            login(res.token, user)
-        }
+        apiSignup(user, pass).then((res) => {
+            if (res) {
+                login(res.token, user)
+            }
+        }).catch((err) => {
+            errorMsg.textContent = (err as Error).message
+        })
     } catch (err) {
         errorMsg.textContent = (err as Error).message
     }
