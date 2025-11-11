@@ -50,10 +50,10 @@ export function getTournamentById(db, id) {
     SELECT ap.username,
            u.id AS id
     FROM all_players ap
-    LEFT JOIN users u ON u.username = ap.username
+           LEFT JOIN users u ON u.username = ap.username
     WHERE ap.username IS NOT NULL
     ORDER BY ap.username COLLATE NOCASE
-    `).all(tid, tid);
+  `).all(tid, tid);
 
   const games = db.prepare(`
     SELECT
@@ -70,7 +70,7 @@ export function getTournamentById(db, id) {
     FROM games g
     WHERE g.tournament_id = ?
     ORDER BY g.started_at ASC, g.id ASC
-    `).all(tid);
+  `).all(tid);
 
   return { ...tournament, participants, games };
 };
@@ -93,36 +93,34 @@ export function getTournamentsByStatus(db, status) {
     FROM tournaments t
     WHERE t.status = ?
     ORDER BY t.created_at DESC
-    `).all(st);
+  `).all(st);
 };
 
 export function createTournament(db, { socket_id, name, description, difficulty, maxPlayer, creator}){
-    const info = db.prepare(`INSERT INTO tournaments (socket_id, name, description, creator, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, ?, 0)`).run(socket_id, name, description || null, creator, difficulty, maxPlayer);
-    return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);
+  const info = db.prepare(`INSERT INTO tournaments (socket_id, name, description, creator, difficulty, maxPlayer, status) VALUES (?, ?, ?, ?, ?, ?, 0)`).run(socket_id, name, description || null, creator, difficulty, maxPlayer);
+  return db.prepare(`SELECT * FROM tournaments WHERE id = ?`).get(info.lastInsertRowid);
 };
 
 export function changeTournamentStatus(db, id, nextStatus = null){
-    const current = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(id);
-    if (!current) return null;
-    const newStatus = nextStatus ?? (current.status === 0 ? 1 : current.status === 1 ? 2 : 2);
-    if (newStatus !== 0 && newStatus !== 1 && newStatus !== 2) return null;
-    const row = db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(newStatus, id);
-    return row || null;
+  const current = db.prepare(`SELECT status FROM tournaments WHERE id = ?`).get(id);
+  if (!current) return null;
+  const newStatus = nextStatus ?? (current.status === 0 ? 1 : current.status === 1 ? 2 : 2);
+  if (newStatus !== 0 && newStatus !== 1 && newStatus !== 2) return null;
+  const row = db.prepare(`UPDATE tournaments SET status = ? WHERE id = ? RETURNING id, status`).get(newStatus, id);
+  return row || null;
 };
 
 export function setTournamentWinner(db, id, winnerUser){
-    return db.prepare(`UPDATE tournaments SET winner = ?, status = 2 WHERE id = ? RETURNING id, status, winner`).get(winnerUser, id);
+  return db.prepare(`UPDATE tournaments SET winner = ?, status = 2 WHERE id = ? RETURNING id, status, winner`).get(winnerUser, id);
 };
 
 export function deleteTournament(db, id){
-    return db.prepare(`DELETE FROM tournaments WHERE id = ?`).run(id);
+  return db.prepare(`DELETE FROM tournaments WHERE id = ?`).run(id);
 };
 
 export function insertStatGame(fastify, tournamentId, gamesInput) {
   const tid = Number(tournamentId);
   if (!Number.isFinite(tid)) throw new Error('INVALID_TOURNAMENT');
-
-  const getMaxNum = fastify.db.prepare(`SELECT COALESCE(MAX(game_num), 0) AS maxn FROM games WHERE tournament_id = ?`);
 
   const insGame = fastify.db.prepare(`INSERT INTO games (game_num, tournament_id, player1, player2, winner, started_at, duration_sec, p1_score, p2_score)
     VALUES (?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)`);
@@ -238,7 +236,7 @@ export function validateGameRow(row) {
   if (!Number.isFinite(s2) || s2 < 0) errors.push('p2_score invalid');
   if (!Number.isFinite(dur) || dur < 0) errors.push('duration_sec invalid');
 
-  const winnerUsername = typeof row?.winner === 'string' ? row.winner.trim() : null;
+  const winnerUsername = typeof row?.winner === 'string' ? row.winner.trim() : '';
   if (!winnerUsername || (winnerUsername !== p1 && winnerUsername !== p2)) {
     errors.push('winner must be either p1 or p2');
   }
