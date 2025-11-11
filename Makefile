@@ -10,22 +10,22 @@ COMPOSE_FILE = docker-compose.yml
 DEV_OVERRIDE = docker-compose.override.yml
 
 up:
-	docker-compose -f $(COMPOSE_FILE) up --build -d
+	docker compose -f $(COMPOSE_FILE) up --build -d
 
 build:
-	docker-compose -f $(COMPOSE_FILE) build --no-cache
+	docker compose -f $(COMPOSE_FILE) build --no-cache
 
 logs:
-	docker-compose -f $(COMPOSE_FILE) logs -f
+	docker compose -f $(COMPOSE_FILE) logs -f
 
 dev:
-	docker-compose -f $(COMPOSE_FILE) -f $(DEV_OVERRIDE) up --build
+	docker compose -f $(COMPOSE_FILE) -f $(DEV_OVERRIDE) up --build
 
 down:
-	docker-compose -f $(COMPOSE_FILE) down
+	docker compose -f $(COMPOSE_FILE) down
 
 clean:
-	docker-compose -f $(COMPOSE_FILE) down --volumes --remove-orphans
+	docker compose -f $(COMPOSE_FILE) down --volumes --remove-orphans
 	$(RM) .$(DIRSEP)nginx$(DIRSEP)data
 	$(RM) .$(DIRSEP)web$(DIRSEP)dist
 	$(RM) .$(DIRSEP)sqlite_api$(DIRSEP)data
