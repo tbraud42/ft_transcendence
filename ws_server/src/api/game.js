@@ -52,6 +52,8 @@ export async function saveTournamentResult(tournament) {
 
     const data = await res.json().catch(() => ({}))
 
+    console.log(data)
+
     if (!res.ok) {
         console.error('Error saving tournament result:', res.status, res.statusText)
         return null
