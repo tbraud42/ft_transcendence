@@ -131,6 +131,7 @@ export class Tournament {
         this.broadcastSnapshot();
         console.log("YEY", this.isEnded())
         if (this.isEnded()) {
+            console.log("LALA", this.isEnded())
             console.log(`${room.getUsername()} has ended`);
             updateTournamentState(this.creator, this.id, 2).then();
             saveTournamentResult(this).then();
