@@ -39,7 +39,6 @@ function createPasswordForm(): HTMLElement {
     currentPasswordInput.id = 'currentPassword';
     currentPasswordInput.autocomplete = 'current-password';
 
-    // Message area
     const message = document.createElement('p');
     message.className = 'text-red-500 text-sm h-5'
     message.setAttribute('role', 'alert');

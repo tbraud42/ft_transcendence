@@ -73,7 +73,7 @@ export async function request42Auth(code: string, state: string): Promise<{ toke
     const data = await res.json()
 
     if (data.error === true || !res.ok) {
-        switch (data.code) {
+        switch (data.info.code) {
             case "INVALID_CODE":
                 throw new Error(i18n.t('INVALID_CODE'));
                 break;
@@ -87,11 +87,11 @@ export async function request42Auth(code: string, state: string): Promise<{ toke
                 throw new Error(i18n.t('PROFILE_FETCH_FAILED'));
                 break;
             default:
-                throw new Error("login error : ${data.code}");
+                throw new Error(`login error : ${data.info.code}`);
         }
     }
 
-    return await data
+    return await data.info
 }
 
 export const apiSignup = (name: string, password: string) =>
@@ -123,7 +123,7 @@ export async function api2faSetup(): Promise<{ qrCode: string, secret: string, o
                 throw new Error(i18n.t('2fa_already_enabled'));
                 break;
             default:
-                throw new Error("setup faild ${data.code}");
+                throw new Error(`setup faild ${data.code}`);
         }
     }
 

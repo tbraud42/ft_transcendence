@@ -49,8 +49,6 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
 
     const url = `${API_URL}/auth/refreshAuth`;
 
-    console.log(token)
-
     const res = await fetch(url, {
         method: 'GET',
         headers: {
@@ -59,15 +57,12 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
         },
     });
 
-    console.log(res)
-
     if (!res.ok) {
         logoutUser();
         return null;
     }
 
     const data = await res.json();
-    console.log(data)
     if (!data?.info?.token) {
         logoutUser();
         return null;
