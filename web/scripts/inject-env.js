@@ -3,8 +3,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-console.log(process.env);
-
 const vars = {
     DOMAIN: `https://${process.env.VITE_DOMAIN || "localhost"}`,
     API_URL: `https://${process.env.VITE_API_URL || "localhost/api"}`,

@@ -130,9 +130,7 @@ export class Tournament {
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
         if (this.isEnded()) {
-            updateTournamentState(this.creator, this.id, 2).then((res) => {
-                console.log(res)
-            });
+            updateTournamentState(this.creator, this.id, 2).then();
             saveTournamentResult(this).then();
         }
     }

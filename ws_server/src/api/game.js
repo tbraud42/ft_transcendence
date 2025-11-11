@@ -61,7 +61,6 @@ export async function saveTournamentResult(tournament) {
 }
 
 export async function updateTournamentState(creator, id, status) {
-    console.log(creator)
     const url = `${API_URL}/tournaments/state/${encodeURIComponent(id)}`
 
     const res = await fetch(url, {
