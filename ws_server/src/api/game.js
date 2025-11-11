@@ -41,6 +41,8 @@ export async function saveTournamentResult(tournament) {
 
     const result = tournament.convertTournamentToResult();
 
+    console.log(result)
+
     const res = await fetch(url, {
         method: 'POST',
         headers: {
@@ -51,6 +53,8 @@ export async function saveTournamentResult(tournament) {
     })
 
     const data = await res.json().catch(() => ({}))
+
+    console.log(data)
 
     if (!res.ok) {
         console.error('Error saving tournament result:', res.status, res.statusText)

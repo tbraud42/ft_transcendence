@@ -129,11 +129,10 @@ export class Tournament {
         room.removePlayer(loser.getUsername());
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
-        console.log("YEY", this.isEnded())
         if (this.isEnded()) {
             console.log("LALA", this.isEnded())
-            console.log(`${room.getUsername()} has ended`);
             updateTournamentState(this.creator, this.id, 2).then();
+            console.log("WTF")
             saveTournamentResult(this).then();
         }
     }
