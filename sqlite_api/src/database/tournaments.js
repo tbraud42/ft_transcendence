@@ -122,8 +122,6 @@ export function insertStatGame(fastify, tournamentId, gamesInput) {
   const tid = Number(tournamentId);
   if (!Number.isFinite(tid)) throw new Error('INVALID_TOURNAMENT');
 
-  const getMaxNum = fastify.db.prepare(`SELECT COALESCE(MAX(game_num), 0) AS maxn FROM games WHERE tournament_id = ?`);
-
   const insGame = fastify.db.prepare(`INSERT INTO games (game_num, tournament_id, player1, player2, winner, started_at, duration_sec, p1_score, p2_score)
     VALUES (?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?)`);
 
@@ -238,7 +236,7 @@ export function validateGameRow(row) {
   if (!Number.isFinite(s2) || s2 < 0) errors.push('p2_score invalid');
   if (!Number.isFinite(dur) || dur < 0) errors.push('duration_sec invalid');
 
-  const winnerUsername = typeof row?.winner === 'string' ? row.winner.trim() : null;
+  const winnerUsername = typeof row?.winner === 'string' ? row.winner.trim() : '';
   if (!winnerUsername || (winnerUsername !== p1 && winnerUsername !== p2)) {
     errors.push('winner must be either p1 or p2');
   }

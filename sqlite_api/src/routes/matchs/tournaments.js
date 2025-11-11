@@ -100,13 +100,10 @@ export default async function (fastify, options) {
 
     const body  = req.body ?? {};
     const games = Array.isArray(body.games) ? body.games : [];
-    const tourWinnerUsername =
-      typeof body?.winner === 'string' ? body.winner.trim()
-      : typeof body?.winner_username === 'string' ? body.winner_username.trim()
-      : undefined;
+    const tourWinnerUsername = typeof body?.winner === 'string' ? body.winner.trim() : '';
 
-    if (games.length === 0 && tourWinnerUsername === undefined) {
-      return reply.code(200).send({ error: true, code: 'TOURNAMENT_MISSING_GAMES_OR_WINNER', info: 'Provide games and/or winner' });
+    if (games.length === 0) {
+      return reply.code(200).send({ error: true, code: 'TOURNAMENT_MISSING_GAMES_OR_WINNER', info: 'Provide games' });
     }
 
     const preparedRows = [];
@@ -139,11 +136,11 @@ export default async function (fastify, options) {
 
     await fastify.insertStatGame(fastify, tid, preparedRows);
 
-    if (tourWinnerUsername !== undefined) {
+    if (tourWinnerUsername !== undefined && tourWinnerUsername !== '') {
       const u = fastify.showUserByUsername(fastify, tourWinnerUsername);
       if (!u) return reply.code(200).send({ error: true, code: 'TOURNAMENT_INVALID_WINNER', info: 'Invalid tournament winner' });
 
-      const done = await fastify.setTournamentWinner(fastify.db, tid, tourWinnerUsername);
+      await fastify.setTournamentWinner(fastify.db, tid, tourWinnerUsername);
       return reply.send({ error: false, code: '', info: { tournament } });
     }
 
