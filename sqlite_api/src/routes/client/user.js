@@ -110,6 +110,11 @@ export default async function (fastify, options) {
       return reply.code(200).send({ error: true, code: 'AUTH_ACCESS_DENIED', info: 'Access denied' });
     }
 
+    if (fastify.usernameEndsWith42(req.user.username)) {
+      await fastify.deleteUser(fastify.db, req.params.id);
+      return reply.send({ error: false, code: '', info: 'delete sucesse'});
+    }
+
     if (!await fastify.verifyPassword(password, req.user.password_hash)) {
         return reply.code(200).send({ error: true, code: 'PASSWORD_CHANGE_REQUIRED', info: 'Need too change the password' });
     }

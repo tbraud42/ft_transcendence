@@ -3,7 +3,7 @@ import { createInput } from '../../components/input';
 import { createButton } from '../../components/button';
 import {changeUserPass, deleteUser, userMe} from '../../api/methode';
 import {createOverlayCard} from "../../components/overlayCard";
-import {clearStorage} from "../../utils/storage";
+import {clearStorage, getUsername} from "../../utils/storage";
 
 export function renderSettingsView(): HTMLElement {
     const wrapper = document.createElement('div');
@@ -134,9 +134,17 @@ const createDeleteAccountButton = (label: string): HTMLButtonElement => {
 
         actions.append(cancel, confirm);
 
+        const is42Account = getUsername().endsWith("_42");
+        let children: any[];
+        if (is42Account) {
+            children = [warning, actions];
+        } else {
+            children = [info, warning, pwd, actions];
+        }
+
         const overlay = createOverlayCard({
             title: i18n.t('settings_delete_account_confirm_title'),
-            children: [info, warning, pwd, actions],
+            children: children
         });
 
         overlay.element.classList.add('flex', 'items-center', 'justify-center', 'bg-black/70');
