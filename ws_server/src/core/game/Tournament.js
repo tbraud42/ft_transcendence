@@ -102,12 +102,6 @@ export class Tournament {
             return;
         }
 
-        if (this.isEnded()) {
-            updateTournamentState(this.creator, this.id, 2).then();
-            saveTournamentResult(this).then();
-            return;
-        }
-
         if (this.isFull() && !this.isEnded()) {
             updateTournamentState(this.creator, this.id, 0).then();
         }
