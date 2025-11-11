@@ -41,6 +41,8 @@ export async function saveTournamentResult(tournament) {
 
     const result = tournament.convertTournamentToResult();
 
+    console.log(result)
+
     const res = await fetch(url, {
         method: 'POST',
         headers: {
