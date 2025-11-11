@@ -37,7 +37,7 @@ export class Tournament {
      */
     addPlayer(client) {
         const username = client.getUsername();
-        if (!username || this.participants.has(username) || this.participants.size >= this.maxPlayers || this.isEnded()) {
+        if (!username || this.participants.has(username) || this.isFull() || this.isEnded()) {
             return false;
         }
 
@@ -60,7 +60,7 @@ export class Tournament {
      * No-op if tournament is full or room/slot is invalid.
      */
     addBotAt(roomId, slot) {
-        if (this.participants.size >= this.maxPlayers) {
+        if (this.isFull() || this.isEnded()) {
             return;
         }
 
@@ -102,7 +102,7 @@ export class Tournament {
             return;
         }
 
-        if (this.isFull()) {
+        if (this.isFull() && !this.isEnded()) {
             updateTournamentState(this.creator, this.id, 0).then();
         }
 
@@ -130,6 +130,7 @@ export class Tournament {
         this._assignNextRound(winner, room);
         this.broadcastSnapshot();
         if (this.isEnded()) {
+            console.log(`${room.getUsername()} has ended`);
             updateTournamentState(this.creator, this.id, 2).then();
             saveTournamentResult(this).then();
         }
