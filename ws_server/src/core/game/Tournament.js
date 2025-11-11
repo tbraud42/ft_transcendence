@@ -108,7 +108,7 @@ export class Tournament {
 
         client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
         client.detachTournament();
-        if (this.isEmpty()) {
+        if (this.isEmpty() && !this.isEnded()) {
             getTournamentManager().removeTournament(this.id);
         }
         this.broadcastSnapshot();
