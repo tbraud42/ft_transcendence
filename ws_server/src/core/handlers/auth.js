@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import {getClientManager} from "../game/GamesManager.js";
+import {getClientManager} from "../game/TournamentManager.js";
 import {env} from "../../utils/env.js";
 
 const JWT_SECRET = env.JWT_SECRET

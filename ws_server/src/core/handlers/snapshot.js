@@ -1,4 +1,4 @@
-import { getTournamentManager } from '../game/GamesManager.js'
+import { getTournamentManager } from '../game/TournamentManager.js'
 
 /**
  * Handle snapshot request, sending back the current state of the tournament.

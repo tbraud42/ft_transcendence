@@ -25,6 +25,9 @@ class TournamentManager {
             if (data.error) {
                 return null
             }
+            if (data?.status === 2) {
+                return null
+            }
             if (data?.name) {
                 name = String(data.name)
             }

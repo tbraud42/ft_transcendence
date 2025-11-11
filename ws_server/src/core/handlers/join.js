@@ -1,4 +1,4 @@
-import { getTournamentManager } from '../game/GamesManager.js'
+import { getTournamentManager } from '../game/TournamentManager.js'
 import {SrvMessageType} from "../client/protocol.js";
 
 /**
@@ -18,7 +18,7 @@ export default async function handleJoin(msg, socket) {
     const tournamentManager = getTournamentManager()
     const tournament = await tournamentManager.getOrCreate(id, { id: client.id, username: client.getUsername()})
     if (!tournament) {
-        client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: this.id, user: client.username });
+        client.send({ type: SrvMessageType.PLAYER_KICK, tournamentId: 0, user: client.username });
         return;
     }
 

@@ -5,7 +5,7 @@ import {
     saveTournamentResult,
     updateTournamentState
 } from "../../api/game.js";
-import {getTournamentManager} from "./GamesManager.js";
+import {getTournamentManager} from "./TournamentManager.js";
 
 export class Tournament {
     /**
