@@ -46,11 +46,14 @@ export function getTmpToken(): string {
 
 export function setToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token)
-    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString())
 }
 
 export function getToken(): string {
     return localStorage.getItem(TOKEN_KEY) || ''
+}
+
+export function updateLastTokenRefresh(): void {
+    localStorage.setItem(LAST_REFRESH_KEY, Date.now().toString())
 }
 
 export function getLastTokenRefresh(): number {

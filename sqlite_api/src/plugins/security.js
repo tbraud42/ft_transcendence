@@ -18,7 +18,7 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
   return async function Authenticate(request, reply) {
     const auth = request.headers.authorization;
     if (!auth || !auth.startsWith('Bearer ')) {
-      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // No token provided
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_0', info: 'Unauthorized' }); // No token provided
     }
 
     const token = auth.slice(7);
@@ -26,23 +26,19 @@ export function authenticate(fastify, { allow2FAPending = false } = {}) {
     try {
       decoded = jwt.verify(token, JWT_SECRET);
     } catch {
-      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // Invalid token
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_1', info: 'Unauthorized' }); // Invalid token
     }
 
     const user = await fastify.showUserById(fastify.db, Number(decoded.id));
     if (!user) {
-      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // User no longer exists
-    }
-
-    if (!fastify.isTokenAccepted(fastify.db, user.id, decoded.iat)) {
-      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // Invalid token
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_2', info: 'Unauthorized' }); // User no longer exists
     }
 
     const is2FAEnabled = !!(user.is_twofa_enabled === true || user.is_twofa_enabled === 1);
     const tokenHas2FA = !!decoded.twofa;
 
     if (is2FAEnabled && !tokenHas2FA && !allow2FAPending) {
-      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED', info: 'Unauthorized' }); // Invalid token
+      return reply.code(200).send({ error: true, code: 'AUTH_UNAUTHORIZED_4', info: 'Unauthorized' }); // Invalid token
     }
 
     fastify.updateTimeStamp(fastify.db, user.id);

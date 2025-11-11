@@ -68,7 +68,6 @@ export default async function (fastify, options) {
     });
 
     if (isValid) {
-      fastify.updateTimeStamp(fastify.db, req.user.id);
       const fullToken = fastify.generateToken({ id: req.user.id, username: req.user.username, role: req.user.role }, true, '12h');
 
       return reply.send({ error: false, code: '', info: { token: fullToken } });

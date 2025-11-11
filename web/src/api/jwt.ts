@@ -1,7 +1,7 @@
 // api/jwt.ts
 
 import { env } from '../utils/env';
-import { getToken } from '../utils/storage';
+import {getToken, updateLastTokenRefresh} from '../utils/storage';
 import {
     getLastTokenRefresh,
     setToken,
@@ -17,7 +17,7 @@ import {logoutUser} from "./auth";
 const API_URL = env.API_URL;
 
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
-  await refreshToken();
+  const token = getToken()
 
   const url = `${API_URL}${path}`;
   const method = init.method ?? 'GET';
@@ -28,7 +28,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     method,
     body: hasBody ? JSON.stringify(init.json) : undefined,
     headers: {
-      Authorization: `Bearer ${getToken()}`,
+      Authorization: `Bearer ${token}`,
       ...(hasBody ? { 'Content-Type': 'application/json' } : {})}
   });
 
@@ -41,19 +41,25 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
  * @returns The new token or null if the refresh failed
  */
 export async function refreshToken(tolerance: number = 1800000): Promise<string | null> {
+    const token = getToken();
     if (Date.now() - getLastTokenRefresh() < tolerance) {
-        return getToken();
+        return token;
     }
+    updateLastTokenRefresh()
 
     const url = `${API_URL}/auth/refreshAuth`;
+
+    console.log(token)
 
     const res = await fetch(url, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${getToken()}`
+            'Authorization': `Bearer ${token}`
         },
     });
+
+    console.log(res)
 
     if (!res.ok) {
         logoutUser();
@@ -61,6 +67,7 @@ export async function refreshToken(tolerance: number = 1800000): Promise<string 
     }
 
     const data = await res.json();
+    console.log(data)
     if (!data?.info?.token) {
         logoutUser();
         return null;

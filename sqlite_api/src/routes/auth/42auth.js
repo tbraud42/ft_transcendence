@@ -91,8 +91,7 @@ export default async function (fastify) {
 
     fastify.updateTimeStamp(fastify.db, user.id);
 
-    fastify.setJwtIAT(fastify.db, user.id);
-    const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role, iat: Math.floor(Date.now() / 1000) }, true, '12h');
+    const token = fastify.generateToken({ id: user.id, username: user.username, role: user.role }, true, '12h');
 
     return reply.send({ error: false, code: '', info: { token, user: { id: user.id, username: user.username } } });
   });

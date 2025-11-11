@@ -72,7 +72,7 @@ export function renderOnlineTab(): HTMLElement {
         const btn = createButton(label, 'button', 'blue')
         btn.onclick = () => {
             const nameInput = createInput('text', i18n.t('pong_online_name'))
-            nameInput.id = 'tournament-name-input'
+            nameInput.id = 'online-name-input'
             const difficulty = createOptionSelector({
                 label: i18n.t('pong_difficulty_label'),
                 values: [

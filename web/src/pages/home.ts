@@ -251,8 +251,6 @@ function renderLeaderboard(): HTMLElement {
 }
 
 export function renderHome(): HTMLElement {
-    refreshToken().catch(() => {})
-
     const page = document.createElement('div')
     page.className = 'w-full min-h-screen px-4 py-6'
     document.documentElement.classList.add('h-full')

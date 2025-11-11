@@ -6,7 +6,6 @@ import i18n from "../utils/lang/i18n";
 const API_URL = env.API_URL
 
 export async function fetchTournaments(): Promise<any[]> {
-    await refreshToken();
 
     const url = `${API_URL}/tournaments/waitting`
 
@@ -30,7 +29,6 @@ export async function createTournament(
     difficulty: string,
     maxPlayer: number,
 ): Promise<any> {
-    await refreshToken();
 
     const url = `${API_URL}/tournaments`
 

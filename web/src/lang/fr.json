@@ -118,6 +118,7 @@
   "pong_lobby_full": "Le tournoi est plein.",
   "stats_title": "Statistiques du joueur",
   "stats_user": "Utilisateur",
+  "stats_user_not_found": "Utilisateur introuvable.",
   "stats_overview": "Aperçu",
   "stats_recent": "Matchs récents",
   "stats_charts_title": "Graphiques",

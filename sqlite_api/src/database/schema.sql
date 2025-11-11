@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS users (
   avatar           BLOB,
   created_at       DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_timestamp   DATETIME DEFAULT CURRENT_TIMESTAMP,
-  jwt_issued_at    INTEGER NOT NULL DEFAULT 0,
   twofa_secret     TEXT,
   is_twofa_enabled INTEGER NOT NULL DEFAULT 0,
   total_seconds    INTEGER NOT NULL DEFAULT 0 CHECK (total_seconds >= 0),
